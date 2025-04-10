@@ -184,9 +184,9 @@
         loader.setDRACOLoader(dracoLoader);
         
         let car; // 全局变量保存汽车模型
-        const wheels = []; // 存储轮胎的数组
+        const wheels = []; // 存储轮胎及其相关部件的数组
         
-        // 加载汽车模型并识别轮胎
+        // 加载汽车模型并识别轮胎及轮毂盖
         loader.load(
             'https://threejs.org/examples/models/gltf/ferrari.glb',
             (gltf) => {
@@ -197,11 +197,19 @@
                 car.position.set(0, -1, 0);
                 car.rotation.y = 0;
                 
-                // 遍历模型找到轮胎
+                // 遍历模型找到轮胎及相关部件
                 car.traverse((child) => {
-                    if (child.isMesh && child.name.toLowerCase().includes('wheel')) {
+                    if (child.isMesh && (
+                        child.name.toLowerCase().includes('wheel')||
+                        child.name.toLowerCase().includes('rim')
+                    )) {
                         wheels.push(child);
-                        console.log('Found wheel:', child.name); // 调试用，查看轮胎名称
+                        console.log('Found wheel component:', child.name);
+                        // 初始化贴图旋转
+                        if (child.material && child.material.map) {
+                            child.material.map.center.set(0.5, 0.5);
+                            child.material.map.rotation = 0;
+                        }
                     }
                 });
                 
@@ -350,9 +358,12 @@
                 }
             });
 
-            // 轮胎旋转
+            // 轮胎及轮毂盖旋转并同步贴图
             wheels.forEach(wheel => {
-                wheel.rotation.x += 0.1; // 绕 X 轴旋转（根据模型调整）
+                wheel.rotation.x -= 0.1; // 几何体旋转
+                if (wheel.material && wheel.material.map) {
+                    wheel.material.map.rotation -= 0.1; // 贴图同步旋转
+                }
             });
             
             controls.update();
