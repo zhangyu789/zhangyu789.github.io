@@ -316,8 +316,7 @@ vocabulary.forEach(word => {
             cn: word.chinese,
             phonetic: word.phonetic || '',
             example: word.example || '',
-            emoji: word.imageUrl || '',
-            aiImg: null
+            imageUrl: word.imageUrl || ''
         });
     }
 });
@@ -327,8 +326,7 @@ const appState = {
     currentCategory: Object.keys(data)[0],
     currentMode: 'flashcards',
     currentQuestion: null,
-    isGameLoading: false,
-    generativeCategories: ['水果 (Fruits)', '动物 (Animals)', '家庭 (Family)', '身体 (Body)', '食物 (Food)', '玩具 (Toys)']
+    isGameLoading: false
 };
 
 // --- DOM Elements ---
@@ -343,42 +341,6 @@ const gameChoicesGridEl = document.getElementById('game-choices-grid');
 const menuToggle = document.getElementById('menu-toggle');
 const menuBackdrop = document.getElementById('menu-backdrop');
 
-// --- Caching Logic ---
-const cacheKey = 'kidsEnglishAppImageCache';
-
-function loadImageCache() {
-    try {
-        const cachedImages = JSON.parse(localStorage.getItem(cacheKey));
-        if (cachedImages) {
-            Object.values(data).forEach(categoryWords => {
-                categoryWords.forEach(word => {
-                    if (cachedImages[word.en]) {
-                        word.aiImg = cachedImages[word.en];
-                    }
-                });
-            });
-        }
-    } catch (e) {
-        console.error("Failed to load image cache:", e);
-        localStorage.removeItem(cacheKey);
-    }
-}
-
-function saveImageCache() {
-    try {
-        const imageCache = {};
-        Object.values(data).forEach(categoryWords => {
-            categoryWords.forEach(word => {
-                if (word.aiImg) {
-                    imageCache[word.en] = word.aiImg;
-                }
-            });
-        });
-        localStorage.setItem(cacheKey, JSON.stringify(imageCache));
-    } catch (e) {
-        console.error("Failed to save image cache:", e);
-    }
-}
 
 // --- Core Functions ---
 
@@ -395,57 +357,6 @@ function speak(text, rate = 0.9, pitch = 1.2) {
     }
 }
 
-async function generateImage(prompt) {
-    const apiKey = "";
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
-
-    const refinedPrompt = `A high-quality children's book illustration of a realistic, non-anthropomorphic ${prompt}. 
-                                    The object should be the clear focus, centered and prominent. 
-                                    Use a clean, simple, light-colored background, preferably white or very light pastel, with subtle shadows. 
-                                    The style should be friendly, vibrant, and cartoony but grounded in realism, avoiding any human-like features or expressions on objects/animals. 
-                                    Soft, natural lighting. No text or letters in the image.`;
-
-    const payload = {
-        instances: [{ prompt: refinedPrompt }],
-        parameters: { "sampleCount": 1 }
-    };
-
-    try {
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const result = await response.json();
-        if (result.predictions && result.predictions[0].bytesBase64Encoded) {
-            return `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
-        } else {
-            throw new Error('Invalid image data received.');
-        }
-    } catch (error) {
-        console.error(`Image generation failed for "${prompt}":`, error);
-        return null;
-    }
-}
-
-async function prepareCategoryImagesForGame(category) {
-    const words = data[category];
-    if (appState.generativeCategories.includes(category)) {
-        const wordsToGenerate = words.filter(item => !item.aiImg);
-        if (wordsToGenerate.length === 0) return;
-
-        const generationPromises = wordsToGenerate.map(item => 
-            generateImage(item.en).then(url => {
-                if(url) {
-                    item.aiImg = url;
-                    saveImageCache();
-                }
-            })
-        );
-        await Promise.all(generationPromises);
-    }
-}
 
 // --- UI Rendering & Progressive Loading ---
 
@@ -459,15 +370,8 @@ function displayFlashcardsProgressively(category) {
         card.id = cardId;
         card.className = 'flashcard flex flex-col items-center justify-start rounded-2xl shadow-lg p-3 bg-white text-center';
 
-        let imageContent = '';
-        if (appState.generativeCategories.includes(category)) {
-            imageContent = item.aiImg 
-                ? `<img src="${item.aiImg}" alt="${item.en}" />` 
-                : `<div class="flex flex-col items-center justify-center h-full"><div class="loader"></div><p class="loader-text">AI 正在努力绘画中...</p></div>`;
-        } else {
-            imageContent = `<img src="${item.imageUrl}" alt="${item.en}" class="w-full h-full object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-                           <div class="flex items-center justify-center w-full h-full text-6xl bg-gray-100 rounded-lg" style="display:none;">📷</div>`;
-        }
+        const imageContent = `<img src="${item.imageUrl}" alt="${item.en}" class="w-full h-full object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                              <div class="flex items-center justify-center w-full h-full text-6xl bg-gray-100 rounded-lg" style="display:none;">📷</div>`;
 
         card.innerHTML = `
             <div class="image-container">${imageContent}</div>
@@ -485,28 +389,6 @@ function displayFlashcardsProgressively(category) {
         flashcardContainer.appendChild(card);
     });
 
-    if (appState.generativeCategories.includes(category)) {
-        words.forEach(item => {
-            if (!item.aiImg) {
-                generateImage(item.en).then(url => {
-                    if (url) {
-                        item.aiImg = url;
-                        saveImageCache();
-                    }
-                    const cardId = `card-${category.replace(/[^a-zA-Z0-9]/g, '')}-${item.en.replace(/[^a-zA-Z0-9]/g, '')}`;
-                    const cardToUpdate = document.getElementById(cardId);
-                    if (cardToUpdate) {
-                        const imageContainer = cardToUpdate.querySelector('.image-container');
-                        if (url) {
-                            imageContainer.innerHTML = `<img src="${url}" alt="${item.en}" />`;
-                        } else {
-                            imageContainer.innerHTML = `<p class="text-red-500 text-xs p-2">图片生成失败</p>`;
-                        }
-                    }
-                });
-            }
-        });
-    }
 }
 
 function renderGameChoices(choices) {
@@ -515,15 +397,8 @@ function renderGameChoices(choices) {
         const card = document.createElement('div');
         card.className = 'game-choice-card aspect-square rounded-2xl shadow-lg p-2 flex items-center justify-center';
 
-        let imageContent = '';
-        if(appState.generativeCategories.includes(appState.currentCategory)) {
-            imageContent = item.aiImg 
-                ? `<img src="${item.aiImg}" class="w-full h-full object-contain">` 
-                : `<div class="flex flex-col items-center justify-center h-full text-center"><div class="loader"></div><p class="loader-text">加载中...</p></div>`;
-        } else {
-            imageContent = `<img src="${item.imageUrl}" alt="${item.en}" class="w-full h-full object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-                           <div class="flex items-center justify-center w-full h-full text-6xl bg-gray-100 rounded-lg" style="display:none;">📷</div>`;
-        }
+        const imageContent = `<img src="${item.imageUrl}" alt="${item.en}" class="w-full h-full object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                              <div class="flex items-center justify-center w-full h-full text-6xl bg-gray-100 rounded-lg" style="display:none;">📷</div>`;
         card.innerHTML = imageContent;
 
         card.addEventListener('click', () => handleChoiceClick(item, card));
@@ -598,9 +473,6 @@ async function selectCategory(category) {
     if (appState.currentMode === 'flashcards') {
         displayFlashcardsProgressively(category);
     } else {
-        gameChoicesGridEl.innerHTML = `<div class="col-span-full text-center p-8"><div class="loader mx-auto"></div><p class="mt-4 text-gray-600">正在准备游戏图片...</p></div>`;
-        gameQuestionWordEl.textContent = '';
-        await prepareCategoryImagesForGame(category);
         generateQuestion();
     }
 
@@ -616,7 +488,6 @@ function toggleMenu() {
 
 // --- Initialization ---
 function init() {
-    loadImageCache();
 
     const categories = Object.keys(data);
     categoryNav.innerHTML = '<h2 class="px-2 text-2xl font-bold text-sky-600 mb-4">主题分类</h2>';
