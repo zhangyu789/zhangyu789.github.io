@@ -1,26 +1,181 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>LOADING...</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>儿童英语乐园</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            display: none; /* 隐藏页面内容 */
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background-color: #f0f9ff;
+            overflow: hidden; /* Prevent body scroll */
+        }
+        
+        /* Sidebar Category Buttons */
+        #category-nav .category-button:hover {
+            background-color: #e0f2fe; /* sky-100 */
+            color: #0284c7; /* sky-600 */
+        }
+        #category-nav .active-category {
+            background-color: #3b82f6; /* blue-500 */
+            color: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        #category-nav .active-category:hover {
+            background-color: #2563eb; /* blue-600 */
+             color: white;
+        }
+
+        .flashcard {
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        .flashcard:hover {
+            transform: scale(1.05);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .flashcard .image-container {
+            position: relative; /* Needed for download button positioning */
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8fafc;
+            border-radius: 0.75rem;
+            margin-bottom: 0.75rem;
+            box-shadow: inset 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+        }
+        .flashcard img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 0.5rem;
+        }
+        .download-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border-radius: 9999px;
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+            cursor: pointer;
+        }
+        .flashcard .image-container:hover .download-btn {
+            opacity: 1;
+        }
+        
+        /* --- Mode & Game Styles --- */
+        .mode-toggle { 
+            transition: background-color 0.2s, color 0.2s; 
+        }
+        .mode-toggle.active { 
+            background-color: #3b82f6; 
+            color: white; 
+            box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+        }
+        .game-choice-card { 
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; 
+            cursor: pointer; 
+            border: 4px solid transparent; 
+            background-color: white;
+        }
+        .game-choice-card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
+        }
+        .game-choice-card.correct { 
+            border-color: #22c55e; 
+            animation: pulse-green 0.5s; 
+        }
+        .game-choice-card.incorrect { 
+            border-color: #ef4444; 
+            animation: shake 0.5s; 
+        }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
+        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+
+        /* --- Loader --- */
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #d1d5db;
+            border-bottom-color: #3b82f6;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loader-text {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
         }
     </style>
-    <script>
-        if (/Android/i.test(navigator.userAgent)) {
-            window.location.href = "Android/index.html";
-        } else if (/iPhone|iPad|iPod|iOS/i.test(navigator.userAgent)) {
-            window.location.href = "ios.html"; // 替换为你的外部链接
-        } else {
-            window.location.href = "Android/index.html";
-        }
-    </script>
 </head>
 <body>
-    <!-- 可以添加一些加载提示，比如："页面正在加载，请稍候..." -->
+
+    <div class="relative h-screen md:flex">
+        <!-- Mobile Menu Backdrop -->
+        <div id="menu-backdrop" class="fixed inset-0 bg-black/50 z-20 hidden md:hidden"></div>
+
+        <!-- Sidebar -->
+        <nav id="category-nav" class="bg-white border-r border-gray-200 fixed inset-y-0 left-0 z-30 w-64 p-4 space-y-2 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:h-screen md:overflow-y-auto">
+             <h2 class="px-2 text-2xl font-bold text-sky-600 mb-4">主题分类</h2>
+            <!-- 类别按钮将由JS动态生成 -->
+        </nav>
+
+        <!-- Main Content -->
+        <div class="flex-1 h-screen overflow-y-auto">
+            <header class="bg-white/80 backdrop-blur-sm sticky top-0 z-10 p-4 flex items-center shadow-sm">
+                <!-- Hamburger button for mobile -->
+                <button id="menu-toggle" class="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <h1 class="text-xl font-bold text-sky-600 md:hidden ml-4">儿童英语乐园</h1>
+            </header>
+
+            <div class="p-4 md:p-8">
+                <header class="text-center mb-8">
+                    <h1 class="hidden md:block text-4xl md:text-5xl font-bold text-sky-600">儿童英语乐园</h1>
+                    <p id="app-subtitle" class="text-lg text-gray-500 mt-2">选择类别，点击卡片学习单词、听发音和看例句！</p>
+                </header>
+                 
+                <div class="flex justify-center mb-6 bg-gray-200 rounded-full p-1 max-w-sm mx-auto">
+                    <button id="mode-flashcards" class="mode-toggle w-1/2 p-2 rounded-full font-semibold text-gray-600">卡片认读</button>
+                    <button id="mode-game" class="mode-toggle w-1/2 p-2 rounded-full font-semibold text-gray-600">看词选图</button>
+                </div>
+
+                <main id="flashcard-container" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+                    <!-- 闪卡将由JS动态生成 -->
+                </main>
+        
+                <div id="game-container" class="hidden text-center max-w-4xl mx-auto">
+                    <div id="game-question-area" class="mb-8">
+                        <p class="text-lg text-gray-600">听声音，选择正确的图片：</p>
+                        <div id="game-question-word" class="text-4xl font-bold text-sky-700 my-2 cursor-pointer hover:scale-110 transition-transform" title="点击重新播放"></div>
+                    </div>
+                    <div id="game-choices-grid" class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                         <!-- 游戏选项将由JS动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
 </body>
 </html>
