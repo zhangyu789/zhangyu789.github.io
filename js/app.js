@@ -1,6 +1,6 @@
 // --- 词汇数据 ---
 const vocabulary = [
-    // 水果 (fruits) - 27
+    // 水果 (fruits)
     { id: 'apple', english: 'apple', chinese: '苹果', phonetic: '/ˈæp.əl/', themeId: 'fruits', imageUrl: '/images/fruits/apple.png', example: 'I eat an apple.' },
     { id: 'banana', english: 'banana', chinese: '香蕉', phonetic: '/bəˈnænə/', themeId: 'fruits', imageUrl: '/images/fruits/banana.png', example: 'The banana is yellow.' },
     { id: 'orange', english: 'orange', chinese: '橙子', phonetic: '/ˈɔːr.ɪndʒ/', themeId: 'fruits', imageUrl: '/images/fruits/orange.png', example: 'I like orange juice.' },
@@ -28,7 +28,7 @@ const vocabulary = [
     { id: 'cantaloupe', english: 'cantaloupe', chinese: '哈密瓜', phonetic: '/ˈkæn.tə.loʊp/', themeId: 'fruits', imageUrl: '/images/fruits/cantaloupe.png', example: 'Cantaloupe is sweet.' },
     { id: 'honeydew', english: 'honeydew', chinese: '蜜瓜', phonetic: '/ˈhʌn.i.duː/', themeId: 'fruits', imageUrl: '/images/fruits/honeydew.png', example: 'Honeydew is green.' },
     { id: 'grapefruit', english: 'grapefruit', chinese: '柚子', phonetic: '/ˈɡreɪp.fruːt/', themeId: 'fruits', imageUrl: '/images/fruits/grapefruit.png', example: 'Grapefruit is citrus.' },
-    // 动物 (animals) - 40
+    // 动物 (animals)
     { id: 'dog', english: 'dog', chinese: '狗', phonetic: '/dɔːɡ/', themeId: 'animals', imageUrl: '/images/animals/dog.png', example: 'Dogs like to play.' },
     { id: 'cat', english: 'cat', chinese: '猫', phonetic: '/kæt/', themeId: 'animals', imageUrl: '/images/animals/cat.png', example: 'The cat is sleeping.' },
     { id: 'tiger', english: 'tiger', chinese: '老虎', phonetic: '/ˈtaɪ.ɡər/', themeId: 'animals', imageUrl: '/images/animals/tiger.png', example: 'The tiger is strong.' },
@@ -70,7 +70,7 @@ const vocabulary = [
     { id: 'crab', english: 'crab', chinese: '螃蟹', phonetic: '/kræb/', themeId: 'animals', imageUrl: '/images/animals/crab.png', example: 'Crabs walk sideways.' },
     { id: 'butterfly', english: 'butterfly', chinese: '蝴蝶', phonetic: '/ˈbʌt̬.ɚ.flaɪ/', themeId: 'animals', imageUrl: '/images/animals/butterfly.png', example: 'Butterfly has colorful wings.' },
     // ... (rest of the vocabulary data remains the same)
-    // 颜色 (colors) - 27
+    // 颜色 (colors)
     { id: 'red', english: 'red', chinese: '红色', phonetic: '/red/', themeId: 'colors', imageUrl: '/images/colors/red.png', example: 'The apple is red.' },
     { id: 'blue', english: 'blue', chinese: '蓝色', phonetic: '/bluː/', themeId: 'colors', imageUrl: '/images/colors/blue.png', example: 'The sky is blue.' },
     { id: 'green', english: 'green', chinese: '绿色', phonetic: '/ɡriːn/', themeId: 'colors', imageUrl: '/images/colors/green.png', example: 'The grass is green.' },
@@ -97,7 +97,7 @@ const vocabulary = [
     { id: 'blush', english: 'blush', chinese: '腮红色', phonetic: '/blʌʃ/', themeId: 'colors', imageUrl: '/images/colors/blush.png', example: 'Blush is light pink.' },
     { id: 'cherry', english: 'cherry', chinese: '樱桃色', phonetic: '/ˈtʃer.i/', themeId: 'colors', imageUrl: '/images/colors/cherry.png', example: 'Cherry is bright red.' },
     { id: 'rust', english: 'rust', chinese: '铁锈色', phonetic: '/rʌst/', themeId: 'colors', imageUrl: '/images/colors/rust.png', example: 'Rust is reddish-brown.' },
-    // 数字 (numbers) - 31
+    // 数字 (numbers)
     { id: 'zero', english: 'zero', chinese: '零', phonetic: '/ˈzɪr.oʊ/', themeId: 'numbers', imageUrl: '/images/numbers/zero.png', example: 'Zero means nothing.' },
     { id: 'one', english: 'one', chinese: '一', phonetic: '/wʌn/', themeId: 'numbers', imageUrl: '/images/numbers/one.png', example: 'I have one apple.' },
     { id: 'two', english: 'two', chinese: '二', phonetic: '/tuː/', themeId: 'numbers', imageUrl: '/images/numbers/two.png', example: 'I see two cats.' },
@@ -129,7 +129,7 @@ const vocabulary = [
     { id: 'hundred', english: 'hundred', chinese: '一百', phonetic: '/ˈhʌn.drəd/', themeId: 'numbers', imageUrl: '/images/numbers/hundred.png', example: 'One hundred cents in a dollar.' },
     { id: 'thousand', english: 'thousand', chinese: '一千', phonetic: '/ˈθaʊ.zənd/', themeId: 'numbers', imageUrl: '/images/numbers/thousand.png', example: 'A thousand years is a millennium.' },
     { id: 'million', english: 'million', chinese: '一百万', phonetic: '/ˈmɪl.jən/', themeId: 'numbers', imageUrl: '/images/numbers/million.png', example: 'A million dollars is a lot.' },
-    // 家庭 (family) - 30
+    // 家庭 (family)
     { id: 'father', english: 'father', chinese: '父亲', phonetic: '/ˈfɑː.ðər/', themeId: 'family', imageUrl: '/images/family/father.png', example: 'My father is tall.' },
     { id: 'mother', english: 'mother', chinese: '母亲', phonetic: '/ˈmʌð.ər/', themeId: 'family', imageUrl: '/images/family/mother.png', example: 'My mother is kind.' },
     { id: 'son', english: 'son', chinese: '儿子', phonetic: '/sʌn/', themeId: 'family', imageUrl: '/images/family/son.png', example: 'He is their son.' },
@@ -157,7 +157,7 @@ const vocabulary = [
     { id: 'neighbor', english: 'neighbor', chinese: '邻居', phonetic: '/ˈneɪ.bər/', themeId: 'family', imageUrl: '/images/family/neighbor.png', example: 'My neighbor is friendly.' },
     { id: 'family', english: 'family', chinese: '家庭', phonetic: '/ˈfæm.əl.i/', themeId: 'family', imageUrl: '/images/family/family.png', example: 'Family is important.' },
     { id: 'relative', english: 'relative', chinese: '亲戚', phonetic: '/ˈrel.ə.tɪv/', themeId: 'family', imageUrl: '/images/family/relative.png', example: 'Relatives visit on holidays.' },
-    // 身体 (body) - 52
+    // 身体 (body)
     { id: 'head', english: 'head', chinese: '头', phonetic: '/hed/', themeId: 'body', imageUrl: '/images/body/head.png', example: 'My head is round.' },
     { id: 'face', english: 'face', chinese: '脸', phonetic: '/feɪs/', themeId: 'body', imageUrl: '/images/body/face.png', example: 'I wash my face.' },
     { id: 'eye', english: 'eye', chinese: '眼睛', phonetic: '/aɪ/', themeId: 'body', imageUrl: '/images/body/eye.png', example: 'I see with my eyes.' },
@@ -209,7 +209,7 @@ const vocabulary = [
     { id: 'kidney', english: 'kidney', chinese: '肾脏', phonetic: '/ˈkɪd.ni/', themeId: 'body', imageUrl: '/images/body/kidney.png', example: 'Kidneys filter waste.' },
     { id: 'spine', english: 'spine', chinese: '脊柱', phonetic: '/spaɪn/', themeId: 'body', imageUrl: '/images/body/spine.png', example: 'The spine supports the back.' },
     { id: 'rib', english: 'rib', chinese: '肋骨', phonetic: '/rɪb/', themeId: 'body', imageUrl: '/images/body/rib.png', example: 'Ribs protect our organs.' },
-    // 食物 (food) - 34
+    // 食物 (food)
     { id: 'bread', english: 'bread', chinese: '面包', phonetic: '/bred/', themeId: 'food', imageUrl: '/images/food/bread.png', example: 'I eat bread for breakfast.' },
     { id: 'rice', english: 'rice', chinese: '米饭', phonetic: '/raɪs/', themeId: 'food', imageUrl: '/images/food/rice.png', example: 'Rice is white and fluffy.' },
     { id: 'noodle', english: 'noodle', chinese: '面条', phonetic: '/ˈnuː.dəl/', themeId: 'food', imageUrl: '/images/food/noodle.png', example: 'Noodles are long and thin.' },
@@ -243,7 +243,7 @@ const vocabulary = [
     { id: 'nuts', english: 'nuts', chinese: '坚果', phonetic: '/nʌts/', themeId: 'food', imageUrl: '/images/food/nuts.png', example: 'Nuts are healthy snacks.' },
     { id: 'seeds', english: 'seeds', chinese: '种子', phonetic: '/siːdz/', themeId: 'food', imageUrl: '/images/food/seeds.png', example: 'Seeds grow into plants.' },
     { id: 'beans', english: 'beans', chinese: '豆子', phonetic: '/biːnz/', themeId: 'food', imageUrl: '/images/food/beans.png', example: 'Beans are full of protein.' },
-    // 玩具 (toys) - 47
+    // 玩具 (toys)
     { id: 'ball', english: 'ball', chinese: '球', phonetic: '/bɔːl/', themeId: 'toys', imageUrl: '/images/toys/ball.png', example: 'I play with a ball.' },
     { id: 'doll', english: 'doll', chinese: '娃娃', phonetic: '/dɑːl/', themeId: 'toys', imageUrl: '/images/toys/doll.png', example: 'The doll has pretty hair.' },
     { id: 'teddy bear', english: 'teddy bear', chinese: '泰迪熊', phonetic: '/ˈted.i ber/', themeId: 'toys', imageUrl: '/images/toys/teddy-bear.png', example: 'My teddy bear is soft and cuddly.' },
