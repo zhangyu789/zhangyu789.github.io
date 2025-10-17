@@ -1,3 +1,187 @@
+// --- 音效系统 ---
+const soundEffects = {
+    click: new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'),
+    correct: new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'),
+    wrong: new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'),
+    success: new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT')
+};
+
+function playSound(soundName) {
+    if (soundEffects[soundName]) {
+        soundEffects[soundName].currentTime = 0;
+        soundEffects[soundName].play().catch(e => console.log('Sound play failed:', e));
+    }
+}
+
+// --- 学习进度系统 ---
+const learningProgress = {
+    totalWords: 0,
+    learnedWords: new Set(),
+    correctAnswers: 0,
+    totalAttempts: 0,
+    
+    init() {
+        this.totalWords = vocabulary.length;
+        this.loadProgress();
+    },
+    
+    markWordLearned(wordId) {
+        this.learnedWords.add(wordId);
+        this.saveProgress();
+        updateProgressDisplay();
+    },
+    
+    recordAnswer(isCorrect) {
+        this.totalAttempts++;
+        if (isCorrect) {
+            this.correctAnswers++;
+        }
+        this.saveProgress();
+        updateProgressDisplay();
+    },
+    
+    getProgressPercentage() {
+        return Math.round((this.learnedWords.size / this.totalWords) * 100);
+    },
+    
+    getAccuracyPercentage() {
+        return this.totalAttempts > 0 ? Math.round((this.correctAnswers / this.totalAttempts) * 100) : 0;
+    },
+    
+    saveProgress() {
+        localStorage.setItem('learningProgress', JSON.stringify({
+            learnedWords: Array.from(this.learnedWords),
+            correctAnswers: this.correctAnswers,
+            totalAttempts: this.totalAttempts
+        }));
+    },
+    
+    loadProgress() {
+        const saved = localStorage.getItem('learningProgress');
+        if (saved) {
+            const data = JSON.parse(saved);
+            this.learnedWords = new Set(data.learnedWords || []);
+            this.correctAnswers = data.correctAnswers || 0;
+            this.totalAttempts = data.totalAttempts || 0;
+        }
+    }
+};
+
+// --- 奖励系统 ---
+const rewardSystem = {
+    stars: 0,
+    badges: [],
+    
+    init() {
+        this.loadRewards();
+    },
+    
+    giveStar() {
+        this.stars++;
+        this.saveRewards();
+        this.showStarAnimation();
+        updateProgressDisplay();
+    },
+    
+    checkBadges() {
+        const progress = learningProgress.getProgressPercentage();
+        const accuracy = learningProgress.getAccuracyPercentage();
+        
+        if (progress >= 25 && !this.badges.includes('first_steps')) {
+            this.badges.push('first_steps');
+            this.showBadgeNotification('first_steps', '迈出第一步！');
+        }
+        if (progress >= 50 && !this.badges.includes('half_way')) {
+            this.badges.push('half_way');
+            this.showBadgeNotification('half_way', '学习小能手！');
+        }
+        if (progress >= 100 && !this.badges.includes('master')) {
+            this.badges.push('master');
+            this.showBadgeNotification('master', '英语小达人！');
+        }
+        if (accuracy >= 90 && !this.badges.includes('accuracy_master')) {
+            this.badges.push('accuracy_master');
+            this.showBadgeNotification('accuracy_master', '准确率大师！');
+        }
+    },
+    
+    showStarAnimation() {
+        const star = document.createElement('div');
+        star.innerHTML = '⭐';
+        star.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            z-index: 1000;
+            animation: starPop 1s ease-out forwards;
+            pointer-events: none;
+        `;
+        document.body.appendChild(star);
+        setTimeout(() => star.remove(), 1000);
+    },
+    
+    showBadgeNotification(badgeId, message) {
+        const notification = document.createElement('div');
+        notification.innerHTML = `
+            <div style="background: linear-gradient(45deg, #ffd700, #ffed4e); padding: 1rem; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🏆</div>
+                <div style="font-weight: bold; color: #333;">${message}</div>
+            </div>
+        `;
+        notification.style.cssText = `
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 1000;
+            animation: slideInRight 0.5s ease-out;
+        `;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 3000);
+    },
+    
+    saveRewards() {
+        localStorage.setItem('rewards', JSON.stringify({
+            stars: this.stars,
+            badges: this.badges
+        }));
+    },
+    
+    loadRewards() {
+        const saved = localStorage.getItem('rewards');
+        if (saved) {
+            const data = JSON.parse(saved);
+            this.stars = data.stars || 0;
+            this.badges = data.badges || [];
+        }
+    }
+};
+
+// --- 进度显示更新 ---
+function updateProgressDisplay() {
+    const progressIndicator = document.getElementById('progress-indicator');
+    const progressText = document.getElementById('progress-text');
+    const starCounter = document.getElementById('star-counter');
+    const starText = document.getElementById('star-text');
+    
+    if (progressIndicator && progressText) {
+        const progress = learningProgress.getProgressPercentage();
+        const accuracy = learningProgress.getAccuracyPercentage();
+        
+        if (progress > 0) {
+            progressIndicator.classList.remove('hidden');
+            progressText.textContent = `学习进度: ${progress}% (准确率: ${accuracy}%)`;
+        } else {
+            progressIndicator.classList.add('hidden');
+        }
+    }
+    
+    if (starCounter && starText) {
+        starText.textContent = `⭐ ${rewardSystem.stars}`;
+    }
+}
+
 // --- 词汇数据 ---
 const vocabulary = [
     // 水果 (fruits) - 最常用50个
@@ -843,10 +1027,18 @@ function speak(text, rate = 0.9, pitch = 1.2) {
     }
 }
 
-function speakWordAndExample(word, example) {
+function speakWordAndExample(word, example, wordId = null) {
+    // 播放点击音效
+    playSound('click');
+    
+    // 记录学习进度
+    if (wordId) {
+        learningProgress.markWordLearned(wordId);
+    }
+    
     // 先阅读单词
     speak(word, 0.8, 1.2);
-    
+
     // 延迟一秒后阅读例句
     setTimeout(() => {
         speak(example, 0.7, 1.0);
@@ -881,7 +1073,7 @@ function displayFlashcardsProgressively(category) {
             </div>
         `;
 
-        card.addEventListener('click', () => speakWordAndExample(item.en, item.example));
+        card.addEventListener('click', () => speakWordAndExample(item.en, item.example, item.id));
         flashcardContainer.appendChild(card);
     });
 
@@ -925,19 +1117,34 @@ function generateQuestion() {
 function handleChoiceClick(selectedItem, cardElement) {
     if (appState.isGameLoading) return;
     const isCorrect = selectedItem.en === appState.currentQuestion.en;
+    
+    // 记录答题结果
+    learningProgress.recordAnswer(isCorrect);
+    
     gameChoicesGridEl.style.pointerEvents = 'none';
     cardElement.classList.add(isCorrect ? 'correct' : 'incorrect');
+    
     if (isCorrect) {
+        // 播放正确音效
+        playSound('correct');
+        
+        // 给予星星奖励
+        rewardSystem.giveStar();
+        
         // 先读单词和例句，然后读"Great!"
-        speakWordAndExample(selectedItem.en, selectedItem.example);
+        speakWordAndExample(selectedItem.en, selectedItem.example, selectedItem.id);
         setTimeout(() => {
             speak('Great!', 1.2, 1.3);
+            playSound('success');
         }, 2500); // 等待单词和例句读完
         setTimeout(() => {
             generateQuestion();
             gameChoicesGridEl.style.pointerEvents = 'auto';
         }, 4000); // 总等待时间
     } else {
+        // 播放错误音效
+        playSound('wrong');
+        
         speak('Try again!', 1.2, 1);
         setTimeout(() => {
             cardElement.classList.remove('incorrect');
@@ -988,6 +1195,23 @@ function toggleMenu() {
 
 // --- Initialization ---
 function init() {
+    // 初始化系统
+    learningProgress.init();
+    rewardSystem.init();
+    
+    // 初始化数据
+    vocabulary.forEach(word => {
+        if (word && word.themeId && themeMap[word.themeId]) {
+            data[themeMap[word.themeId]].push({
+                id: word.id,
+                en: word.english,
+                cn: word.chinese,
+                phonetic: word.phonetic || '',
+                example: word.example || '',
+                imageUrl: word.imageUrl || ''
+            });
+        }
+    });
 
     const categories = Object.keys(data);
     categoryNav.innerHTML = '<h2 class="px-2 text-2xl font-bold text-sky-600 mb-4">主题分类</h2>';
@@ -1010,6 +1234,12 @@ function init() {
     });
     
     setMode('flashcards');
+    
+    // 检查徽章
+    rewardSystem.checkBadges();
+    
+    // 更新进度显示
+    updateProgressDisplay();
 }
 
 window.onload = init;

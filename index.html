@@ -124,9 +124,91 @@
             color: #6b7280;
             margin-top: 0.5rem;
         }
+        
+        /* --- 儿童友好动画效果 --- */
+        @keyframes starPop {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+        }
+        
+        @keyframes slideInRight {
+            0% { transform: translateX(100%); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
+            40%, 43% { transform: translate3d(0, -8px, 0); }
+            70% { transform: translate3d(0, -4px, 0); }
+            90% { transform: translate3d(0, -2px, 0); }
+        }
+        
+        @keyframes wiggle {
+            0%, 7% { transform: rotateZ(0); }
+            15% { transform: rotateZ(-15deg); }
+            20% { transform: rotateZ(10deg); }
+            25% { transform: rotateZ(-10deg); }
+            30% { transform: rotateZ(6deg); }
+            35% { transform: rotateZ(-4deg); }
+            40%, 100% { transform: rotateZ(0); }
+        }
+        
+        /* 增强的悬停效果 */
+        .flashcard:hover {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            animation: bounce 0.6s ease-in-out;
+        }
+        
+        .game-choice-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            animation: wiggle 0.5s ease-in-out;
+        }
+        
+        /* 学习进度指示器 */
+        .progress-indicator {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            z-index: 50;
+        }
+        
+        /* 星星计数器 */
+        .star-counter {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            background: linear-gradient(45deg, #fbbf24, #f59e0b);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+            z-index: 50;
+        }
     </style>
 </head>
 <body>
+
+    <!-- 学习进度指示器 -->
+    <div id="progress-indicator" class="progress-indicator hidden">
+        <span id="progress-text">学习进度: 0%</span>
+    </div>
+    
+    <!-- 星星计数器 -->
+    <div id="star-counter" class="star-counter">
+        <span id="star-text">⭐ 0</span>
+    </div>
 
     <div class="relative h-screen md:flex">
         <!-- Mobile Menu Backdrop -->
