@@ -1206,14 +1206,15 @@ function initMatchingGame(category) {
     const categoryWords = data[category] || [];
     if (categoryWords.length === 0) return;
     
-    // 随机选择6-8个单词
+    // 随机选择4个单词
     const shuffled = [...categoryWords].sort(() => Math.random() - 0.5);
-    const selectedWords = shuffled.slice(0, Math.min(8, categoryWords.length));
+    const selectedWords = shuffled.slice(0, Math.min(4, categoryWords.length));
     
     // 重置状态
     matchingState.words = selectedWords;
     matchingState.images = [...selectedWords].sort(() => Math.random() - 0.5);
     matchingState.connections.clear();
+    matchingState.matched = new Set();
     matchingState.selectedWord = null;
     matchingState.selectedImage = null;
     matchingState.isCompleted = false;
@@ -1261,7 +1262,7 @@ function selectMatchingWord(wordId, element) {
     
     // 如果已经选择了图片，尝试连接
     if (matchingState.selectedImage) {
-        createMatchingConnection();
+        validateMatchingSelection();
     }
 }
 
@@ -1279,40 +1280,64 @@ function selectMatchingImage(imageId, element) {
     
     // 如果已经选择了单词，尝试连接
     if (matchingState.selectedWord) {
-        createMatchingConnection();
+        validateMatchingSelection();
     }
 }
 
-function createMatchingConnection() {
+function validateMatchingSelection() {
     if (!matchingState.selectedWord || !matchingState.selectedImage) return;
     
     const wordId = matchingState.selectedWord;
     const imageId = matchingState.selectedImage;
     
-    // 检查是否已经连接过
-    if (matchingState.connections.has(wordId)) {
-        // 移除旧连接
-        const oldImageId = matchingState.connections.get(wordId);
-        matchingState.connections.delete(wordId);
-        document.querySelector(`[data-image-id="${oldImageId}"]`).classList.remove('connected');
-    }
+    const wordEl = document.querySelector(`[data-word-id="${wordId}"]`);
+    const imageEl = document.querySelector(`[data-image-id="${imageId}"]`);
     
-    // 创建新连接
-    matchingState.connections.set(wordId, imageId);
-    document.querySelector(`[data-image-id="${imageId}"]`).classList.add('connected');
+    const isCorrect = wordId === imageId;
     
-    // 清除选择
-    matchingState.selectedWord = null;
-    matchingState.selectedImage = null;
-    document.querySelectorAll('.matching-item').forEach(el => el.classList.remove('selected'));
-    
-    // 绘制连线
-    drawMatchingLines();
-    updateMatchingProgress();
-    
-    // 检查是否完成
-    if (matchingState.connections.size === matchingState.words.length) {
-        setTimeout(() => checkMatchingAnswers(), 500);
+    if (isCorrect) {
+        // 正确：播放音效并移除两张卡片
+        playSound('correct');
+        if (wordEl) { wordEl.classList.add('correct', 'anim-pop-in'); }
+        if (imageEl) { imageEl.classList.add('correct', 'anim-pop-in'); }
+        
+        setTimeout(() => {
+            if (wordEl) wordEl.classList.add('anim-fade-out');
+            if (imageEl) imageEl.classList.add('anim-fade-out');
+        }, 120);
+        
+        setTimeout(() => {
+            if (wordEl && wordEl.parentElement) wordEl.parentElement.removeChild(wordEl);
+            if (imageEl && imageEl.parentElement) imageEl.parentElement.removeChild(imageEl);
+            matchingState.matched.add(wordId);
+            updateMatchingProgress();
+            
+            // 重置选择
+            matchingState.selectedWord = null;
+            matchingState.selectedImage = null;
+            
+            // 判断是否全部完成
+            const total = Math.min(4, matchingState.words.length);
+            if (matchingState.matched.size >= total) {
+                matchingState.isCompleted = true;
+                playSound('success');
+                if (typeof rewardSystem !== 'undefined') {
+                    rewardSystem.giveStar();
+                }
+            }
+        }, 420);
+    } else {
+        // 错误：红框抖动并取消选择
+        playSound('wrong');
+        if (wordEl) wordEl.classList.add('incorrect', 'anim-shake');
+        if (imageEl) imageEl.classList.add('incorrect', 'anim-shake');
+        
+        setTimeout(() => {
+            if (wordEl) wordEl.classList.remove('incorrect', 'selected', 'anim-shake');
+            if (imageEl) imageEl.classList.remove('incorrect', 'selected', 'anim-shake');
+            matchingState.selectedWord = null;
+            matchingState.selectedImage = null;
+        }, 600);
     }
 }
 
@@ -1352,54 +1377,16 @@ function clearMatchingLines() {
 }
 
 function updateMatchingProgress() {
-    matchingProgressEl.textContent = matchingState.connections.size;
-    matchingTotalEl.textContent = matchingState.words.length;
+    const total = Math.min(4, matchingState.words.length);
+    const done = matchingState.matched ? matchingState.matched.size : 0;
+    matchingProgressEl.textContent = done;
+    matchingTotalEl.textContent = total;
 }
 
-function checkMatchingAnswers() {
-    let correctCount = 0;
-    
-    matchingState.connections.forEach((imageId, wordId) => {
-        const isCorrect = wordId === imageId;
-        if (isCorrect) correctCount++;
-        
-        // 更新视觉反馈
-        const wordEl = document.querySelector(`[data-word-id="${wordId}"]`);
-        const imageEl = document.querySelector(`[data-image-id="${imageId}"]`);
-        const line = document.querySelector(`[data-word-id="${wordId}"][data-image-id="${imageId}"]`);
-        
-        if (wordEl && imageEl && line) {
-            wordEl.classList.add(isCorrect ? 'correct' : 'incorrect');
-            imageEl.classList.add(isCorrect ? 'correct' : 'incorrect');
-            line.classList.add(isCorrect ? 'correct' : 'incorrect');
-        }
-    });
-    
-    // 播放音效
-    if (correctCount === matchingState.words.length) {
-        playSound('success');
-        rewardSystem.giveStar();
-        matchingState.isCompleted = true;
-    } else {
-        playSound('wrong');
-    }
-    
-    // 记录学习进度
-    learningProgress.recordAnswer(correctCount === matchingState.words.length);
-}
+// 旧的整体验证与连线逻辑已不再使用
 
 function resetMatchingGame() {
-    matchingState.connections.clear();
-    matchingState.selectedWord = null;
-    matchingState.selectedImage = null;
-    matchingState.isCompleted = false;
-    
-    document.querySelectorAll('.matching-item').forEach(el => {
-        el.classList.remove('selected', 'connected', 'correct', 'incorrect');
-    });
-    
-    clearMatchingLines();
-    updateMatchingProgress();
+    initMatchingGame(appState.currentCategory);
 }
 
 // --- 听写训练功能 ---
@@ -1457,6 +1444,7 @@ function renderWordDisplay() {
         const letterEl = document.createElement('div');
         letterEl.className = 'word-letter';
         letterEl.dataset.position = index;
+        letterEl.addEventListener('click', () => undoDictationAt(index));
         dictationWordDisplayEl.appendChild(letterEl);
     });
 }
@@ -1468,9 +1456,9 @@ function selectLetter(letterIndex, cardElement) {
     const nextPosition = dictationState.currentAnswer.length;
     if (nextPosition >= dictationState.currentLetters.length) return;
     
-    // 添加字母到答案中
+    // 添加字母到答案中（记录来源索引以便撤销）
     const letter = dictationState.shuffledLetters[letterIndex];
-    dictationState.currentAnswer.push(letter);
+    dictationState.currentAnswer.push({ letter, sourceIndex: letterIndex });
     dictationState.usedLetters.add(letterIndex);
     
     // 更新显示
@@ -1479,6 +1467,8 @@ function selectLetter(letterIndex, cardElement) {
         letterEl.textContent = letter.toUpperCase();
         letterEl.style.background = '#dbeafe';
         letterEl.style.borderColor = '#3b82f6';
+        letterEl.classList.add('filled', 'pop');
+        setTimeout(() => letterEl.classList.remove('pop'), 250);
     }
     
     // 标记卡片为已使用
@@ -1491,6 +1481,42 @@ function selectLetter(letterIndex, cardElement) {
     if (dictationState.currentAnswer.length === dictationState.currentLetters.length) {
         setTimeout(() => submitDictationAnswer(), 500);
     }
+}
+
+function undoDictationAt(position) {
+    // 仅当该位置已有字母时允许撤销
+    if (position < 0 || position >= dictationState.currentLetters.length) return;
+    if (position >= dictationState.currentAnswer.length) return;
+    
+    // 取出被撤销的答案项
+    const removed = dictationState.currentAnswer.splice(position, 1)[0];
+    if (!removed) return;
+    
+    // 释放对应字母卡
+    dictationState.usedLetters.delete(removed.sourceIndex);
+    const card = document.querySelector(`.letter-card[data-letter-index="${removed.sourceIndex}"]`);
+    if (card) card.classList.remove('used');
+    
+    // 重新渲染已填字母显示（顺序左对齐）
+    const slots = document.querySelectorAll('.word-letter');
+    dictationState.currentLetters.forEach((_, idx) => {
+        const slot = slots[idx];
+        if (!slot) return;
+        const ans = dictationState.currentAnswer[idx];
+        if (ans) {
+            slot.textContent = ans.letter.toUpperCase();
+            slot.style.background = '#dbeafe';
+            slot.style.borderColor = '#3b82f6';
+            slot.classList.add('filled');
+        } else {
+            slot.textContent = '';
+            slot.style.background = '';
+            slot.style.borderColor = '';
+            slot.classList.remove('filled');
+        }
+    });
+    
+    playSound('click');
 }
 
 function clearDictationAnswer() {
@@ -1525,7 +1551,7 @@ function updateDictationDisplay() {
 }
 
 function submitDictationAnswer() {
-    const userAnswer = dictationState.currentAnswer.join('').toLowerCase();
+    const userAnswer = dictationState.currentAnswer.map(x => typeof x === 'string' ? x : x.letter).join('').toLowerCase();
     const correctAnswer = dictationState.currentWord.en.toLowerCase();
     
     const isCorrect = userAnswer === correctAnswer;
@@ -1539,6 +1565,8 @@ function submitDictationAnswer() {
         document.querySelectorAll('.word-letter').forEach(letterEl => {
             letterEl.style.background = '#dcfce7';
             letterEl.style.borderColor = '#22c55e';
+            letterEl.classList.add('anim-pop-in');
+            setTimeout(() => letterEl.classList.remove('anim-pop-in'), 250);
         });
     } else {
         playSound('wrong');
@@ -1548,6 +1576,8 @@ function submitDictationAnswer() {
         document.querySelectorAll('.word-letter').forEach(letterEl => {
             letterEl.style.background = '#fef2f2';
             letterEl.style.borderColor = '#ef4444';
+            letterEl.classList.add('anim-shake');
+            setTimeout(() => letterEl.classList.remove('anim-shake'), 500);
         });
     }
     
