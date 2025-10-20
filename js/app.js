@@ -1178,6 +1178,8 @@ function handleChoiceClick(selectedItem, cardElement) {
         
         // 给予星星奖励
         rewardSystem.giveStar();
+        // 彩带动画（答对时小朋友增强反馈）
+        launchConfetti();
         
         // 先读单词和例句，然后读"Great!"
         speakWordAndExample(selectedItem.en, selectedItem.example, selectedItem.id);
@@ -1229,7 +1231,7 @@ function renderMatchingItems() {
     matchingWordsEl.innerHTML = '';
     matchingState.words.forEach((word, index) => {
         const wordEl = document.createElement('div');
-        wordEl.className = 'matching-item';
+        wordEl.className = 'matching-item anim-pop-in';
         wordEl.dataset.wordId = word.id;
         wordEl.innerHTML = `<div class="matching-word">${word.en}</div>`;
         wordEl.addEventListener('click', () => selectMatchingWord(word.id, wordEl));
@@ -1240,7 +1242,7 @@ function renderMatchingItems() {
     matchingImagesEl.innerHTML = '';
     matchingState.images.forEach((word, index) => {
         const imageEl = document.createElement('div');
-        imageEl.className = 'matching-item';
+        imageEl.className = 'matching-item anim-pop-in';
         imageEl.dataset.imageId = word.id;
         imageEl.innerHTML = `<img src="${word.imageUrl}" alt="${word.en}" class="matching-image">`;
         imageEl.addEventListener('click', () => selectMatchingImage(word.id, imageEl));
@@ -1296,36 +1298,55 @@ function validateMatchingSelection() {
     const isCorrect = wordId === imageId;
     
     if (isCorrect) {
-        // 正确：播放音效并移除两张卡片
+        // 正确：创建连线、半透明禁用、不移除
         playSound('correct');
-        if (wordEl) { wordEl.classList.add('correct', 'anim-pop-in'); }
-        if (imageEl) { imageEl.classList.add('correct', 'anim-pop-in'); }
-        
-        setTimeout(() => {
-            if (wordEl) wordEl.classList.add('anim-fade-out');
-            if (imageEl) imageEl.classList.add('anim-fade-out');
-        }, 120);
-        
-        setTimeout(() => {
-            if (wordEl && wordEl.parentElement) wordEl.parentElement.removeChild(wordEl);
-            if (imageEl && imageEl.parentElement) imageEl.parentElement.removeChild(imageEl);
-            matchingState.matched.add(wordId);
-            updateMatchingProgress();
-            
-            // 重置选择
-            matchingState.selectedWord = null;
-            matchingState.selectedImage = null;
-            
-            // 判断是否全部完成
-            const total = Math.min(4, matchingState.words.length);
-            if (matchingState.matched.size >= total) {
-                matchingState.isCompleted = true;
-                playSound('success');
-                if (typeof rewardSystem !== 'undefined') {
-                    rewardSystem.giveStar();
-                }
+
+        // 防止重复使用同一图片
+        for (const [, usedImageId] of matchingState.connections.entries()) {
+            if (usedImageId === imageId) {
+                // 已被占用，直接重置选择
+                matchingState.selectedWord = null;
+                matchingState.selectedImage = null;
+                document.querySelectorAll('.matching-item').forEach(el => el.classList.remove('selected'));
+                return;
             }
-        }, 420);
+        }
+
+        // 记录连接
+        matchingState.connections.set(wordId, imageId);
+
+        // 视觉状态：正确+禁用
+        if (wordEl) {
+            wordEl.classList.add('correct');
+            wordEl.style.opacity = '0.55';
+            wordEl.style.pointerEvents = 'none';
+        }
+        if (imageEl) {
+            imageEl.classList.add('correct');
+            imageEl.style.opacity = '0.55';
+            imageEl.style.pointerEvents = 'none';
+        }
+
+        // 清除选择高亮
+        matchingState.selectedWord = null;
+        matchingState.selectedImage = null;
+        document.querySelectorAll('.matching-item').forEach(el => el.classList.remove('selected'));
+
+        // 绘制连线与更新进度
+        drawMatchingLines();
+        updateMatchingProgress();
+
+        // 判断是否全部完成
+        const total = Math.min(4, matchingState.words.length);
+        if (matchingState.connections.size >= total) {
+            matchingState.isCompleted = true;
+            playSound('success');
+            if (typeof rewardSystem !== 'undefined') {
+                rewardSystem.giveStar();
+            }
+            launchConfetti();
+            setTimeout(() => initMatchingGame(appState.currentCategory), 1200);
+        }
     } else {
         // 错误：红框抖动并取消选择
         playSound('wrong');
@@ -1338,6 +1359,26 @@ function validateMatchingSelection() {
             matchingState.selectedWord = null;
             matchingState.selectedImage = null;
         }, 600);
+    }
+}
+
+// --- 彩带动画 ---
+function launchConfetti() {
+    const colors = ['#f87171', '#fbbf24', '#34d399', '#60a5fa', '#a78bfa', '#f472b6'];
+    const count = 120;
+    for (let i = 0; i < count; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        const size = 6 + Math.random() * 8;
+        piece.style.width = `${size}px`;
+        piece.style.height = `${size * 1.2}px`;
+        piece.style.left = `${Math.random() * 100}vw`;
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.opacity = '0.9';
+        piece.style.setProperty('--dur', `${1.6 + Math.random() * 1.6}s`);
+        piece.style.transform = `translateY(-100vh) rotate(${Math.random() * 360}deg)`;
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), 2600);
     }
 }
 
@@ -1378,7 +1419,7 @@ function clearMatchingLines() {
 
 function updateMatchingProgress() {
     const total = Math.min(4, matchingState.words.length);
-    const done = matchingState.matched ? matchingState.matched.size : 0;
+    const done = matchingState.connections ? matchingState.connections.size : 0;
     matchingProgressEl.textContent = done;
     matchingTotalEl.textContent = total;
 }
@@ -1568,6 +1609,8 @@ function submitDictationAnswer() {
             letterEl.classList.add('anim-pop-in');
             setTimeout(() => letterEl.classList.remove('anim-pop-in'), 250);
         });
+        // 答对一题也放彩带，增强正反馈
+        launchConfetti();
     } else {
         playSound('wrong');
         showDictationFeedback('incorrect', '不正确', `正确答案: ${dictationState.currentWord.en}`);
@@ -1634,6 +1677,8 @@ function finishDictationGame() {
     
     if (accuracy >= 80) {
         rewardSystem.giveStar();
+        // 结算达标时再放一次彩带
+        launchConfetti();
     }
 }
 
