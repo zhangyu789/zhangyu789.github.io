@@ -511,6 +511,78 @@
             }
         }
         
+        @keyframes cardFlip {
+            0% {
+                transform: translateY(0) rotateY(0deg) scale(1);
+            }
+            25% {
+                transform: translateY(-30px) rotateY(90deg) scale(1.05);
+            }
+            50% {
+                transform: translateY(-50px) rotateY(180deg) scale(1.1);
+            }
+            75% {
+                transform: translateY(-30px) rotateY(270deg) scale(1.05);
+            }
+            100% {
+                transform: translateY(0) rotateY(360deg) scale(1);
+            }
+        }
+        
+        @keyframes simpleDeal {
+            0% {
+                transform: translate(50vw, 50vh) rotate(45deg) scale(0.3);
+                opacity: 0;
+                z-index: 1000;
+            }
+            50% {
+                transform: translate(25vw, 25vh) rotate(20deg) scale(0.7);
+                opacity: 0.7;
+                z-index: 1000;
+            }
+            100% {
+                transform: translate(0, 0) rotate(var(--card-rotation, 0deg)) scale(1);
+                opacity: 1;
+                z-index: auto;
+            }
+        }
+        
+        @keyframes flyToWord {
+            0% {
+                transform: translate(0, 0) scale(1) rotate(0deg);
+                opacity: 1;
+                z-index: 1000;
+            }
+            50% {
+                transform: translate(var(--fly-x, 0), var(--fly-y, -100px)) scale(0.8) rotate(180deg);
+                opacity: 0.8;
+                z-index: 1000;
+            }
+            100% {
+                transform: translate(var(--fly-x, 0), var(--fly-y, -100px)) scale(0.6) rotate(360deg);
+                opacity: 0;
+                z-index: 1000;
+            }
+        }
+        
+        @keyframes flyBackToCard {
+            0% {
+                transform: translate(var(--fly-x, 0), var(--fly-y, -100px)) scale(0.6) rotate(0deg);
+                opacity: 0;
+                z-index: 1000;
+            }
+            50% {
+                transform: translate(var(--fly-x, 0), var(--fly-y, -50px)) scale(0.8) rotate(180deg);
+                opacity: 0.8;
+                z-index: 1000;
+            }
+            100% {
+                transform: translate(0, 0) scale(1) rotate(360deg);
+                opacity: 1;
+                z-index: auto;
+            }
+        }
+        
         .anim-pop-in { 
             animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
         }
@@ -536,6 +608,18 @@
         .anim-deal-card-reverse { 
             animation: dealCardReverse 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
             box-shadow: 0 20px 40px rgba(0,0,0,0.3) !important;
+        }
+        .anim-card-flip { 
+            animation: cardFlip 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        .anim-simple-deal { 
+            animation: simpleDeal 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        .anim-fly-to-word { 
+            animation: flyToWord 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        .anim-fly-back { 
+            animation: flyBackToCard 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
         
         /* 彩带动画 */
