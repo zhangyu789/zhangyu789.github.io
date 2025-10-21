@@ -441,6 +441,76 @@
             50% { transform: translateY(-10px) rotate(1deg); }
         }
         
+        @keyframes dealCard {
+            0% {
+                transform: translate(100vw, 100vh) rotate(180deg) scale(0.5);
+                opacity: 0;
+                z-index: 1000;
+                position: fixed;
+            }
+            20% {
+                transform: translate(80vw, 80vh) rotate(90deg) scale(0.7);
+                opacity: 0.3;
+                position: fixed;
+            }
+            40% {
+                transform: translate(60vw, 60vh) rotate(45deg) scale(0.8);
+                opacity: 0.6;
+                position: fixed;
+            }
+            60% {
+                transform: translate(40vw, 40vh) rotate(20deg) scale(0.9);
+                opacity: 0.8;
+                position: fixed;
+            }
+            80% {
+                transform: translate(20vw, 20vh) rotate(5deg) scale(0.95);
+                opacity: 0.9;
+                position: fixed;
+            }
+            100% {
+                transform: translate(0, 0) rotate(var(--card-rotation, 0deg)) scale(1);
+                opacity: 1;
+                z-index: auto;
+                position: static;
+            }
+        }
+        
+        @keyframes dealCardReverse {
+            0% {
+                transform: translate(100vw, 100vh) rotate(-180deg) scale(0.5);
+                opacity: 0;
+                z-index: 1000;
+                position: fixed;
+            }
+            20% {
+                transform: translate(80vw, 80vh) rotate(-90deg) scale(0.7);
+                opacity: 0.3;
+                position: fixed;
+            }
+            40% {
+                transform: translate(60vw, 60vh) rotate(-45deg) scale(0.8);
+                opacity: 0.6;
+                position: fixed;
+            }
+            60% {
+                transform: translate(40vw, 40vh) rotate(-20deg) scale(0.9);
+                opacity: 0.8;
+                position: fixed;
+            }
+            80% {
+                transform: translate(20vw, 20vh) rotate(-5deg) scale(0.95);
+                opacity: 0.9;
+                position: fixed;
+            }
+            100% {
+                transform: translate(0, 0) rotate(var(--card-rotation, 0deg)) scale(1);
+                opacity: 1;
+                z-index: auto;
+                position: static;
+            }
+        }
+        
         .anim-pop-in { 
             animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
         }
@@ -458,6 +528,14 @@
         }
         .anim-float { 
             animation: float 3s ease-in-out infinite; 
+        }
+        .anim-deal-card { 
+            animation: dealCard 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3) !important;
+        }
+        .anim-deal-card-reverse { 
+            animation: dealCardReverse 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3) !important;
         }
         
         /* 彩带动画 */
@@ -530,17 +608,19 @@
             }
         }
         
-        /* 拟物化配对连线卡片 */
+        /* 拟物化配对连线卡片 - 正方形设计 */
         .matching-item {
             background: 
                 linear-gradient(145deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%);
             border: 1px solid rgba(0,0,0,0.1);
             border-radius: 16px;
-            padding: 1.5rem;
+            padding: 1rem;
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
-            min-height: 100px;
+            width: 120px;
+            height: 120px;
+            aspect-ratio: 1 / 1;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -549,6 +629,7 @@
                 0 2px 4px rgba(0,0,0,0.1),
                 inset 0 1px 0 rgba(255,255,255,0.8);
             transform: rotate(var(--matching-rotation, 0deg)) translateY(var(--matching-offset, 0px));
+            margin: 0 auto;
         }
         
         /* 配对卡片随机角度 */
@@ -618,14 +699,17 @@
             transform: rotate(0deg) translateY(-2px);
         }
         .matching-word {
-            font-size: 1.25rem;
+            font-size: 1rem;
             font-weight: 600;
             color: #1f2937;
             text-align: center;
+            line-height: 1.2;
+            word-break: break-word;
+            padding: 0.5rem;
         }
         .matching-image {
             width: 100%;
-            height: 60px;
+            height: 100%;
             object-fit: contain;
             border-radius: 0.5rem;
         }
@@ -902,7 +986,7 @@
                                 <h3 class="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">单词</h3>
                                 <span class="text-2xl">📝</span>
                             </div>
-                            <div id="matching-words" class="space-y-4">
+                            <div id="matching-words" class="flex flex-col items-center space-y-4">
                                 <!-- 单词列表将由JS动态生成 -->
                             </div>
                         </div>
@@ -912,7 +996,7 @@
                                 <h3 class="text-2xl font-bold bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text text-transparent">图片</h3>
                                 <span class="text-2xl">🖼️</span>
                             </div>
-                            <div id="matching-images" class="space-y-4">
+                            <div id="matching-images" class="flex flex-col items-center space-y-4">
                                 <!-- 图片列表将由JS动态生成 -->
                             </div>
                         </div>

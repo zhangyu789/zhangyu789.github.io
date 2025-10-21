@@ -8,8 +8,8 @@ const soundEffects = {
 
 function playSound(soundName) {
     try {
-        if (soundEffects[soundName]) {
-            soundEffects[soundName].currentTime = 0;
+    if (soundEffects[soundName]) {
+        soundEffects[soundName].currentTime = 0;
             soundEffects[soundName].play().catch(e => {
                 console.log('Sound play failed:', e);
                 // 静默失败，不影响用户体验
@@ -989,6 +989,7 @@ for (const theme in themeMap) {
 vocabulary.forEach(word => {
     if (word && word.themeId && themeMap[word.themeId]) {
         data[themeMap[word.themeId]].push({
+            id: word.id,
             en: word.english,
             cn: word.chinese,
             phonetic: word.phonetic || '',
@@ -1087,9 +1088,9 @@ const speechQueue = {
         const { text, options } = this.queue.shift();
         
         try {
-            if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'en-US';
+    if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
                 utterance.rate = options.rate || 0.85;
                 utterance.pitch = options.pitch || 1.1;
                 utterance.volume = options.volume || 0.9;
@@ -1105,8 +1106,8 @@ const speechQueue = {
                     setTimeout(() => this.process(), 200);
                 };
                 
-                window.speechSynthesis.speak(utterance);
-            } else {
+        window.speechSynthesis.speak(utterance);
+    } else {
                 this.isPlaying = false;
                 setTimeout(() => this.process(), 200);
             }
@@ -1141,7 +1142,7 @@ function speakWordAndExample(word, example, wordId = null) {
     
     // 清空之前的语音队列
     speechQueue.clear();
-    
+
     // 先阅读单词（更自然的语调）
     speak(word, 0.8, 1.15, 0.95);
     
@@ -1163,7 +1164,7 @@ function displayFlashcardsProgressively(category) {
     
     flashcardContainer.innerHTML = '';
 
-    words.forEach(item => {
+    words.forEach((item, index) => {
         if (!item || !item.en) return; // 跳过无效数据
         const card = document.createElement('div');
         const cardId = `card-${category.replace(/[^a-zA-Z0-9]/g, '')}-${item.en.replace(/[^a-zA-Z0-9]/g, '')}`;
@@ -1187,13 +1188,18 @@ function displayFlashcardsProgressively(category) {
 
         card.addEventListener('click', () => speakWordAndExample(item.en, item.example, item.id));
         flashcardContainer.appendChild(card);
+        
+        // 添加发牌动画效果
+        setTimeout(() => {
+            card.classList.add(index % 2 === 0 ? 'anim-deal-card' : 'anim-deal-card-reverse');
+        }, index * 150); // 每张卡片间隔150ms
     });
 
 }
 
 function renderGameChoices(choices) {
     gameChoicesGridEl.innerHTML = '';
-    choices.forEach(item => {
+    choices.forEach((item, index) => {
         const card = document.createElement('div');
         card.className = 'game-choice-card rounded-2xl shadow-lg p-2';
 
@@ -1203,6 +1209,11 @@ function renderGameChoices(choices) {
 
         card.addEventListener('click', () => handleChoiceClick(item, card));
         gameChoicesGridEl.appendChild(card);
+        
+        // 添加发牌动画效果
+        setTimeout(() => {
+            card.classList.add(index % 2 === 0 ? 'anim-deal-card' : 'anim-deal-card-reverse');
+        }, index * 100); // 每张卡片间隔100ms
     });
 }
 
@@ -1226,15 +1237,15 @@ function generateQuestion() {
             const j = Math.floor(Math.random() * (i + 1)); 
             [words[i], words[j]] = [words[j], words[i]]; 
         }
-        const choices = words.slice(0, 4);
-        appState.currentQuestion = choices[Math.floor(Math.random() * 4)];
+    const choices = words.slice(0, 4);
+    appState.currentQuestion = choices[Math.floor(Math.random() * 4)];
 
-        gameQuestionWordEl.textContent = appState.currentQuestion.en;
+    gameQuestionWordEl.textContent = appState.currentQuestion.en;
         // 清空语音队列，确保题目朗读清晰
         speechQueue.clear();
         speak(appState.currentQuestion.en, 0.8, 1.1, 0.9);
 
-        renderGameChoices(choices);
+    renderGameChoices(choices);
         appState.isGameLoading = false;
     }, 800);
 }
@@ -1293,7 +1304,6 @@ function initMatchingGame(category) {
     matchingState.words = selectedWords;
     matchingState.images = [...selectedWords].sort(() => Math.random() - 0.5);
     matchingState.connections.clear();
-    matchingState.matched = new Set();
     matchingState.selectedWord = null;
     matchingState.selectedImage = null;
     matchingState.isCompleted = false;
@@ -1309,32 +1319,42 @@ function renderMatchingItems() {
     matchingWordsEl.innerHTML = '';
     matchingState.words.forEach((word, index) => {
         const wordEl = document.createElement('div');
-        wordEl.className = 'matching-item anim-pop-in';
+        wordEl.className = 'matching-item';
         wordEl.dataset.wordId = word.id;
         wordEl.innerHTML = `<div class="matching-word">${word.en}</div>`;
         wordEl.addEventListener('click', () => selectMatchingWord(word.id, wordEl));
         matchingWordsEl.appendChild(wordEl);
         
-        // 添加延迟动画效果
+        // 添加发牌动画效果
+        setTimeout(() => {
+            wordEl.classList.add(index % 2 === 0 ? 'anim-deal-card' : 'anim-deal-card-reverse');
+        }, index * 200); // 每张卡片间隔200ms
+        
+        // 添加浮动动画效果
         setTimeout(() => {
             wordEl.classList.add('anim-float');
-        }, index * 100);
+        }, (index * 200) + 1200); // 发牌动画完成后添加浮动效果
     });
     
     // 渲染图片列表
     matchingImagesEl.innerHTML = '';
     matchingState.images.forEach((word, index) => {
         const imageEl = document.createElement('div');
-        imageEl.className = 'matching-item anim-pop-in';
+        imageEl.className = 'matching-item';
         imageEl.dataset.imageId = word.id;
         imageEl.innerHTML = `<img src="${word.imageUrl}" alt="${word.en}" class="matching-image">`;
         imageEl.addEventListener('click', () => selectMatchingImage(word.id, imageEl));
         matchingImagesEl.appendChild(imageEl);
         
-        // 添加延迟动画效果
+        // 添加发牌动画效果
+        setTimeout(() => {
+            imageEl.classList.add((index + 4) % 2 === 0 ? 'anim-deal-card' : 'anim-deal-card-reverse');
+        }, (index + 4) * 200); // 每张卡片间隔200ms
+        
+        // 添加浮动动画效果
         setTimeout(() => {
             imageEl.classList.add('anim-float');
-        }, (index + 4) * 100);
+        }, ((index + 4) * 200) + 1200); // 发牌动画完成后添加浮动效果
     });
 }
 
@@ -1411,26 +1431,39 @@ function validateMatchingSelection() {
     const wordEl = document.querySelector(`[data-word-id="${wordId}"]`);
     const imageEl = document.querySelector(`[data-image-id="${imageId}"]`);
     
-    const isCorrect = wordId === imageId;
+    // 检查是否已经连接过
+    if (matchingState.connections.has(wordId)) {
+        // 已连接过，直接重置选择
+        matchingState.selectedWord = null;
+        matchingState.selectedImage = null;
+        document.querySelectorAll('.matching-item').forEach(el => el.classList.remove('selected'));
+        matchingState.isProcessing = false;
+        return;
+    }
+    
+    // 检查图片是否已被使用
+    for (const [, usedImageId] of matchingState.connections.entries()) {
+        if (usedImageId === imageId) {
+            // 已被占用，直接重置选择
+            matchingState.selectedWord = null;
+            matchingState.selectedImage = null;
+            document.querySelectorAll('.matching-item').forEach(el => el.classList.remove('selected'));
+            matchingState.isProcessing = false;
+            return;
+        }
+    }
+    
+    // 验证配对是否正确 - 通过比较单词的英文
+    const selectedWord = matchingState.words.find(w => w.id === wordId);
+    const selectedImage = matchingState.images.find(i => i.id === imageId);
+    const isCorrect = selectedWord && selectedImage && selectedWord.en === selectedImage.en;
     
     if (isCorrect) {
         // 正确：创建连线、半透明禁用、不移除
         playSound('correct');
 
-        // 防止重复使用同一图片
-        for (const [, usedImageId] of matchingState.connections.entries()) {
-            if (usedImageId === imageId) {
-                // 已被占用，直接重置选择
-                matchingState.selectedWord = null;
-                matchingState.selectedImage = null;
-                document.querySelectorAll('.matching-item').forEach(el => el.classList.remove('selected'));
-                matchingState.isProcessing = false;
-                return;
-            }
-        }
-
         // 记录连接
-        matchingState.connections.set(wordId, imageId);
+    matchingState.connections.set(wordId, imageId);
 
         // 视觉状态：正确+禁用
         if (wordEl) {
@@ -1445,14 +1478,14 @@ function validateMatchingSelection() {
         }
 
         // 清除选择高亮
-        matchingState.selectedWord = null;
-        matchingState.selectedImage = null;
-        document.querySelectorAll('.matching-item').forEach(el => el.classList.remove('selected'));
-
+    matchingState.selectedWord = null;
+    matchingState.selectedImage = null;
+    document.querySelectorAll('.matching-item').forEach(el => el.classList.remove('selected'));
+    
         // 绘制连线与更新进度
-        drawMatchingLines();
-        updateMatchingProgress();
-
+    drawMatchingLines();
+    updateMatchingProgress();
+    
         // 判断是否全部完成
         const total = Math.min(4, matchingState.words.length);
         if (matchingState.connections.size >= total) {
@@ -1479,8 +1512,8 @@ function validateMatchingSelection() {
         if (imageEl) imageEl.classList.add('incorrect', 'anim-shake', 'anim-shuffle');
         
         setTimeout(() => {
-            if (wordEl) wordEl.classList.remove('incorrect', 'selected', 'anim-shake');
-            if (imageEl) imageEl.classList.remove('incorrect', 'selected', 'anim-shake');
+            if (wordEl) wordEl.classList.remove('incorrect', 'selected', 'anim-shake', 'anim-shuffle');
+            if (imageEl) imageEl.classList.remove('incorrect', 'selected', 'anim-shake', 'anim-shuffle');
             matchingState.selectedWord = null;
             matchingState.selectedImage = null;
             matchingState.isProcessing = false;
@@ -1614,6 +1647,11 @@ function renderLetterCards() {
         card.dataset.letterIndex = index;
         card.addEventListener('click', () => selectLetter(index, card));
         dictationLetterCardsEl.appendChild(card);
+        
+        // 添加发牌动画效果
+        setTimeout(() => {
+            card.classList.add(index % 2 === 0 ? 'anim-deal-card' : 'anim-deal-card-reverse');
+        }, index * 80); // 每张卡片间隔80ms
     });
 }
 
@@ -1625,6 +1663,11 @@ function renderWordDisplay() {
         letterEl.dataset.position = index;
         letterEl.addEventListener('click', () => undoDictationAt(index));
         dictationWordDisplayEl.appendChild(letterEl);
+        
+        // 添加发牌动画效果
+        setTimeout(() => {
+            letterEl.classList.add(index % 2 === 0 ? 'anim-deal-card' : 'anim-deal-card-reverse');
+        }, (index * 100) + 500); // 延迟500ms开始，每张卡片间隔100ms
     });
 }
 
