@@ -1314,6 +1314,11 @@ function renderMatchingItems() {
         wordEl.innerHTML = `<div class="matching-word">${word.en}</div>`;
         wordEl.addEventListener('click', () => selectMatchingWord(word.id, wordEl));
         matchingWordsEl.appendChild(wordEl);
+        
+        // 添加延迟动画效果
+        setTimeout(() => {
+            wordEl.classList.add('anim-float');
+        }, index * 100);
     });
     
     // 渲染图片列表
@@ -1325,6 +1330,11 @@ function renderMatchingItems() {
         imageEl.innerHTML = `<img src="${word.imageUrl}" alt="${word.en}" class="matching-image">`;
         imageEl.addEventListener('click', () => selectMatchingImage(word.id, imageEl));
         matchingImagesEl.appendChild(imageEl);
+        
+        // 添加延迟动画效果
+        setTimeout(() => {
+            imageEl.classList.add('anim-float');
+        }, (index + 4) * 100);
     });
 }
 
@@ -1424,12 +1434,12 @@ function validateMatchingSelection() {
 
         // 视觉状态：正确+禁用
         if (wordEl) {
-            wordEl.classList.add('correct');
+            wordEl.classList.add('correct', 'anim-flip');
             wordEl.style.opacity = '0.55';
             wordEl.style.pointerEvents = 'none';
         }
         if (imageEl) {
-            imageEl.classList.add('correct');
+            imageEl.classList.add('correct', 'anim-flip');
             imageEl.style.opacity = '0.55';
             imageEl.style.pointerEvents = 'none';
         }
@@ -1465,8 +1475,8 @@ function validateMatchingSelection() {
     } else {
         // 错误：红框抖动并取消选择
         playSound('wrong');
-        if (wordEl) wordEl.classList.add('incorrect', 'anim-shake');
-        if (imageEl) imageEl.classList.add('incorrect', 'anim-shake');
+        if (wordEl) wordEl.classList.add('incorrect', 'anim-shake', 'anim-shuffle');
+        if (imageEl) imageEl.classList.add('incorrect', 'anim-shake', 'anim-shuffle');
         
         setTimeout(() => {
             if (wordEl) wordEl.classList.remove('incorrect', 'selected', 'anim-shake');
@@ -1834,10 +1844,10 @@ function updateActiveUI() {
     });
     
     const subtitles = {
-        'flashcards': '点击卡片学习单词吧！',
-        'game': '听声音，选择正确的图片！',
-        'matching': '将左侧的单词与右侧对应的图片连线',
-        'dictation': '听声音，输入你听到的单词'
+        'flashcards': '🌟 点击卡片学习单词，听发音和看例句！',
+        'game': '🎵 听声音，选择正确的图片！',
+        'matching': '🔗 将左侧的单词与右侧对应的图片连线',
+        'dictation': '✏️ 听声音，用字母卡片拼出单词'
     };
     appSubtitle.textContent = subtitles[appState.currentMode] || '选择类别开始学习！';
 }

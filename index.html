@@ -9,32 +9,178 @@
     <style>
         body {
             font-family: 'Inter', 'Noto Sans SC', sans-serif;
-            background-color: #f0f9ff;
-            overflow: hidden; /* Prevent body scroll */
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%),
+                linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            min-height: 100vh;
+            position: relative;
         }
         
-        /* Sidebar Category Buttons */
+        /* 桌子背景效果 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse at center, rgba(139, 69, 19, 0.1) 0%, transparent 70%),
+                linear-gradient(45deg, rgba(160, 82, 45, 0.05) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(160, 82, 45, 0.05) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(160, 82, 45, 0.05) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(160, 82, 45, 0.05) 75%);
+            background-size: 100% 100%, 20px 20px, 20px 20px, 20px 20px, 20px 20px;
+            background-position: 0 0, 0 0, 0 10px, 10px -10px, -10px 0px;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        /* 桌子边缘阴影 */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, transparent 20px),
+                linear-gradient(to top, rgba(0,0,0,0.1) 0%, transparent 20px),
+                linear-gradient(to right, rgba(0,0,0,0.1) 0%, transparent 20px),
+                linear-gradient(to left, rgba(0,0,0,0.1) 0%, transparent 20px);
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        /* 幼童友好的主色调 */
+        :root {
+            --primary-color: #ff6b6b;
+            --secondary-color: #4ecdc4;
+            --accent-color: #45b7d1;
+            --success-color: #96ceb4;
+            --warning-color: #feca57;
+            --error-color: #ff9ff3;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+        }
+        
+        /* 幼童友好的侧边栏按钮 */
+        #category-nav .category-button {
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            border: 3px solid transparent;
+            border-radius: 20px;
+            margin: 8px 0;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        #category-nav .category-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+        #category-nav .category-button:hover::before {
+            left: 100%;
+        }
         #category-nav .category-button:hover {
-            background-color: #e0f2fe; /* sky-100 */
-            color: #0284c7; /* sky-600 */
+            background: linear-gradient(135deg, var(--primary-color), #ff8a8a);
+            color: white;
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+            border-color: #ff5252;
         }
         #category-nav .active-category {
-            background-color: #3b82f6; /* blue-500 */
+            background: linear-gradient(135deg, var(--accent-color), #5bc0de);
             color: white;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            box-shadow: 0 6px 20px rgba(69, 183, 209, 0.4);
+            border-color: #3498db;
+            transform: scale(1.05);
         }
         #category-nav .active-category:hover {
-            background-color: #2563eb; /* blue-600 */
-             color: white;
+            background: linear-gradient(135deg, #3498db, var(--accent-color));
+            transform: scale(1.08);
         }
 
+        /* 拟物化卡片设计 - 散落在桌子上的卡片 */
         .flashcard {
-            transition: transform 0.3s, box-shadow 0.3s;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             cursor: pointer;
+            background: 
+                linear-gradient(145deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%);
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 4px 8px rgba(0,0,0,0.1),
+                0 2px 4px rgba(0,0,0,0.06),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+            transform: rotate(var(--card-rotation, 0deg)) translateY(var(--card-offset, 0px));
+            transform-origin: center;
         }
+        
+        /* 随机卡片角度和位置 */
+        .flashcard:nth-child(odd) {
+            --card-rotation: -2deg;
+            --card-offset: 2px;
+        }
+        .flashcard:nth-child(even) {
+            --card-rotation: 1.5deg;
+            --card-offset: -1px;
+        }
+        .flashcard:nth-child(3n) {
+            --card-rotation: 0.8deg;
+            --card-offset: 3px;
+        }
+        .flashcard:nth-child(4n) {
+            --card-rotation: -1.2deg;
+            --card-offset: -2px;
+        }
+        
+        .flashcard::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+            border-radius: 16px 16px 0 0;
+        }
+        
+        .flashcard::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+            border-radius: 16px;
+            pointer-events: none;
+        }
+        
         .flashcard:hover {
-            transform: scale(1.05);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: rotate(0deg) translateY(-12px) scale(1.05);
+            box-shadow: 
+                0 20px 40px rgba(0,0,0,0.2),
+                0 8px 16px rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.9);
+            z-index: 10;
+        }
+        
+        .flashcard:active {
+            transform: rotate(0deg) translateY(-8px) scale(1.02);
+            transition: all 0.1s ease;
         }
         .flashcard .image-container {
             position: relative; /* Needed for download button positioning */
@@ -74,37 +220,117 @@
             opacity: 1;
         }
         
-        /* --- Mode & Game Styles --- */
+        /* 幼童友好的模式切换按钮 */
         .mode-toggle { 
-            transition: background-color 0.2s, color 0.2s; 
+            transition: all 0.3s ease;
+            border-radius: 25px;
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .mode-toggle::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        .mode-toggle:hover::before {
+            left: 100%;
+        }
+        .mode-toggle:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
         }
         .mode-toggle.active { 
-            background-color: #3b82f6; 
+            background: linear-gradient(135deg, var(--accent-color), #5bc0de);
             color: white; 
-            box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+            box-shadow: 0 6px 20px rgba(69, 183, 209, 0.4);
+            border-color: #3498db;
+            transform: scale(1.05);
         }
+        .mode-toggle.active:hover {
+            background: linear-gradient(135deg, #3498db, var(--accent-color));
+            transform: scale(1.08);
+        }
+        /* 拟物化游戏选择卡片 */
         .game-choice-card { 
-            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
             cursor: pointer; 
-            border: 4px solid transparent; 
-            background-color: white;
+            border: 1px solid rgba(0,0,0,0.1);
+            background: 
+                linear-gradient(145deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%);
             aspect-ratio: 1 / 1;
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 120px;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 6px 12px rgba(0,0,0,0.15),
+                0 2px 4px rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+            transform: rotate(var(--game-card-rotation, 0deg)) translateY(var(--game-card-offset, 0px));
+        }
+        
+        /* 游戏卡片随机角度 */
+        .game-choice-card:nth-child(1) { --game-card-rotation: -1deg; --game-card-offset: 2px; }
+        .game-choice-card:nth-child(2) { --game-card-rotation: 1.5deg; --game-card-offset: -1px; }
+        .game-choice-card:nth-child(3) { --game-card-rotation: 0.8deg; --game-card-offset: 3px; }
+        .game-choice-card:nth-child(4) { --game-card-rotation: -1.2deg; --game-card-offset: -2px; }
+        
+        .game-choice-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--warning-color), var(--success-color));
+            border-radius: 16px 16px 0 0;
+        }
+        
+        .game-choice-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+            border-radius: 16px;
+            pointer-events: none;
         }
         .game-choice-card:hover { 
-            transform: translateY(-5px); 
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
+            transform: rotate(0deg) translateY(-8px) scale(1.05);
+            box-shadow: 
+                0 20px 40px rgba(0,0,0,0.2),
+                0 8px 16px rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.9);
+            z-index: 10;
         }
         .game-choice-card.correct { 
-            border-color: #22c55e; 
+            border-color: var(--success-color); 
+            background: linear-gradient(145deg, #d4edda 0%, #c3e6cb 50%, #b8dacc 100%);
             animation: pulse-green 0.5s; 
+            transform: rotate(0deg) scale(1.05) translateY(-4px);
+            box-shadow: 
+                0 12px 24px rgba(34, 197, 94, 0.3),
+                0 4px 8px rgba(34, 197, 94, 0.2),
+                inset 0 1px 0 rgba(255,255,255,0.9);
         }
         .game-choice-card.incorrect { 
-            border-color: #ef4444; 
+            border-color: var(--error-color); 
+            background: linear-gradient(145deg, #f8d7da 0%, #f5c6cb 50%, #f1b0b7 100%);
             animation: shake 0.5s; 
+            transform: rotate(0deg) translateY(-2px);
         }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
         @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
@@ -159,19 +385,80 @@
             40%, 100% { transform: rotateZ(0); }
         }
         
-        /* 童趣动效：轻弹入、淡出缩放、一次抖动 */
+        /* 现代化过渡动画 */
         @keyframes popIn {
-            0% { transform: scale(0.7); opacity: 0; }
-            70% { transform: scale(1.06); opacity: 1; }
-            100% { transform: scale(1); opacity: 1; }
+            0% { 
+                transform: scale(0.7) rotate(-5deg); 
+                opacity: 0; 
+                filter: blur(4px);
+            }
+            50% { 
+                transform: scale(1.1) rotate(2deg); 
+                opacity: 0.8; 
+                filter: blur(1px);
+            }
+            100% { 
+                transform: scale(1) rotate(0deg); 
+                opacity: 1; 
+                filter: blur(0px);
+            }
         }
+        
         @keyframes fadeOutScale {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(0.8); opacity: 0; }
+            0% { 
+                transform: scale(1) rotate(0deg); 
+                opacity: 1; 
+                filter: blur(0px);
+            }
+            50% { 
+                transform: scale(1.1) rotate(5deg); 
+                opacity: 0.5; 
+                filter: blur(2px);
+            }
+            100% { 
+                transform: scale(0.8) rotate(10deg); 
+                opacity: 0; 
+                filter: blur(4px);
+            }
         }
-        .anim-pop-in { animation: popIn 0.25s ease-out; }
-        .anim-fade-out { animation: fadeOutScale 0.3s ease-in forwards; }
-        .anim-shake { animation: shake 0.5s; }
+        
+        @keyframes cardFlip {
+            0% { transform: rotateY(0deg) scale(1); }
+            50% { transform: rotateY(90deg) scale(1.1); }
+            100% { transform: rotateY(0deg) scale(1); }
+        }
+        
+        @keyframes cardShuffle {
+            0% { transform: translateX(0) rotate(0deg); }
+            25% { transform: translateX(10px) rotate(2deg); }
+            50% { transform: translateX(-5px) rotate(-1deg); }
+            75% { transform: translateX(5px) rotate(1deg); }
+            100% { transform: translateX(0) rotate(0deg); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(1deg); }
+        }
+        
+        .anim-pop-in { 
+            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        .anim-fade-out { 
+            animation: fadeOutScale 0.4s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards; 
+        }
+        .anim-shake { 
+            animation: shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97); 
+        }
+        .anim-flip { 
+            animation: cardFlip 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        .anim-shuffle { 
+            animation: cardShuffle 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+        }
+        .anim-float { 
+            animation: float 3s ease-in-out infinite; 
+        }
         
         /* 彩带动画 */
         @keyframes confettiFall {
@@ -191,18 +478,18 @@
         
         /* 增强的悬停效果 - 仅在非触摸设备上生效 */
         @media (hover: hover) and (pointer: fine) {
-            .flashcard:hover {
-                transform: scale(1.05) translateY(-2px);
-                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-                animation: bounce 0.6s ease-in-out;
-            }
-            
-            .game-choice-card:hover {
-                transform: translateY(-5px) scale(1.02);
-                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-                animation: wiggle 0.5s ease-in-out;
-            }
-            
+        .flashcard:hover {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            animation: bounce 0.6s ease-in-out;
+        }
+        
+        .game-choice-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            animation: wiggle 0.5s ease-in-out;
+        }
+        
             .matching-item:hover {
                 border-color: #3b82f6;
                 transform: translateY(-2px);
@@ -243,35 +530,92 @@
             }
         }
         
-        /* --- 配对连线样式 --- */
+        /* 拟物化配对连线卡片 */
         .matching-item {
-            background: white;
-            border: 2px solid #e5e7eb;
-            border-radius: 0.75rem;
-            padding: 1rem;
+            background: 
+                linear-gradient(145deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%);
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
-            min-height: 80px;
+            min-height: 100px;
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 
+                0 6px 12px rgba(0,0,0,0.15),
+                0 2px 4px rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+            transform: rotate(var(--matching-rotation, 0deg)) translateY(var(--matching-offset, 0px));
         }
+        
+        /* 配对卡片随机角度 */
+        .matching-item:nth-child(odd) {
+            --matching-rotation: -1.5deg;
+            --matching-offset: 2px;
+        }
+        .matching-item:nth-child(even) {
+            --matching-rotation: 1.2deg;
+            --matching-offset: -1px;
+        }
+        
+        .matching-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 16px 16px 0 0;
+        }
+        
+        .matching-item::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+            border-radius: 16px;
+            pointer-events: none;
+        }
+        .matching-item:hover {
+            transform: rotate(0deg) translateY(-8px) scale(1.05);
+            box-shadow: 
+                0 20px 40px rgba(0,0,0,0.2),
+                0 8px 16px rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.9);
+            z-index: 10;
+        }
+        
         .matching-item.selected {
-            border-color: #3b82f6;
-            background-color: #eff6ff;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-            transform: scale(1.02);
+            border-color: var(--accent-color);
+            background: linear-gradient(145deg, #e3f2fd 0%, #bbdefb 50%, #90caf9 100%);
+            box-shadow: 
+                0 0 0 4px rgba(69, 183, 209, 0.3),
+                0 12px 24px rgba(69, 183, 209, 0.2),
+                inset 0 1px 0 rgba(255,255,255,0.9);
+            transform: rotate(0deg) scale(1.05) translateY(-4px);
         }
         .matching-item.correct {
-            border-color: #22c55e;
-            background-color: #f0fdf4;
+            border-color: var(--success-color);
+            background: linear-gradient(145deg, #d4edda 0%, #c3e6cb 50%, #b8dacc 100%);
             animation: pulse-green 0.5s;
+            transform: rotate(0deg) scale(1.02) translateY(-2px);
+            box-shadow: 
+                0 12px 24px rgba(34, 197, 94, 0.3),
+                0 4px 8px rgba(34, 197, 94, 0.2),
+                inset 0 1px 0 rgba(255,255,255,0.9);
         }
         .matching-item.incorrect {
-            border-color: #ef4444;
-            background-color: #fef2f2;
+            border-color: var(--error-color);
+            background: linear-gradient(145deg, #f8d7da 0%, #f5c6cb 50%, #f1b0b7 100%);
             animation: shake 0.5s;
+            transform: rotate(0deg) translateY(-2px);
         }
         .matching-word {
             font-size: 1.25rem;
@@ -335,35 +679,91 @@
             transition: transform 0.2s ease;
         }
         
-        /* --- 字母卡片样式 --- */
+        /* 拟物化字母卡片样式 */
         .letter-card {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            width: 60px;
+            height: 60px;
+            background: 
+                linear-gradient(145deg, #60a5fa 0%, #3b82f6 50%, #1d4ed8 100%);
             color: white;
-            border-radius: 12px;
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 
+                0 8px 16px rgba(59, 130, 246, 0.3),
+                0 4px 8px rgba(59, 130, 246, 0.2),
+                inset 0 1px 0 rgba(255,255,255,0.3),
+                inset 0 -1px 0 rgba(0,0,0,0.1);
             user-select: none;
+            position: relative;
+            transform: rotate(var(--letter-rotation, 0deg)) translateY(var(--letter-offset, 0px));
         }
+        
+        /* 字母卡片随机角度 */
+        .letter-card:nth-child(odd) {
+            --letter-rotation: -2deg;
+            --letter-offset: 1px;
+        }
+        .letter-card:nth-child(even) {
+            --letter-rotation: 1.5deg;
+            --letter-offset: -1px;
+        }
+        .letter-card:nth-child(3n) {
+            --letter-rotation: 0.8deg;
+            --letter-offset: 2px;
+        }
+        .letter-card:nth-child(4n) {
+            --letter-rotation: -1.2deg;
+            --letter-offset: -1px;
+        }
+        
+        .letter-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+            border-radius: 16px;
+            pointer-events: none;
+        }
+        .letter-card:hover {
+            transform: rotate(0deg) translateY(-6px) scale(1.1);
+            box-shadow: 
+                0 16px 32px rgba(59, 130, 246, 0.4),
+                0 8px 16px rgba(59, 130, 246, 0.3),
+                inset 0 1px 0 rgba(255,255,255,0.4),
+                inset 0 -1px 0 rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+        
         .letter-card:active {
-            transform: translateY(-1px) scale(1.02);
+            transform: rotate(0deg) translateY(-3px) scale(1.05);
+            transition: all 0.1s ease;
         }
+        
         .letter-card.used {
-            background: linear-gradient(135deg, #c7d2fe, #93c5fd);
+            background: linear-gradient(145deg, #c7d2fe 0%, #93c5fd 50%, #7c3aed 100%);
             cursor: not-allowed;
-            opacity: 0.5;
-            transform: none;
+            opacity: 0.6;
+            transform: rotate(0deg) scale(0.95);
+            box-shadow: 
+                0 4px 8px rgba(124, 58, 237, 0.2),
+                0 2px 4px rgba(124, 58, 237, 0.1),
+                inset 0 1px 0 rgba(255,255,255,0.2);
         }
         .letter-card.used:hover {
-            transform: none;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: rotate(0deg) scale(0.95);
+            box-shadow: 
+                0 4px 8px rgba(124, 58, 237, 0.2),
+                0 2px 4px rgba(124, 58, 237, 0.1),
+                inset 0 1px 0 rgba(255,255,255,0.2);
         }
         
         /* 单词显示区域样式 */
@@ -419,15 +819,34 @@
 
             <div class="p-4 md:p-8">
                 <header class="text-center mb-8">
-                    <h1 class="hidden md:block text-4xl md:text-5xl font-bold text-sky-600">儿童英语乐园</h1>
-                    <p id="app-subtitle" class="text-lg text-gray-500 mt-2">选择类别，点击卡片学习单词、听发音和看例句！</p>
+                    <h1 class="hidden md:block text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent">
+                        🌟 儿童英语乐园 🌟
+                    </h1>
+                    <p id="app-subtitle" class="text-lg text-gray-600 mt-2 font-medium">选择类别，点击卡片学习单词、听发音和看例句！</p>
+                    <div class="mt-4 flex justify-center items-center gap-2 text-sm text-gray-500">
+                        <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full">💡 点击卡片听发音</span>
+                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full">🎯 选择正确图片</span>
+                        <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">🔗 配对连线游戏</span>
+                    </div>
                 </header>
                  
-                <div class="flex justify-center mb-6 bg-gray-200 rounded-full p-1 max-w-2xl mx-auto">
-                    <button id="mode-flashcards" class="mode-toggle w-1/4 p-2 rounded-full font-semibold text-gray-600 text-sm">卡片认读</button>
-                    <button id="mode-game" class="mode-toggle w-1/4 p-2 rounded-full font-semibold text-gray-600 text-sm">看词选图</button>
-                    <button id="mode-matching" class="mode-toggle w-1/4 p-2 rounded-full font-semibold text-gray-600 text-sm">配对连线</button>
-                    <button id="mode-dictation" class="mode-toggle w-1/4 p-2 rounded-full font-semibold text-gray-600 text-sm">听写训练</button>
+                <div class="flex justify-center mb-6 bg-gradient-to-r from-pink-100 via-purple-100 to-blue-100 rounded-full p-2 max-w-3xl mx-auto shadow-lg">
+                    <button id="mode-flashcards" class="mode-toggle w-1/4 p-3 rounded-full font-semibold text-gray-700 text-sm flex flex-col items-center gap-1">
+                        <span class="text-lg">📚</span>
+                        <span>卡片认读</span>
+                    </button>
+                    <button id="mode-game" class="mode-toggle w-1/4 p-3 rounded-full font-semibold text-gray-700 text-sm flex flex-col items-center gap-1">
+                        <span class="text-lg">🎯</span>
+                        <span>看词选图</span>
+                    </button>
+                    <button id="mode-matching" class="mode-toggle w-1/4 p-3 rounded-full font-semibold text-gray-700 text-sm flex flex-col items-center gap-1">
+                        <span class="text-lg">🔗</span>
+                        <span>配对连线</span>
+                    </button>
+                    <button id="mode-dictation" class="mode-toggle w-1/4 p-3 rounded-full font-semibold text-gray-700 text-sm flex flex-col items-center gap-1">
+                        <span class="text-lg">✏️</span>
+                        <span>听写训练</span>
+                    </button>
                 </div>
 
                 <main id="flashcard-container" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
@@ -435,9 +854,15 @@
                 </main>
         
                 <div id="game-container" class="hidden text-center max-w-4xl mx-auto">
-                    <div id="game-question-area" class="mb-8">
-                        <p class="text-lg text-gray-600">听声音，选择正确的图片：</p>
-                        <div id="game-question-word" class="text-4xl font-bold text-sky-700 my-2 cursor-pointer hover:scale-110 transition-transform" title="点击重新播放"></div>
+                    <div id="game-question-area" class="mb-8 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-3xl p-6 shadow-lg">
+                        <div class="flex items-center justify-center gap-3 mb-4">
+                            <span class="text-2xl">🎵</span>
+                            <p class="text-xl text-gray-700 font-semibold">听声音，选择正确的图片：</p>
+                            <span class="text-2xl">👂</span>
+                        </div>
+                        <div id="game-question-word" class="text-5xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent my-4 cursor-pointer hover:scale-110 transition-transform p-4 bg-white rounded-2xl shadow-md" title="点击重新播放">
+                            <div class="text-sm text-gray-500 mb-2">点击单词听发音</div>
+                        </div>
                     </div>
                     <div id="game-choices-grid" class="grid grid-cols-2 md:grid-cols-4 gap-6">
                          <!-- 游戏选项将由JS动态生成 -->
@@ -446,24 +871,48 @@
 
                 <!-- 配对连线容器 -->
                 <div id="matching-container" class="hidden max-w-6xl mx-auto">
-                    <div class="text-center mb-6">
-                        <p class="text-lg text-gray-600 mb-4">将左侧的单词与右侧对应的图片连线</p>
-                        <div class="flex justify-center items-center gap-4">
-                            <span class="text-sm text-gray-500">已连线: <span id="matching-progress">0</span>/<span id="matching-total">0</span></span>
-                            <button id="matching-check" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">检查答案</button>
-                            <button id="matching-reset" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">重新开始</button>
+                    <div class="text-center mb-8 bg-gradient-to-r from-green-50 to-blue-50 rounded-3xl p-6 shadow-lg">
+                        <div class="flex items-center justify-center gap-3 mb-4">
+                            <span class="text-2xl">🔗</span>
+                            <p class="text-xl text-gray-700 font-semibold">将左侧的单词与右侧对应的图片连线</p>
+                            <span class="text-2xl">🎯</span>
+                        </div>
+                        <div class="flex justify-center items-center gap-6 flex-wrap">
+                            <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-md">
+                                <span class="text-lg">📊</span>
+                                <span class="text-sm text-gray-600">已连线: </span>
+                                <span id="matching-progress" class="text-lg font-bold text-green-600">0</span>
+                                <span class="text-gray-400">/</span>
+                                <span id="matching-total" class="text-lg font-bold text-blue-600">0</span>
+                            </div>
+                            <button id="matching-check" class="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full hover:from-green-600 hover:to-green-700 transition-all shadow-lg flex items-center gap-2">
+                                <span>✅</span>
+                                <span>检查答案</span>
+                            </button>
+                            <button id="matching-reset" class="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-full hover:from-gray-600 hover:to-gray-700 transition-all shadow-lg flex items-center gap-2">
+                                <span>🔄</span>
+                                <span>重新开始</span>
+                            </button>
                         </div>
                     </div>
                     <div class="flex gap-8">
-                        <div class="flex-1">
-                            <h3 class="text-xl font-bold text-sky-600 mb-4 text-center">单词</h3>
-                            <div id="matching-words" class="space-y-3">
+                        <div class="flex-1 bg-gradient-to-b from-pink-50 to-purple-50 rounded-3xl p-6 shadow-lg">
+                            <div class="flex items-center justify-center gap-2 mb-6">
+                                <span class="text-2xl">📝</span>
+                                <h3 class="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">单词</h3>
+                                <span class="text-2xl">📝</span>
+                            </div>
+                            <div id="matching-words" class="space-y-4">
                                 <!-- 单词列表将由JS动态生成 -->
                             </div>
                         </div>
-                        <div class="flex-1">
-                            <h3 class="text-xl font-bold text-sky-600 mb-4 text-center">图片</h3>
-                            <div id="matching-images" class="space-y-3">
+                        <div class="flex-1 bg-gradient-to-b from-blue-50 to-cyan-50 rounded-3xl p-6 shadow-lg">
+                            <div class="flex items-center justify-center gap-2 mb-6">
+                                <span class="text-2xl">🖼️</span>
+                                <h3 class="text-2xl font-bold bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text text-transparent">图片</h3>
+                                <span class="text-2xl">🖼️</span>
+                            </div>
+                            <div id="matching-images" class="space-y-4">
                                 <!-- 图片列表将由JS动态生成 -->
                             </div>
                         </div>
@@ -474,40 +923,64 @@
                 </div>
 
                 <!-- 听写训练容器 -->
-                <div id="dictation-container" class="hidden text-center max-w-4xl mx-auto">
-                    <div class="mb-8">
-                        <p class="text-lg text-gray-600 mb-4">听声音，用下方的字母卡片拼出单词</p>
-                        <div class="flex justify-center items-center gap-4 mb-6">
-                            <button id="dictation-play" class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2">
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM15.657 6.343a1 1 0 011.414 0A9.972 9.972 0 0119 12a9.972 9.972 0 01-1.929 5.657 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 12a7.971 7.971 0 00-1.343-4.243 1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                                </svg>
-                                播放
+                <div id="dictation-container" class="hidden text-center max-w-5xl mx-auto">
+                    <div class="mb-8 bg-gradient-to-r from-purple-50 to-pink-50 rounded-3xl p-8 shadow-lg">
+                        <div class="flex items-center justify-center gap-3 mb-6">
+                            <span class="text-2xl">✏️</span>
+                            <p class="text-xl text-gray-700 font-semibold">听声音，用下方的字母卡片拼出单词</p>
+                            <span class="text-2xl">🎧</span>
+                        </div>
+                        <div class="flex justify-center items-center gap-6 mb-8 flex-wrap">
+                            <button id="dictation-play" class="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg flex items-center gap-3 text-lg font-semibold">
+                                <span class="text-2xl">🔊</span>
+                                <span>播放单词</span>
                             </button>
-                            <span class="text-sm text-gray-500">剩余: <span id="dictation-remaining">0</span></span>
+                            <div class="flex items-center gap-2 bg-white px-6 py-3 rounded-full shadow-md">
+                                <span class="text-lg">📊</span>
+                                <span class="text-sm text-gray-600">剩余: </span>
+                                <span id="dictation-remaining" class="text-xl font-bold text-purple-600">0</span>
+                            </div>
                         </div>
                         
                         <!-- 单词输入区域 -->
-                        <div class="mb-8">
-                            <div class="text-sm text-gray-500 mb-2">拼出的单词：</div>
-                            <div id="dictation-word-display" class="min-h-[60px] w-full max-w-2xl mx-auto px-4 py-3 text-2xl font-bold text-center border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 flex items-center justify-center gap-2">
-                                <span class="text-gray-400">点击下方字母卡片拼出单词</span>
+                        <div class="mb-8 bg-white rounded-2xl p-6 shadow-md">
+                            <div class="flex items-center justify-center gap-2 mb-4">
+                                <span class="text-lg">📝</span>
+                                <div class="text-lg text-gray-700 font-semibold">拼出的单词：</div>
+                                <span class="text-lg">📝</span>
+                            </div>
+                            <div id="dictation-word-display" class="min-h-[80px] w-full max-w-3xl mx-auto px-6 py-4 text-3xl font-bold text-center border-3 border-dashed border-purple-300 rounded-2xl bg-gradient-to-r from-purple-50 to-pink-50 flex items-center justify-center gap-3 shadow-inner">
+                                <span class="text-gray-400 text-lg">点击下方字母卡片拼出单词</span>
+                                <span class="text-2xl">👆</span>
                             </div>
                         </div>
                         
                         <!-- 字母卡片区域 -->
-                        <div class="mb-6">
-                            <div class="text-sm text-gray-500 mb-4">字母卡片：</div>
-                            <div id="dictation-letter-cards" class="flex flex-wrap justify-center gap-3 max-w-4xl mx-auto">
+                        <div class="mb-8 bg-white rounded-2xl p-6 shadow-md">
+                            <div class="flex items-center justify-center gap-2 mb-6">
+                                <span class="text-2xl">🔤</span>
+                                <div class="text-xl text-gray-700 font-semibold">字母卡片：</div>
+                                <span class="text-2xl">🔤</span>
+                            </div>
+                            <div id="dictation-letter-cards" class="flex flex-wrap justify-center gap-4 max-w-5xl mx-auto">
                                 <!-- 字母卡片将由JS动态生成 -->
                             </div>
                         </div>
                         
                         <!-- 操作按钮 -->
-                        <div class="flex justify-center gap-4">
-                            <button id="dictation-clear" class="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">清空</button>
-                            <button id="dictation-submit" class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">提交</button>
-                            <button id="dictation-skip" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">跳过</button>
+                        <div class="flex justify-center gap-6 flex-wrap">
+                            <button id="dictation-clear" class="px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-full hover:from-yellow-600 hover:to-orange-600 transition-all shadow-lg flex items-center gap-2 text-lg font-semibold">
+                                <span>🗑️</span>
+                                <span>清空</span>
+                            </button>
+                            <button id="dictation-submit" class="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg flex items-center gap-2 text-lg font-semibold">
+                                <span>✅</span>
+                                <span>提交</span>
+                            </button>
+                            <button id="dictation-skip" class="px-8 py-3 bg-gradient-to-r from-gray-500 to-slate-500 text-white rounded-full hover:from-gray-600 hover:to-slate-600 transition-all shadow-lg flex items-center gap-2 text-lg font-semibold">
+                                <span>⏭️</span>
+                                <span>跳过</span>
+                            </button>
                         </div>
                     </div>
                     <div id="dictation-feedback" class="mb-6">
