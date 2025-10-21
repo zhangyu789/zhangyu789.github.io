@@ -1047,6 +1047,8 @@ const gameQuestionWordEl = document.getElementById('game-question-word');
 const gameChoicesGridEl = document.getElementById('game-choices-grid');
 const menuToggle = document.getElementById('menu-toggle');
 const menuBackdrop = document.getElementById('menu-backdrop');
+const desktopSidebarToggle = document.getElementById('desktop-sidebar-toggle');
+const sidebarToggle = document.getElementById('sidebar-toggle');
 
 // 配对连线相关元素
 const matchingWordsEl = document.getElementById('matching-words');
@@ -1714,25 +1716,25 @@ function selectLetter(letterIndex, cardElement) {
     // 动画完成后更新状态
     setTimeout(() => {
         // 添加字母到答案中（记录来源索引以便撤销）
-        const letter = dictationState.shuffledLetters[letterIndex];
+    const letter = dictationState.shuffledLetters[letterIndex];
         dictationState.currentAnswer.push({ letter, sourceIndex: letterIndex });
-        dictationState.usedLetters.add(letterIndex);
-        
-        // 更新显示
+    dictationState.usedLetters.add(letterIndex);
+    
+    // 更新显示
         if (targetLetterEl) {
             targetLetterEl.textContent = letter.toUpperCase();
             targetLetterEl.style.background = '#dbeafe';
             targetLetterEl.style.borderColor = '#3b82f6';
             targetLetterEl.classList.add('filled', 'pop');
             setTimeout(() => targetLetterEl.classList.remove('pop'), 250);
-        }
-        
-        // 标记卡片为已使用
-        cardElement.classList.add('used');
+    }
+    
+    // 标记卡片为已使用
+    cardElement.classList.add('used');
         cardElement.classList.remove('anim-fly-to-word');
-        
-        // 播放点击音效
-        playSound('click');
+    
+    // 播放点击音效
+    playSound('click');
         
         // 确保新填入的字母在可视区域内
         const container = document.getElementById('dictation-word-display');
@@ -1743,10 +1745,10 @@ function selectLetter(letterIndex, cardElement) {
                 container.scrollLeft += (slotRect.right - contRect.right) + 16;
             }
         }
-
-        // 检查是否完成
-        if (dictationState.currentAnswer.length === dictationState.currentLetters.length) {
-            setTimeout(() => submitDictationAnswer(), 500);
+    
+    // 检查是否完成
+    if (dictationState.currentAnswer.length === dictationState.currentLetters.length) {
+        setTimeout(() => submitDictationAnswer(), 500);
         }
     }, 600);
 }
@@ -2015,6 +2017,10 @@ function toggleMenu() {
     menuBackdrop.classList.toggle('hidden');
 }
 
+function toggleDesktopSidebar() {
+    document.body.classList.toggle('sidebar-hidden');
+}
+
 // --- Initialization ---
 function init() {
     // 初始化系统
@@ -2052,6 +2058,8 @@ function init() {
     
     menuToggle.addEventListener('click', toggleMenu);
     menuBackdrop.addEventListener('click', toggleMenu);
+    desktopSidebarToggle.addEventListener('click', toggleDesktopSidebar);
+    sidebarToggle.addEventListener('click', toggleMenu);
 
     gameQuestionWordEl.addEventListener('click', () => { 
         if(appState.currentQuestion) {

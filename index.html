@@ -948,6 +948,17 @@
             backface-visibility: hidden;
         }
 
+        /* 侧边栏隐藏状态 */
+        .sidebar-hidden #category-nav {
+            transform: translateX(-100%);
+        }
+        .sidebar-hidden .flex-1 {
+            margin-left: 0;
+        }
+        .sidebar-hidden #desktop-sidebar-toggle svg {
+            transform: rotate(180deg);
+        }
+        
         /* 系统偏好：减少动态效果 */
         @media (prefers-reduced-motion: reduce) {
             * {
@@ -1006,7 +1017,14 @@
 
         <!-- Sidebar -->
         <nav id="category-nav" class="bg-white border-r border-gray-200 fixed inset-y-0 left-0 z-30 w-64 p-4 space-y-2 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:h-screen md:overflow-y-auto">
-             <h2 class="px-2 text-2xl font-bold text-sky-600 mb-4">主题分类</h2>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="px-2 text-2xl font-bold text-sky-600">主题分类</h2>
+                <button id="sidebar-toggle" class="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-200 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
             <!-- 类别按钮将由JS动态生成 -->
         </nav>
 
@@ -1016,6 +1034,12 @@
                 <!-- Hamburger button for mobile -->
                 <button id="menu-toggle" class="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-200">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <!-- Desktop sidebar toggle button -->
+                <button id="desktop-sidebar-toggle" class="hidden md:block p-2 rounded-md text-gray-600 hover:bg-gray-200 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
                 </button>
                 <h1 class="text-xl font-bold text-sky-600 md:hidden ml-4">儿童英语乐园</h1>
             </header>
