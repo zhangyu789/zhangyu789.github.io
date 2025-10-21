@@ -1164,6 +1164,16 @@ function displayFlashcardsProgressively(category) {
     
     flashcardContainer.innerHTML = '';
 
+    const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const el = entry.target;
+                el.classList.add('anim-simple-deal');
+                obs.unobserve(el);
+            }
+        });
+    }, { root: null, rootMargin: '0px 0px 200px 0px', threshold: 0.05 });
+
     words.forEach((item, index) => {
         if (!item || !item.en) return; // 跳过无效数据
         const card = document.createElement('div');
@@ -1171,7 +1181,7 @@ function displayFlashcardsProgressively(category) {
         card.id = cardId;
         card.className = 'flashcard flex flex-col items-center justify-start rounded-2xl shadow-lg p-3 bg-white text-center';
 
-        const imageContent = `<img src="${item.imageUrl}" alt="${item.en}" class="w-full h-full object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+        const imageContent = `<img src="${item.imageUrl}" alt="${item.en}" class="w-full h-full object-contain" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
                               <div class="flex items-center justify-center w-full h-full text-6xl bg-gray-100 rounded-lg" style="display:none;">📷</div>`;
 
         card.innerHTML = `
@@ -1198,31 +1208,35 @@ function displayFlashcardsProgressively(category) {
         });
         flashcardContainer.appendChild(card);
         
-        // 添加简化的发牌动画效果
-        setTimeout(() => {
-            card.classList.add('anim-simple-deal');
-        }, index * 100); // 每张卡片间隔100ms
+        // 仅当可见时触发发牌动画
+        observer.observe(card);
     });
 
 }
 
 function renderGameChoices(choices) {
     gameChoicesGridEl.innerHTML = '';
+    const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('anim-simple-deal');
+                obs.unobserve(entry.target);
+            }
+        });
+    }, { root: null, rootMargin: '0px 0px 200px 0px', threshold: 0.05 });
+
     choices.forEach((item, index) => {
         const card = document.createElement('div');
         card.className = 'game-choice-card rounded-2xl shadow-lg p-2';
 
-        const imageContent = `<img src="${item.imageUrl}" alt="${item.en}" class="w-full h-full object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+        const imageContent = `<img src="${item.imageUrl}" alt="${item.en}" class="w-full h-full object-contain" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
                               <div class="flex items-center justify-center w-full h-full text-6xl bg-gray-100 rounded-lg" style="display:none;">📷</div>`;
         card.innerHTML = imageContent;
 
         card.addEventListener('click', () => handleChoiceClick(item, card));
         gameChoicesGridEl.appendChild(card);
         
-        // 添加简化的发牌动画效果
-        setTimeout(() => {
-            card.classList.add('anim-simple-deal');
-        }, index * 80); // 每张卡片间隔80ms
+        observer.observe(card);
     });
 }
 

@@ -126,6 +126,11 @@
                 inset 0 1px 0 rgba(255,255,255,0.8);
             transform: rotate(var(--card-rotation, 0deg)) translateY(var(--card-offset, 0px));
             transform-origin: center;
+            contain: content;
+            backface-visibility: hidden;
+            will-change: transform, box-shadow;
+            content-visibility: auto;
+            contain-intrinsic-size: 240px 300px;
         }
         
         /* 随机卡片角度和位置 */
@@ -279,6 +284,11 @@
                 0 2px 4px rgba(0,0,0,0.1),
                 inset 0 1px 0 rgba(255,255,255,0.8);
             transform: rotate(var(--game-card-rotation, 0deg)) translateY(var(--game-card-offset, 0px));
+            contain: content;
+            backface-visibility: hidden;
+            will-change: transform, box-shadow;
+            content-visibility: auto;
+            contain-intrinsic-size: 160px 160px;
         }
         
         /* 游戏卡片随机角度 */
@@ -717,6 +727,11 @@
                 inset 0 1px 0 rgba(255,255,255,0.8);
             transform: rotate(var(--matching-rotation, 0deg)) translateY(var(--matching-offset, 0px));
             margin: 0 auto;
+            contain: content;
+            backface-visibility: hidden;
+            will-change: transform, box-shadow;
+            content-visibility: auto;
+            contain-intrinsic-size: 120px 120px;
         }
         
         /* 配对卡片随机角度 */
@@ -873,6 +888,9 @@
             user-select: none;
             position: relative;
             transform: rotate(var(--letter-rotation, 0deg)) translateY(var(--letter-offset, 0px));
+            contain: content;
+            backface-visibility: hidden;
+            will-change: transform, box-shadow;
         }
         
         /* 字母卡片随机角度 */
@@ -953,6 +971,17 @@
             color: #1f2937;
             margin: 0 2px;
             transition: all 0.2s ease;
+            contain: content;
+            backface-visibility: hidden;
+        }
+
+        /* 系统偏好：减少动态效果 */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation: none !important;
+                transition: none !important;
+                scroll-behavior: auto !important;
+            }
         }
         .word-letter.filled { box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2); }
         .word-letter.pop { animation: popIn 0.25s ease-out; }
