@@ -7,9 +7,16 @@ const soundEffects = {
 };
 
 function playSound(soundName) {
-    if (soundEffects[soundName]) {
-        soundEffects[soundName].currentTime = 0;
-        soundEffects[soundName].play().catch(e => console.log('Sound play failed:', e));
+    try {
+        if (soundEffects[soundName]) {
+            soundEffects[soundName].currentTime = 0;
+            soundEffects[soundName].play().catch(e => {
+                console.log('Sound play failed:', e);
+                // 静默失败，不影响用户体验
+            });
+        }
+    } catch (error) {
+        console.log('Sound system error:', error);
     }
 }
 
@@ -1006,7 +1013,8 @@ const matchingState = {
     connections: new Map(), // wordId -> imageId
     selectedWord: null,
     selectedImage: null,
-    isCompleted: false
+    isCompleted: false,
+    isProcessing: false // 防止快速连续点击
 };
 
 // --- 听写训练状态 ---
@@ -1062,17 +1070,64 @@ const dictationRemainingEl = document.getElementById('dictation-remaining');
 
 // --- Core Functions ---
 
-function speak(text, rate = 0.9, pitch = 1.2) {
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US';
-        utterance.rate = rate;
-        utterance.pitch = pitch;
-        window.speechSynthesis.speak(utterance);
-    } else {
-        console.error('Browser does not support Speech Synthesis.');
+// 语音队列管理
+const speechQueue = {
+    isPlaying: false,
+    queue: [],
+    
+    add(text, options = {}) {
+        this.queue.push({ text, options });
+        this.process();
+    },
+    
+    process() {
+        if (this.isPlaying || this.queue.length === 0) return;
+        
+        this.isPlaying = true;
+        const { text, options } = this.queue.shift();
+        
+        try {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                utterance.rate = options.rate || 0.85;
+                utterance.pitch = options.pitch || 1.1;
+                utterance.volume = options.volume || 0.9;
+                
+                utterance.onend = () => {
+                    this.isPlaying = false;
+                    setTimeout(() => this.process(), 200); // 短暂停顿
+                };
+                
+                utterance.onerror = (event) => {
+                    console.log('Speech synthesis error:', event.error);
+                    this.isPlaying = false;
+                    setTimeout(() => this.process(), 200);
+                };
+                
+                window.speechSynthesis.speak(utterance);
+            } else {
+                this.isPlaying = false;
+                setTimeout(() => this.process(), 200);
+            }
+        } catch (error) {
+            console.log('Speech synthesis failed:', error);
+            this.isPlaying = false;
+            setTimeout(() => this.process(), 200);
+        }
+    },
+    
+    clear() {
+        this.queue = [];
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
+        this.isPlaying = false;
     }
+};
+
+function speak(text, rate = 0.85, pitch = 1.1, volume = 0.9) {
+    speechQueue.add(text, { rate, pitch, volume });
 }
 
 function speakWordAndExample(word, example, wordId = null) {
@@ -1084,13 +1139,16 @@ function speakWordAndExample(word, example, wordId = null) {
         learningProgress.markWordLearned(wordId);
     }
     
-    // 先阅读单词
-    speak(word, 0.8, 1.2);
-
-    // 延迟一秒后阅读例句
+    // 清空之前的语音队列
+    speechQueue.clear();
+    
+    // 先阅读单词（更自然的语调）
+    speak(word, 0.8, 1.15, 0.95);
+    
+    // 添加停顿后阅读例句（更慢更清晰）
     setTimeout(() => {
-        speak(example, 0.7, 1.0);
-    }, 1000);
+        speak(example, 0.75, 1.05, 0.9);
+    }, 1200);
 }
 
 
@@ -1098,9 +1156,15 @@ function speakWordAndExample(word, example, wordId = null) {
 
 function displayFlashcardsProgressively(category) {
     const words = data[category];
+    if (!words || words.length === 0) {
+        flashcardContainer.innerHTML = '<p class="text-center text-gray-500 p-8 col-span-full">该分类暂无单词数据</p>';
+        return;
+    }
+    
     flashcardContainer.innerHTML = '';
 
     words.forEach(item => {
+        if (!item || !item.en) return; // 跳过无效数据
         const card = document.createElement('div');
         const cardId = `card-${category.replace(/[^a-zA-Z0-9]/g, '')}-${item.en.replace(/[^a-zA-Z0-9]/g, '')}`;
         card.id = cardId;
@@ -1131,7 +1195,7 @@ function renderGameChoices(choices) {
     gameChoicesGridEl.innerHTML = '';
     choices.forEach(item => {
         const card = document.createElement('div');
-        card.className = 'game-choice-card aspect-square rounded-2xl shadow-lg p-2 flex items-center justify-center';
+        card.className = 'game-choice-card rounded-2xl shadow-lg p-2';
 
         const imageContent = `<img src="${item.imageUrl}" alt="${item.en}" class="w-full h-full object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
                               <div class="flex items-center justify-center w-full h-full text-6xl bg-gray-100 rounded-lg" style="display:none;">📷</div>`;
@@ -1152,14 +1216,27 @@ function generateQuestion() {
         return;
     }
 
-    for (let i = words.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [words[i], words[j]] = [words[j], words[i]]; }
-    const choices = words.slice(0, 4);
-    appState.currentQuestion = choices[Math.floor(Math.random() * 4)];
+    // 显示加载状态
+    appState.isGameLoading = true;
+    gameChoicesGridEl.innerHTML = '<div class="col-span-full flex justify-center items-center p-8"><div class="loader"></div><div class="loader-text ml-2">准备题目中...</div></div>';
 
-    gameQuestionWordEl.textContent = appState.currentQuestion.en;
-    speak(appState.currentQuestion.en, 0.8, 1);
+    // 延迟生成题目，让加载动画可见
+    setTimeout(() => {
+        for (let i = words.length - 1; i > 0; i--) { 
+            const j = Math.floor(Math.random() * (i + 1)); 
+            [words[i], words[j]] = [words[j], words[i]]; 
+        }
+        const choices = words.slice(0, 4);
+        appState.currentQuestion = choices[Math.floor(Math.random() * 4)];
 
-    renderGameChoices(choices);
+        gameQuestionWordEl.textContent = appState.currentQuestion.en;
+        // 清空语音队列，确保题目朗读清晰
+        speechQueue.clear();
+        speak(appState.currentQuestion.en, 0.8, 1.1, 0.9);
+
+        renderGameChoices(choices);
+        appState.isGameLoading = false;
+    }, 800);
 }
 
 function handleChoiceClick(selectedItem, cardElement) {
@@ -1184,9 +1261,9 @@ function handleChoiceClick(selectedItem, cardElement) {
         // 先读单词和例句，然后读"Great!"
         speakWordAndExample(selectedItem.en, selectedItem.example, selectedItem.id);
         setTimeout(() => {
-            speak('Great!', 1.2, 1.3);
+            speak('Great!', 1.1, 1.2, 0.95);
             playSound('success');
-        }, 2500); // 等待单词和例句读完
+        }, 3000); // 等待单词和例句读完
         setTimeout(() => {
             generateQuestion();
             gameChoicesGridEl.style.pointerEvents = 'auto';
@@ -1195,7 +1272,7 @@ function handleChoiceClick(selectedItem, cardElement) {
         // 播放错误音效
         playSound('wrong');
         
-        speak('Try again!', 1.2, 1);
+        speak('Try again!', 1.0, 1.1, 0.9);
         setTimeout(() => {
             cardElement.classList.remove('incorrect');
             gameChoicesGridEl.style.pointerEvents = 'auto';
@@ -1220,6 +1297,7 @@ function initMatchingGame(category) {
     matchingState.selectedWord = null;
     matchingState.selectedImage = null;
     matchingState.isCompleted = false;
+    matchingState.isProcessing = false;
     
     renderMatchingItems();
     updateMatchingProgress();
@@ -1251,6 +1329,17 @@ function renderMatchingItems() {
 }
 
 function selectMatchingWord(wordId, element) {
+    // 防止快速连续点击
+    if (matchingState.isProcessing) return;
+    
+    // 检查是否已完成连接
+    if (matchingState.connections.has(wordId)) {
+        return; // 已连接的项目不可点击
+    }
+    
+    // 播放点击音效
+    playSound('click');
+    
     // 清除之前的选择
     document.querySelectorAll('.matching-item').forEach(el => el.classList.remove('selected'));
     
@@ -1269,6 +1358,19 @@ function selectMatchingWord(wordId, element) {
 }
 
 function selectMatchingImage(imageId, element) {
+    // 防止快速连续点击
+    if (matchingState.isProcessing) return;
+    
+    // 检查是否已被连接
+    for (const [, usedImageId] of matchingState.connections.entries()) {
+        if (usedImageId === imageId) {
+            return; // 已被使用的图片不可点击
+        }
+    }
+    
+    // 播放点击音效
+    playSound('click');
+    
     // 清除之前的选择
     document.querySelectorAll('.matching-item').forEach(el => el.classList.remove('selected'));
     
@@ -1289,6 +1391,10 @@ function selectMatchingImage(imageId, element) {
 function validateMatchingSelection() {
     if (!matchingState.selectedWord || !matchingState.selectedImage) return;
     
+    // 防止重复处理
+    if (matchingState.isProcessing) return;
+    matchingState.isProcessing = true;
+    
     const wordId = matchingState.selectedWord;
     const imageId = matchingState.selectedImage;
     
@@ -1308,6 +1414,7 @@ function validateMatchingSelection() {
                 matchingState.selectedWord = null;
                 matchingState.selectedImage = null;
                 document.querySelectorAll('.matching-item').forEach(el => el.classList.remove('selected'));
+                matchingState.isProcessing = false;
                 return;
             }
         }
@@ -1345,7 +1452,15 @@ function validateMatchingSelection() {
                 rewardSystem.giveStar();
             }
             launchConfetti();
-            setTimeout(() => initMatchingGame(appState.currentCategory), 1200);
+            setTimeout(() => {
+                initMatchingGame(appState.currentCategory);
+                matchingState.isProcessing = false;
+            }, 1200);
+        } else {
+            // 重置处理状态
+            setTimeout(() => {
+                matchingState.isProcessing = false;
+            }, 300);
         }
     } else {
         // 错误：红框抖动并取消选择
@@ -1358,6 +1473,7 @@ function validateMatchingSelection() {
             if (imageEl) imageEl.classList.remove('incorrect', 'selected', 'anim-shake');
             matchingState.selectedWord = null;
             matchingState.selectedImage = null;
+            matchingState.isProcessing = false;
         }, 600);
     }
 }
@@ -1404,11 +1520,23 @@ function drawMatchingLines() {
             line.setAttribute('y1', startY);
             line.setAttribute('x2', endX);
             line.setAttribute('y2', endY);
-            line.setAttribute('class', 'matching-line');
+            line.setAttribute('class', 'matching-line correct');
             line.dataset.wordId = wordId;
             line.dataset.imageId = imageId;
             
+            // 添加动画效果
+            line.style.opacity = '0';
+            line.style.strokeDasharray = '10,5';
+            line.style.strokeDashoffset = '15';
+            
             matchingSvgEl.appendChild(line);
+            
+            // 动画显示连线
+            setTimeout(() => {
+                line.style.transition = 'opacity 0.3s ease, stroke-dashoffset 0.5s ease';
+                line.style.opacity = '1';
+                line.style.strokeDashoffset = '0';
+            }, 50);
         }
     });
 }
@@ -1581,7 +1709,9 @@ function clearDictationAnswer() {
 
 function playDictationWord() {
     if (dictationState.currentWord) {
-        speak(dictationState.currentWord.en, 0.7, 1.1);
+        // 清空语音队列，确保听写单词朗读清晰
+        speechQueue.clear();
+        speak(dictationState.currentWord.en, 0.75, 1.1, 0.9);
     }
 }
 
@@ -1611,6 +1741,11 @@ function submitDictationAnswer() {
         });
         // 答对一题也放彩带，增强正反馈
         launchConfetti();
+        
+        // 播放鼓励语音
+        setTimeout(() => {
+            speak('Excellent!', 1.0, 1.2, 0.9);
+        }, 500);
     } else {
         playSound('wrong');
         showDictationFeedback('incorrect', '不正确', `正确答案: ${dictationState.currentWord.en}`);
@@ -1622,6 +1757,11 @@ function submitDictationAnswer() {
             letterEl.classList.add('anim-shake');
             setTimeout(() => letterEl.classList.remove('anim-shake'), 500);
         });
+        
+        // 播放鼓励语音
+        setTimeout(() => {
+            speak('Keep trying!', 0.9, 1.1, 0.85);
+        }, 500);
     }
     
     learningProgress.recordAnswer(isCorrect);
@@ -1774,7 +1914,10 @@ function init() {
     menuBackdrop.addEventListener('click', toggleMenu);
 
     gameQuestionWordEl.addEventListener('click', () => { 
-        if(appState.currentQuestion) speak(appState.currentQuestion.en, 0.8, 1); 
+        if(appState.currentQuestion) {
+            speechQueue.clear();
+            speak(appState.currentQuestion.en, 0.8, 1.1, 0.9);
+        }
     });
     
     // 配对连线事件监听器
