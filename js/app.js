@@ -1657,10 +1657,7 @@ function renderLetterCards() {
         card.addEventListener('click', () => selectLetter(index, card));
         dictationLetterCardsEl.appendChild(card);
         
-        // 添加简化的发牌动画效果
-        setTimeout(() => {
-            card.classList.add('anim-simple-deal');
-        }, index * 60); // 每张卡片间隔60ms
+        // 听写训练不需要发牌动画，直接显示
     });
 }
 
@@ -1673,10 +1670,7 @@ function renderWordDisplay() {
         letterEl.addEventListener('click', () => undoDictationAt(index));
         dictationWordDisplayEl.appendChild(letterEl);
         
-        // 添加简化的发牌动画效果
-        setTimeout(() => {
-            letterEl.classList.add('anim-simple-deal');
-        }, (index * 80) + 300); // 延迟300ms开始，每张卡片间隔80ms
+        // 听写训练不需要发牌动画，直接显示
     });
 }
 
