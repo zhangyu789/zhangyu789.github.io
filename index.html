@@ -151,16 +151,7 @@
             --card-offset: -2px;
         }
         
-        .flashcard::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color));
-            border-radius: 16px 16px 0 0;
-        }
+        
         
         .flashcard::after {
             content: '';
@@ -297,16 +288,7 @@
         .game-choice-card:nth-child(3) { --game-card-rotation: 0.8deg; --game-card-offset: 3px; }
         .game-choice-card:nth-child(4) { --game-card-rotation: -1.2deg; --game-card-offset: -2px; }
         
-        .game-choice-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--warning-color), var(--success-color));
-            border-radius: 16px 16px 0 0;
-        }
+        
         
         .game-choice-card::after {
             content: '';
@@ -744,16 +726,7 @@
             --matching-offset: -1px;
         }
         
-        .matching-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-            border-radius: 16px 16px 0 0;
-        }
+        
         
         .matching-item::after {
             content: '';
@@ -992,6 +965,36 @@
         .word-letter:empty::after {
             content: '_';
             color: #9ca3af;
+        }
+        
+        /* 听写：长单词在手机端横向滚动显示 */
+        #dictation-word-display {
+            overflow-x: auto;
+            overflow-y: hidden;
+            flex-wrap: nowrap;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            mask-image: linear-gradient(to right, transparent 0, black 16px, black calc(100% - 16px), transparent 100%);
+        }
+        #dictation-word-display::-webkit-scrollbar {
+            height: 6px;
+        }
+        #dictation-word-display::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.2);
+            border-radius: 9999px;
+        }
+        @media (max-width: 640px) {
+            #dictation-word-display {
+                justify-content: flex-start !important;
+                padding-left: 12px;
+                padding-right: 12px;
+                gap: 8px;
+            }
+            .word-letter {
+                min-width: 36px;
+                height: 44px;
+                font-size: 1.25rem;
+            }
         }
         
     </style>

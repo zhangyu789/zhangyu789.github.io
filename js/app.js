@@ -1734,6 +1734,16 @@ function selectLetter(letterIndex, cardElement) {
         // 播放点击音效
         playSound('click');
         
+        // 确保新填入的字母在可视区域内
+        const container = document.getElementById('dictation-word-display');
+        if (container && targetLetterEl) {
+            const slotRect = targetLetterEl.getBoundingClientRect();
+            const contRect = container.getBoundingClientRect();
+            if (slotRect.right > contRect.right - 8) {
+                container.scrollLeft += (slotRect.right - contRect.right) + 16;
+            }
+        }
+
         // 检查是否完成
         if (dictationState.currentAnswer.length === dictationState.currentLetters.length) {
             setTimeout(() => submitDictationAnswer(), 500);
@@ -1795,6 +1805,20 @@ function undoDictationAt(position) {
             });
             
             playSound('click');
+
+            // 撤销后如有超出左侧视口，适度回滚
+            const container = document.getElementById('dictation-word-display');
+            if (container) {
+                const firstFilledIndex = Math.max(0, dictationState.currentAnswer.length - 1);
+                const firstFilled = document.querySelector(`[data-position="${firstFilledIndex}"]`);
+                if (firstFilled) {
+                    const slotRect = firstFilled.getBoundingClientRect();
+                    const contRect = container.getBoundingClientRect();
+                    if (slotRect.left < contRect.left + 8) {
+                        container.scrollLeft = Math.max(0, container.scrollLeft - (contRect.left + 16 - slotRect.left));
+                    }
+                }
+            }
         }, 600);
     } else {
         // 如果没有找到目标位置，直接更新状态
