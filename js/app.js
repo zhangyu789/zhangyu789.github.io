@@ -1202,15 +1202,7 @@ function displayFlashcardsProgressively(category) {
     
     flashcardContainer.innerHTML = '';
 
-    const observer = new IntersectionObserver((entries, obs) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const el = entry.target;
-                el.classList.add('anim-simple-deal');
-                obs.unobserve(el);
-            }
-        });
-    }, { root: null, rootMargin: '0px 0px 200px 0px', threshold: 0.05 });
+    // 移除卡片加载动画
 
     words.forEach((item, index) => {
         if (!item || !item.en) return; // 跳过无效数据
@@ -1296,9 +1288,6 @@ function displayFlashcardsProgressively(category) {
         });
 
         flashcardContainer.appendChild(card);
-        
-        // 仅当可见时触发发牌动画
-        observer.observe(card);
     });
 
 }
@@ -1503,14 +1492,7 @@ function reorderCards(fromIndex, toIndex) {
 
 function renderGameChoices(choices) {
     gameChoicesGridEl.innerHTML = '';
-    const observer = new IntersectionObserver((entries, obs) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('anim-simple-deal');
-                obs.unobserve(entry.target);
-            }
-        });
-    }, { root: null, rootMargin: '0px 0px 200px 0px', threshold: 0.05 });
+    // 移除游戏选择卡片动画
 
     choices.forEach((item, index) => {
         const card = document.createElement('div');
@@ -1524,8 +1506,6 @@ function renderGameChoices(choices) {
 
         card.addEventListener('click', () => handleChoiceClick(item, card));
         gameChoicesGridEl.appendChild(card);
-        
-        observer.observe(card);
     });
 }
 
@@ -1637,15 +1617,7 @@ function renderMatchingItems() {
         wordEl.addEventListener('click', () => selectMatchingWord(word.id, wordEl));
         matchingWordsEl.appendChild(wordEl);
         
-        // 添加简化的发牌动画效果
-        setTimeout(() => {
-            wordEl.classList.add('anim-simple-deal');
-        }, index * 150); // 每张卡片间隔150ms
-        
-        // 添加浮动动画效果
-        setTimeout(() => {
-            wordEl.classList.add('anim-float');
-        }, (index * 150) + 800); // 发牌动画完成后添加浮动效果
+        // 移除动画效果
     });
     
     // 渲染图片列表
@@ -1660,15 +1632,7 @@ function renderMatchingItems() {
         imageEl.addEventListener('click', () => selectMatchingImage(word.id, imageEl));
         matchingImagesEl.appendChild(imageEl);
         
-        // 添加简化的发牌动画效果
-        setTimeout(() => {
-            imageEl.classList.add('anim-simple-deal');
-        }, (index + 4) * 150); // 每张卡片间隔150ms
-        
-        // 添加浮动动画效果
-        setTimeout(() => {
-            imageEl.classList.add('anim-float');
-        }, ((index + 4) * 150) + 800); // 发牌动画完成后添加浮动效果
+        // 移除动画效果
     });
 }
 
