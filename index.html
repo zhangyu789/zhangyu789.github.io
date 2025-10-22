@@ -954,9 +954,22 @@
         }
         .sidebar-hidden .flex-1 {
             margin-left: 0;
+            width: 100%;
         }
         .sidebar-hidden #desktop-sidebar-toggle svg {
             transform: rotate(180deg);
+        }
+        
+        /* 确保侧边栏隐藏时主内容区域占满全宽 */
+        @media (min-width: 768px) {
+            .sidebar-hidden .flex-1 {
+                flex: none;
+                width: 100%;
+                max-width: 100%;
+            }
+            .sidebar-hidden .md\\:flex {
+                display: block;
+            }
         }
         
         /* 系统偏好：减少动态效果 */

@@ -1990,6 +1990,13 @@ async function setMode(mode) {
     gameContainer.classList.toggle('hidden', mode !== 'game');
     matchingContainer.classList.toggle('hidden', mode !== 'matching');
     dictationContainer.classList.toggle('hidden', mode !== 'dictation');
+    
+    // 滚动到页面顶部
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+    
     await selectCategory(appState.currentCategory);
 }
 
@@ -2006,6 +2013,12 @@ async function selectCategory(category) {
     } else if (appState.currentMode === 'dictation') {
         initDictationGame(category);
     }
+
+    // 滚动到页面顶部
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
 
     if (window.innerWidth < 768) {
         toggleMenu();
@@ -2027,19 +2040,7 @@ function init() {
     learningProgress.init();
     rewardSystem.init();
     
-    // 初始化数据
-    vocabulary.forEach(word => {
-        if (word && word.themeId && themeMap[word.themeId]) {
-            data[themeMap[word.themeId]].push({
-                id: word.id,
-                en: word.english,
-                cn: word.chinese,
-                phonetic: word.phonetic || '',
-                example: word.example || '',
-                imageUrl: word.imageUrl || ''
-            });
-        }
-    });
+    // 数据已经在全局作用域中初始化，无需重复加载
 
     const categories = Object.keys(data);
     categoryNav.innerHTML = '<h2 class="px-2 text-2xl font-bold text-sky-600 mb-4">主题分类</h2>';
