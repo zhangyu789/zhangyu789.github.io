@@ -962,13 +962,21 @@
         
         /* 确保侧边栏隐藏时主内容区域占满全宽 */
         @media (min-width: 768px) {
+            .sidebar-hidden #category-nav {
+                position: absolute !important;
+                left: -100% !important;
+                width: 0 !important;
+                overflow: hidden !important;
+                z-index: -1 !important;
+            }
             .sidebar-hidden .flex-1 {
-                flex: none;
-                width: 100%;
-                max-width: 100%;
+                flex: none !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin-left: 0 !important;
             }
             .sidebar-hidden .md\\:flex {
-                display: block;
+                display: block !important;
             }
         }
         
