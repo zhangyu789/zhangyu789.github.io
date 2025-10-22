@@ -1199,11 +1199,11 @@ function displayFlashcardsProgressively(category) {
         `;
 
         card.addEventListener('click', () => {
-            // 添加翻转动画效果
-            card.classList.add('anim-card-flip');
+            // 添加弹跳动画效果
+            card.classList.add('anim-card-bounce');
             setTimeout(() => {
-                card.classList.remove('anim-card-flip');
-            }, 1500);
+                card.classList.remove('anim-card-bounce');
+            }, 800);
             
             // 播放语音
             speakWordAndExample(item.en, item.example, item.id);
