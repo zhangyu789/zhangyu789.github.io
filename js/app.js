@@ -1078,17 +1078,7 @@ const dictationRemainingEl = document.getElementById('dictation-remaining');
 
 // --- Core Functions ---
 
-// 拖拽相关变量
-let dragState = {
-    isDragging: false,
-    draggedElement: null,
-    draggedIndex: -1,
-    placeholder: null,
-    startX: 0,
-    startY: 0,
-    offsetX: 0,
-    offsetY: 0
-};
+// 拖拽相关变量（已移除，使用下面的变量）
 
 // 图片URL处理函数 - 优先使用webp格式，回退到png
 function getImageUrl(originalUrl) {
@@ -1229,10 +1219,14 @@ function displayFlashcardsProgressively(category) {
             </div>
         `;
 
+        // 拖拽事件变量
+        let dragStartTimer = null;
+        let hasStartedDrag = false;
+
         // 点击事件 - 播放语音
         card.addEventListener('click', (e) => {
             // 如果正在拖拽，不执行点击事件
-            if (dragState.isDragging) return;
+            if (hasStartedDrag) return;
             
             // 添加弹跳动画效果
             card.classList.add('anim-card-bounce');
@@ -1244,10 +1238,6 @@ function displayFlashcardsProgressively(category) {
             speakWordAndExample(item.en, item.example, item.id);
         });
 
-        // 拖拽事件
-        let dragStartTimer = null;
-        let hasStartedDrag = false;
-
         card.addEventListener('mousedown', (e) => {
             dragStartTimer = setTimeout(() => {
                 hasStartedDrag = true;
@@ -1255,20 +1245,26 @@ function displayFlashcardsProgressively(category) {
             }, 200); // 200ms后开始拖拽
         });
 
-        card.addEventListener('mouseup', () => {
+        card.addEventListener('mouseup', (e) => {
             if (dragStartTimer) {
                 clearTimeout(dragStartTimer);
                 dragStartTimer = null;
             }
-            hasStartedDrag = false;
+            // 只有在没有开始拖拽时才重置状态
+            if (!hasStartedDrag) {
+                hasStartedDrag = false;
+            }
         });
 
-        card.addEventListener('mouseleave', () => {
+        card.addEventListener('mouseleave', (e) => {
             if (dragStartTimer) {
                 clearTimeout(dragStartTimer);
                 dragStartTimer = null;
             }
-            hasStartedDrag = false;
+            // 只有在没有开始拖拽时才重置状态
+            if (!hasStartedDrag) {
+                hasStartedDrag = false;
+            }
         });
 
         // 触摸事件支持
@@ -1412,6 +1408,11 @@ function handleDragEnd(e) {
     draggedCard = null;
     draggedIndex = -1;
     placeholder = null;
+    
+    // 重置所有卡片的拖拽状态
+    document.querySelectorAll('.flashcard').forEach(card => {
+        card.hasStartedDrag = false;
+    });
     
     // 移除全局事件监听器
     document.removeEventListener('mousemove', handleDragMove);
@@ -2230,7 +2231,7 @@ function finishDictationGame() {
             </button>
                 <button onclick="hideDictationFeedback();" class="px-6 py-3 bg-gradient-to-r from-gray-500 to-slate-500 text-white rounded-full hover:from-gray-600 hover:to-slate-600 transition-all shadow-lg font-semibold">
                     关闭
-                </button>
+            </button>
             </div>
         </div>
     `;
