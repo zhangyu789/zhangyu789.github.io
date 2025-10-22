@@ -1204,7 +1204,7 @@ function displayFlashcardsProgressively(category) {
 
         const webpUrl = getImageUrl(item.imageUrl);
         const pngUrl = item.imageUrl;
-        
+
         card.innerHTML = `
             <div class="image-container">
                 <img src="${webpUrl}" alt="${item.en}" class="w-full h-full object-contain" loading="lazy" decoding="async" onerror="if(this.src.endsWith('.webp')){this.src='${pngUrl}';}else{this.style.display='none';this.nextElementSibling.style.display='flex';}" />
@@ -1257,7 +1257,7 @@ function renderGameChoices(choices) {
         const pngUrl = item.imageUrl;
         
         card.innerHTML = `<img src="${webpUrl}" alt="${item.en}" class="w-full h-full object-contain" loading="lazy" decoding="async" onerror="if(this.src.endsWith('.webp')){this.src='${pngUrl}';}else{this.style.display='none';this.nextElementSibling.style.display='flex';}" />
-                          <div class="flex items-center justify-center w-full h-full text-6xl bg-gray-100 rounded-lg" style="display:none;">📷</div>`;
+                              <div class="flex items-center justify-center w-full h-full text-6xl bg-gray-100 rounded-lg" style="display:none;">📷</div>`;
 
         card.addEventListener('click', () => handleChoiceClick(item, card));
         gameChoicesGridEl.appendChild(card);
@@ -1719,9 +1719,19 @@ function renderWordDisplay() {
 function selectLetter(letterIndex, cardElement) {
     if (dictationState.usedLetters.has(letterIndex)) return;
     
-    // 找到下一个空位置
+    // 立即更新状态，防止快速点击时位置冲突
     const nextPosition = dictationState.currentAnswer.length;
     if (nextPosition >= dictationState.currentLetters.length) return;
+    
+    // 立即标记为已使用，防止重复点击
+    dictationState.usedLetters.add(letterIndex);
+    
+    // 立即添加字母到答案中（记录来源索引以便撤销）
+    const letter = dictationState.shuffledLetters[letterIndex];
+    dictationState.currentAnswer.push({ letter, sourceIndex: letterIndex });
+    
+    // 立即禁用卡片，防止重复点击
+    cardElement.style.pointerEvents = 'none';
     
     // 计算飞行目标位置
     const targetLetterEl = document.querySelector(`[data-position="${nextPosition}"]`);
@@ -1739,13 +1749,8 @@ function selectLetter(letterIndex, cardElement) {
     // 添加飞行动画
     cardElement.classList.add('anim-fly-to-word');
     
-    // 动画完成后更新状态
+    // 动画完成后更新显示
     setTimeout(() => {
-        // 添加字母到答案中（记录来源索引以便撤销）
-    const letter = dictationState.shuffledLetters[letterIndex];
-        dictationState.currentAnswer.push({ letter, sourceIndex: letterIndex });
-    dictationState.usedLetters.add(letterIndex);
-    
     // 更新显示
         if (targetLetterEl) {
             targetLetterEl.textContent = letter.toUpperCase();
@@ -1758,6 +1763,8 @@ function selectLetter(letterIndex, cardElement) {
     // 标记卡片为已使用
     cardElement.classList.add('used');
         cardElement.classList.remove('anim-fly-to-word');
+        cardElement.style.opacity = '0.5';
+        cardElement.style.pointerEvents = 'none';
     
     // 播放点击音效
     playSound('click');
