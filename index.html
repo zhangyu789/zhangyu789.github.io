@@ -1091,32 +1091,39 @@
 
         <!-- Main Content -->
         <div class="flex-1 h-screen overflow-y-auto">
-            <header class="bg-white/80 backdrop-blur-sm sticky top-0 z-10 p-4 flex items-center shadow-sm">
-                <!-- Hamburger button for mobile -->
-                <button id="menu-toggle" class="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-200">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                </button>
-                <!-- Desktop sidebar toggle button -->
-                <button id="desktop-sidebar-toggle" class="hidden md:block p-2 rounded-md text-gray-600 hover:bg-gray-200 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
-                </button>
-                <h1 class="text-xl font-bold text-sky-600 md:hidden ml-4">儿童英语乐园</h1>
+            <header class="bg-white/80 backdrop-blur-sm sticky top-0 z-10 p-4 flex items-center justify-between shadow-sm">
+                <!-- Left side: Menu buttons -->
+                <div class="flex items-center">
+                    <!-- Hamburger button for mobile -->
+                    <button id="menu-toggle" class="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-200">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                    <!-- Desktop sidebar toggle button -->
+                    <button id="desktop-sidebar-toggle" class="hidden md:block p-2 rounded-md text-gray-600 hover:bg-gray-200 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Center: Main title -->
+                <h1 class="text-xl md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent text-center flex-1">
+                    🌟 儿童英语乐园 🌟
+                </h1>
+                
+                <!-- Right side: Empty for now, can be used for future features -->
+                <div class="flex items-center w-16"></div>
             </header>
 
             <div class="p-4 md:p-8">
-                <header class="text-center mb-8">
-                    <h1 class="hidden md:block text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent">
-                        🌟 儿童英语乐园 🌟
-                    </h1>
+                <div class="text-center mb-8">
                     <p id="app-subtitle" class="text-lg text-gray-600 mt-2 font-medium">选择类别，点击卡片学习单词、听发音和看例句！</p>
                     <div class="mt-4 flex justify-center items-center gap-2 text-sm text-gray-500">
                         <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full">💡 点击卡片听发音</span>
                         <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full">🎯 选择正确图片</span>
                         <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">🔗 配对连线游戏</span>
                     </div>
-                </header>
+                </div>
                  
                 <div class="flex justify-center mb-6 bg-gradient-to-r from-pink-100 via-purple-100 to-blue-100 rounded-full p-2 max-w-3xl mx-auto shadow-lg">
                     <button id="mode-flashcards" class="mode-toggle w-1/4 p-3 rounded-full font-semibold text-gray-700 text-sm flex flex-col items-center gap-1">
