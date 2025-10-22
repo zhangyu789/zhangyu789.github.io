@@ -988,7 +988,11 @@ for (const theme in themeMap) {
 
 vocabulary.forEach(word => {
     if (word && word.themeId && themeMap[word.themeId]) {
-        data[themeMap[word.themeId]].push({
+        const categoryName = themeMap[word.themeId];
+        if (!data[categoryName]) {
+            data[categoryName] = [];
+        }
+        data[categoryName].push({
             id: word.id,
             en: word.english,
             cn: word.chinese,
@@ -998,6 +1002,7 @@ vocabulary.forEach(word => {
         });
     }
 });
+
 
 // --- App State ---
 const appState = {
@@ -1072,6 +1077,18 @@ const dictationRemainingEl = document.getElementById('dictation-remaining');
 
 
 // --- Core Functions ---
+
+// 拖拽相关变量
+let dragState = {
+    isDragging: false,
+    draggedElement: null,
+    draggedIndex: -1,
+    placeholder: null,
+    startX: 0,
+    startY: 0,
+    offsetX: 0,
+    offsetY: 0
+};
 
 // 图片URL处理函数 - 优先使用webp格式，回退到png
 function getImageUrl(originalUrl) {
@@ -1220,7 +1237,11 @@ function displayFlashcardsProgressively(category) {
             </div>
         `;
 
-        card.addEventListener('click', () => {
+        // 点击事件 - 播放语音
+        card.addEventListener('click', (e) => {
+            // 如果正在拖拽，不执行点击事件
+            if (dragState.isDragging) return;
+            
             // 添加弹跳动画效果
             card.classList.add('anim-card-bounce');
             setTimeout(() => {
@@ -1230,12 +1251,254 @@ function displayFlashcardsProgressively(category) {
             // 播放语音
             speakWordAndExample(item.en, item.example, item.id);
         });
+
+        // 拖拽事件
+        let dragStartTimer = null;
+        let hasStartedDrag = false;
+
+        card.addEventListener('mousedown', (e) => {
+            dragStartTimer = setTimeout(() => {
+                hasStartedDrag = true;
+                handleDragStart(e, card, item);
+            }, 200); // 200ms后开始拖拽
+        });
+
+        card.addEventListener('mouseup', () => {
+            if (dragStartTimer) {
+                clearTimeout(dragStartTimer);
+                dragStartTimer = null;
+            }
+            hasStartedDrag = false;
+        });
+
+        card.addEventListener('mouseleave', () => {
+            if (dragStartTimer) {
+                clearTimeout(dragStartTimer);
+                dragStartTimer = null;
+            }
+            hasStartedDrag = false;
+        });
+
+        // 触摸事件支持
+        card.addEventListener('touchstart', (e) => {
+            dragStartTimer = setTimeout(() => {
+                hasStartedDrag = true;
+                handleDragStart(e, card, item);
+            }, 200);
+        });
+
+        card.addEventListener('touchend', () => {
+            if (dragStartTimer) {
+                clearTimeout(dragStartTimer);
+                dragStartTimer = null;
+            }
+            hasStartedDrag = false;
+        });
+
         flashcardContainer.appendChild(card);
         
         // 仅当可见时触发发牌动画
         observer.observe(card);
     });
 
+}
+
+// --- 拖拽功能相关变量和函数 ---
+let draggedCard = null;
+let draggedIndex = -1;
+let placeholder = null;
+
+function handleDragStart(e, card, item) {
+    // 防止默认行为
+    e.preventDefault();
+    
+    draggedCard = card;
+    draggedIndex = Array.from(flashcardContainer.children).indexOf(card);
+    
+    // 添加拖拽样式
+    card.classList.add('dragging');
+    document.body.classList.add('dragging');
+    
+    // 创建占位符
+    placeholder = document.createElement('div');
+    placeholder.className = 'flashcard drag-placeholder';
+    placeholder.style.height = card.offsetHeight + 'px';
+    placeholder.style.width = card.offsetWidth + 'px';
+    
+    // 插入占位符
+    card.parentNode.insertBefore(placeholder, card.nextSibling);
+    
+    // 设置拖拽位置
+    updateDragPosition(e);
+    
+    // 添加全局事件监听器
+    document.addEventListener('mousemove', handleDragMove);
+    document.addEventListener('mouseup', handleDragEnd);
+    document.addEventListener('touchmove', handleDragMove, { passive: false });
+    document.addEventListener('touchend', handleDragEnd);
+}
+
+function handleDragMove(e) {
+    if (!draggedCard) return;
+    
+    e.preventDefault();
+    
+    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+    
+    // 更新卡片位置
+    draggedCard.style.position = 'fixed';
+    draggedCard.style.left = `${clientX - draggedCard.offsetWidth / 2}px`;
+    draggedCard.style.top = `${clientY - draggedCard.offsetHeight / 2}px`;
+    draggedCard.style.zIndex = '1000';
+    
+    // 检查是否拖拽到其他卡片上
+    const elementBelow = document.elementFromPoint(clientX, clientY);
+    const targetCard = elementBelow?.closest('.flashcard:not(.dragging):not(.drag-placeholder)');
+    
+    if (targetCard) {
+        // 移除所有拖拽悬停效果
+        document.querySelectorAll('.flashcard.drag-over').forEach(card => {
+            card.classList.remove('drag-over');
+        });
+        
+        // 添加悬停效果
+        targetCard.classList.add('drag-over');
+        
+        // 计算插入位置
+        const targetIndex = Array.from(flashcardContainer.children).indexOf(targetCard);
+        const rect = targetCard.getBoundingClientRect();
+        const midX = rect.left + rect.width / 2;
+        
+        if (clientX < midX) {
+            // 插入到目标卡片前面
+            flashcardContainer.insertBefore(placeholder, targetCard);
+        } else {
+            // 插入到目标卡片后面
+            flashcardContainer.insertBefore(placeholder, targetCard.nextSibling);
+        }
+    }
+}
+
+function handleDragEnd(e) {
+    if (!draggedCard) return;
+    
+    // 移除拖拽样式
+    draggedCard.classList.remove('dragging');
+    document.body.classList.remove('dragging');
+    
+    // 移除所有悬停效果
+    document.querySelectorAll('.flashcard.drag-over').forEach(card => {
+        card.classList.remove('drag-over');
+    });
+    
+    // 获取新的位置
+    const placeholderIndex = Array.from(flashcardContainer.children).indexOf(placeholder);
+    
+    if (placeholderIndex !== -1) {
+        // 计算实际的目标位置（排除被拖拽的卡片）
+        let newIndex = placeholderIndex;
+        if (placeholderIndex > draggedIndex) {
+            newIndex = placeholderIndex - 1; // 占位符在拖拽卡片后面，需要减1
+        }
+        
+        if (newIndex !== draggedIndex) {
+            // 重新排列卡片
+            reorderCards(draggedIndex, newIndex);
+        }
+    }
+    
+    // 重置样式
+    draggedCard.style.position = '';
+    draggedCard.style.left = '';
+    draggedCard.style.top = '';
+    draggedCard.style.zIndex = '';
+    
+    // 移除占位符
+    if (placeholder && placeholder.parentNode) {
+        placeholder.parentNode.removeChild(placeholder);
+    }
+    
+    // 清理
+    draggedCard = null;
+    draggedIndex = -1;
+    placeholder = null;
+    
+    // 移除全局事件监听器
+    document.removeEventListener('mousemove', handleDragMove);
+    document.removeEventListener('mouseup', handleDragEnd);
+    document.removeEventListener('touchmove', handleDragMove);
+    document.removeEventListener('touchend', handleDragEnd);
+}
+
+function updateDragPosition(e) {
+    if (!draggedCard) return;
+    
+    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+    
+    draggedCard.style.position = 'fixed';
+    draggedCard.style.left = `${clientX - draggedCard.offsetWidth / 2}px`;
+    draggedCard.style.top = `${clientY - draggedCard.offsetHeight / 2}px`;
+    draggedCard.style.zIndex = '1000';
+}
+
+function reorderCards(fromIndex, toIndex) {
+    // 获取所有卡片（不包括占位符）
+    const allCards = Array.from(flashcardContainer.children).filter(child => 
+        child.classList.contains('flashcard') && !child.classList.contains('drag-placeholder')
+    );
+    
+    if (fromIndex < 0 || toIndex < 0 || fromIndex >= allCards.length || toIndex >= allCards.length) {
+        return;
+    }
+    
+    // 获取被拖拽的卡片
+    const draggedElement = allCards[fromIndex];
+    
+    // 从数组中移除被拖拽的卡片
+    allCards.splice(fromIndex, 1);
+    
+    // 在目标位置插入被拖拽的卡片
+    allCards.splice(toIndex, 0, draggedElement);
+    
+    // 重新排列DOM元素
+    allCards.forEach(card => {
+        flashcardContainer.appendChild(card);
+    });
+    
+    // 添加平滑的交换动画
+    if (Math.abs(fromIndex - toIndex) === 1) {
+        // 相邻卡片交换，添加平滑动画
+        const targetElement = allCards[toIndex];
+        
+        // 为被拖拽的卡片添加动画
+        draggedElement.style.transition = 'transform 0.3s ease';
+        draggedElement.style.transform = 'scale(1.02)';
+        
+        // 为目标位置的卡片添加轻微动画
+        targetElement.style.transition = 'transform 0.3s ease';
+        targetElement.style.transform = 'scale(1.01)';
+        
+        setTimeout(() => {
+            draggedElement.style.transform = '';
+            targetElement.style.transform = '';
+            setTimeout(() => {
+                draggedElement.style.transition = '';
+                targetElement.style.transition = '';
+            }, 300);
+        }, 100);
+    } else {
+        // 非相邻卡片，只对被拖拽的卡片添加动画
+        draggedElement.style.transition = 'transform 0.3s ease';
+        draggedElement.style.transform = 'scale(1.05)';
+        setTimeout(() => {
+            draggedElement.style.transform = '';
+            setTimeout(() => {
+                draggedElement.style.transition = '';
+            }, 300);
+        }, 100);
+    }
 }
 
 function renderGameChoices(choices) {
@@ -1937,6 +2200,11 @@ function submitDictationAnswer() {
         setTimeout(() => {
             speak('Keep trying!', 0.9, 1.1, 0.85);
         }, 500);
+        
+        // 3秒后自动关闭反馈
+        setTimeout(() => {
+            hideDictationFeedback();
+        }, 3000);
     }
     
     learningProgress.recordAnswer(isCorrect);
@@ -1968,27 +2236,41 @@ function skipDictationQuestion() {
 }
 
 function showDictationFeedback(type, title, message) {
+    const overlay = document.getElementById('dictation-feedback-overlay');
     dictationFeedbackEl.innerHTML = `
         <div class="dictation-feedback ${type}">
-            <div class="font-bold text-lg">${title}</div>
-            <div class="text-sm mt-1">${message}</div>
+            <div class="font-bold text-xl">${title}</div>
+            <div class="text-lg mt-2">${message}</div>
         </div>
     `;
+    overlay.classList.remove('hidden');
+}
+
+function hideDictationFeedback() {
+    const overlay = document.getElementById('dictation-feedback-overlay');
+    overlay.classList.add('hidden');
 }
 
 function finishDictationGame() {
     dictationState.isCompleted = true;
     const accuracy = Math.round((dictationState.correctCount / dictationState.totalCount) * 100);
     
+    const overlay = document.getElementById('dictation-feedback-overlay');
     dictationFeedbackEl.innerHTML = `
         <div class="dictation-feedback ${accuracy >= 80 ? 'correct' : 'incorrect'}">
-            <div class="font-bold text-xl">听写完成！</div>
-            <div class="text-lg mt-2">正确率: ${accuracy}% (${dictationState.correctCount}/${dictationState.totalCount})</div>
-            <button onclick="initDictationGame('${appState.currentCategory}')" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+            <div class="font-bold text-2xl">听写完成！</div>
+            <div class="text-xl mt-3">正确率: ${accuracy}% (${dictationState.correctCount}/${dictationState.totalCount})</div>
+            <div class="mt-4">
+                <button onclick="initDictationGame('${appState.currentCategory}'); hideDictationFeedback();" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full hover:from-blue-600 hover:to-purple-600 transition-all shadow-lg font-semibold mr-3">
                 再来一次
             </button>
+                <button onclick="hideDictationFeedback();" class="px-6 py-3 bg-gradient-to-r from-gray-500 to-slate-500 text-white rounded-full hover:from-gray-600 hover:to-slate-600 transition-all shadow-lg font-semibold">
+                    关闭
+                </button>
+            </div>
         </div>
     `;
+    overlay.classList.remove('hidden');
     
     if (accuracy >= 80) {
         rewardSystem.giveStar();
@@ -2074,7 +2356,6 @@ function init() {
     rewardSystem.init();
     
     // 数据已经在全局作用域中初始化，无需重复加载
-
     const categories = Object.keys(data);
     categoryNav.innerHTML = '<h2 class="px-2 text-2xl font-bold text-sky-600 mb-4">主题分类</h2>';
     categories.forEach(category => {
@@ -2111,6 +2392,12 @@ function init() {
     dictationSubmitBtn.addEventListener('click', submitDictationAnswer);
     dictationSkipBtn.addEventListener('click', skipDictationQuestion);
     dictationClearBtn.addEventListener('click', clearDictationAnswer);
+    
+    // 覆盖层关闭按钮
+    const feedbackCloseBtn = document.getElementById('dictation-feedback-close');
+    if (feedbackCloseBtn) {
+        feedbackCloseBtn.addEventListener('click', hideDictationFeedback);
+    }
     
     setMode('flashcards');
     
