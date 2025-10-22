@@ -1073,6 +1073,25 @@ const dictationRemainingEl = document.getElementById('dictation-remaining');
 
 // --- Core Functions ---
 
+// 图片URL处理函数 - 优先使用webp格式，回退到png
+function getImageUrl(originalUrl) {
+    if (!originalUrl) return '';
+    
+    // 如果已经是webp格式，直接返回
+    if (originalUrl.endsWith('.webp')) {
+        return originalUrl;
+    }
+    
+    // 将.png替换为.webp
+    if (originalUrl.endsWith('.png')) {
+        return originalUrl.replace('.png', '.webp');
+    }
+    
+    // 其他格式直接返回
+    return originalUrl;
+}
+
+
 // 语音队列管理
 const speechQueue = {
     isPlaying: false,
@@ -1183,11 +1202,14 @@ function displayFlashcardsProgressively(category) {
         card.id = cardId;
         card.className = 'flashcard flex flex-col items-center justify-start rounded-2xl shadow-lg p-3 bg-white text-center';
 
-        const imageContent = `<img src="${item.imageUrl}" alt="${item.en}" class="w-full h-full object-contain" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-                              <div class="flex items-center justify-center w-full h-full text-6xl bg-gray-100 rounded-lg" style="display:none;">📷</div>`;
-
+        const webpUrl = getImageUrl(item.imageUrl);
+        const pngUrl = item.imageUrl;
+        
         card.innerHTML = `
-            <div class="image-container">${imageContent}</div>
+            <div class="image-container">
+                <img src="${webpUrl}" alt="${item.en}" class="w-full h-full object-contain" loading="lazy" decoding="async" onerror="if(this.src.endsWith('.webp')){this.src='${pngUrl}';}else{this.style.display='none';this.nextElementSibling.style.display='flex';}" />
+                <div class="flex items-center justify-center w-full h-full text-6xl bg-gray-100 rounded-lg" style="display:none;">📷</div>
+            </div>
             <div class="flex flex-col flex-grow justify-between">
                 <div>
                     <p class="text-lg font-bold text-gray-800">${item.en}</p>
@@ -1231,9 +1253,11 @@ function renderGameChoices(choices) {
         const card = document.createElement('div');
         card.className = 'game-choice-card rounded-2xl shadow-lg p-2';
 
-        const imageContent = `<img src="${item.imageUrl}" alt="${item.en}" class="w-full h-full object-contain" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-                              <div class="flex items-center justify-center w-full h-full text-6xl bg-gray-100 rounded-lg" style="display:none;">📷</div>`;
-        card.innerHTML = imageContent;
+        const webpUrl = getImageUrl(item.imageUrl);
+        const pngUrl = item.imageUrl;
+        
+        card.innerHTML = `<img src="${webpUrl}" alt="${item.en}" class="w-full h-full object-contain" loading="lazy" decoding="async" onerror="if(this.src.endsWith('.webp')){this.src='${pngUrl}';}else{this.style.display='none';this.nextElementSibling.style.display='flex';}" />
+                          <div class="flex items-center justify-center w-full h-full text-6xl bg-gray-100 rounded-lg" style="display:none;">📷</div>`;
 
         card.addEventListener('click', () => handleChoiceClick(item, card));
         gameChoicesGridEl.appendChild(card);
@@ -1367,7 +1391,9 @@ function renderMatchingItems() {
         const imageEl = document.createElement('div');
         imageEl.className = 'matching-item';
         imageEl.dataset.imageId = word.id;
-        imageEl.innerHTML = `<img src="${word.imageUrl}" alt="${word.en}" class="matching-image">`;
+        const webpUrl = getImageUrl(word.imageUrl);
+        const pngUrl = word.imageUrl;
+        imageEl.innerHTML = `<img src="${webpUrl}" alt="${word.en}" class="matching-image" onerror="if(this.src.endsWith('.webp')){this.src='${pngUrl}';}">`;
         imageEl.addEventListener('click', () => selectMatchingImage(word.id, imageEl));
         matchingImagesEl.appendChild(imageEl);
         
