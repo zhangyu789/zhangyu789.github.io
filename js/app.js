@@ -1078,7 +1078,17 @@ const dictationRemainingEl = document.getElementById('dictation-remaining');
 
 // --- Core Functions ---
 
-// 拖拽相关变量（已移除，使用下面的变量）
+// 拖拽相关变量
+let dragState = {
+    isDragging: false,
+    draggedElement: null,
+    draggedIndex: -1,
+    placeholder: null,
+    startX: 0,
+    startY: 0,
+    offsetX: 0,
+    offsetY: 0
+};
 
 // 图片URL处理函数 - 优先使用webp格式，回退到png
 function getImageUrl(originalUrl) {
@@ -1192,7 +1202,6 @@ function displayFlashcardsProgressively(category) {
     
     flashcardContainer.innerHTML = '';
 
-    // 移除卡片加载动画
 
     words.forEach((item, index) => {
         if (!item || !item.en) return; // 跳过无效数据
@@ -1219,14 +1228,10 @@ function displayFlashcardsProgressively(category) {
             </div>
         `;
 
-        // 拖拽事件变量
-        let dragStartTimer = null;
-        let hasStartedDrag = false;
-
         // 点击事件 - 播放语音
         card.addEventListener('click', (e) => {
             // 如果正在拖拽，不执行点击事件
-            if (hasStartedDrag) return;
+            if (dragState.isDragging) return;
             
             // 添加弹跳动画效果
             card.classList.add('anim-card-bounce');
@@ -1238,6 +1243,10 @@ function displayFlashcardsProgressively(category) {
             speakWordAndExample(item.en, item.example, item.id);
         });
 
+        // 拖拽事件
+        let dragStartTimer = null;
+        let hasStartedDrag = false;
+
         card.addEventListener('mousedown', (e) => {
             dragStartTimer = setTimeout(() => {
                 hasStartedDrag = true;
@@ -1245,26 +1254,20 @@ function displayFlashcardsProgressively(category) {
             }, 200); // 200ms后开始拖拽
         });
 
-        card.addEventListener('mouseup', (e) => {
+        card.addEventListener('mouseup', () => {
             if (dragStartTimer) {
                 clearTimeout(dragStartTimer);
                 dragStartTimer = null;
             }
-            // 只有在没有开始拖拽时才重置状态
-            if (!hasStartedDrag) {
-                hasStartedDrag = false;
-            }
+            hasStartedDrag = false;
         });
 
-        card.addEventListener('mouseleave', (e) => {
+        card.addEventListener('mouseleave', () => {
             if (dragStartTimer) {
                 clearTimeout(dragStartTimer);
                 dragStartTimer = null;
             }
-            // 只有在没有开始拖拽时才重置状态
-            if (!hasStartedDrag) {
-                hasStartedDrag = false;
-            }
+            hasStartedDrag = false;
         });
 
         // 触摸事件支持
@@ -1409,11 +1412,6 @@ function handleDragEnd(e) {
     draggedIndex = -1;
     placeholder = null;
     
-    // 重置所有卡片的拖拽状态
-    document.querySelectorAll('.flashcard').forEach(card => {
-        card.hasStartedDrag = false;
-    });
-    
     // 移除全局事件监听器
     document.removeEventListener('mousemove', handleDragMove);
     document.removeEventListener('mouseup', handleDragEnd);
@@ -1493,7 +1491,6 @@ function reorderCards(fromIndex, toIndex) {
 
 function renderGameChoices(choices) {
     gameChoicesGridEl.innerHTML = '';
-    // 移除游戏选择卡片动画
 
     choices.forEach((item, index) => {
         const card = document.createElement('div');
@@ -1618,7 +1615,6 @@ function renderMatchingItems() {
         wordEl.addEventListener('click', () => selectMatchingWord(word.id, wordEl));
         matchingWordsEl.appendChild(wordEl);
         
-        // 移除动画效果
     });
     
     // 渲染图片列表
@@ -1633,7 +1629,6 @@ function renderMatchingItems() {
         imageEl.addEventListener('click', () => selectMatchingImage(word.id, imageEl));
         matchingImagesEl.appendChild(imageEl);
         
-        // 移除动画效果
     });
 }
 
