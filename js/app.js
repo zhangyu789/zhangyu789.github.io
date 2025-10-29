@@ -1181,13 +1181,13 @@ function speakWordAndExample(word, example, wordId = null) {
     // 清空之前的语音队列
     speechQueue.clear();
 
-    // 先阅读单词（更自然的语调）
-    speak(word, 0.8, 1.15, 0.95);
+    // 先阅读单词（更慢、更清晰，适合儿童）
+    speak(word, 0.65, 1.1, 0.95);
     
-    // 添加停顿后阅读例句（更慢更清晰）
+    // 添加更长停顿后再读例句（更慢）
     setTimeout(() => {
-        speak(example, 0.75, 1.05, 0.9);
-    }, 1200);
+        speak(example, 0.6, 1.05, 0.9);
+    }, 2000);
 }
 
 
@@ -1224,11 +1224,11 @@ function displayFlashcardsProgressively(category) {
                     <p class="text-sm text-gray-500">${item.phonetic}</p>
                     <p class="text-md font-semibold text-sky-600 mt-1">${item.cn}</p>
                 </div>
-                <p class="text-xs text-gray-400 mt-2 italic text-center w-full">"${item.example}"</p>
+                <p class="text-xs text-gray-400 mt-2 italic text-center w-full example-text" style="cursor:pointer" title="点击朗读例句">"${item.example}"</p>
             </div>
         `;
 
-        // 点击事件 - 播放语音
+        // 点击事件 - 播放单词
         card.addEventListener('click', (e) => {
             // 如果正在拖拽，不执行点击事件
             if (dragState.isDragging) return;
@@ -1239,9 +1239,22 @@ function displayFlashcardsProgressively(category) {
                 card.classList.remove('anim-card-bounce');
             }, 800);
             
-            // 播放语音
-            speakWordAndExample(item.en, item.example, item.id);
+            // 仅朗读单词
+            playSound('click');
+            speak(item.en, 0.65, 1.1, 0.95);
         });
+
+        // 单击例句时朗读例句（与卡片点击分离）
+        const exampleEl = card.querySelector('.example-text');
+        if (exampleEl) {
+            exampleEl.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                playSound('click');
+                // 更慢更清晰地朗读例句
+                speechQueue.clear();
+                speak(item.example, 0.6, 1.05, 0.9);
+            });
+        }
 
         // 已禁用：长按拖拽排序功能
 
@@ -1490,9 +1503,9 @@ function generateQuestion() {
     appState.currentQuestion = choices[Math.floor(Math.random() * 4)];
 
     gameQuestionWordEl.textContent = appState.currentQuestion.en;
-        // 清空语音队列，确保题目朗读清晰
+        // 清空语音队列，确保题目朗读清晰（放慢语速，适合儿童）
         speechQueue.clear();
-        speak(appState.currentQuestion.en, 0.8, 1.1, 0.9);
+        speak(appState.currentQuestion.en, 0.65, 1.1, 0.9);
 
     renderGameChoices(choices);
         appState.isGameLoading = false;
@@ -1521,13 +1534,13 @@ function handleChoiceClick(selectedItem, cardElement) {
         // 先读单词和例句，然后读"Great!"
         speakWordAndExample(selectedItem.en, selectedItem.example, selectedItem.id);
         setTimeout(() => {
-            speak('Great!', 1.1, 1.2, 0.95);
+            speak('Great!', 0.9, 1.15, 0.95);
             playSound('success');
-        }, 3000); // 等待单词和例句读完
+        }, 4500); // 放慢朗读后延长等待时间，避免重叠
         setTimeout(() => {
             generateQuestion();
             gameChoicesGridEl.style.pointerEvents = 'auto';
-        }, 4000); // 总等待时间
+        }, 6000); // 总等待时间相应延长
     } else {
         // 播放错误音效
         playSound('wrong');
@@ -2066,9 +2079,9 @@ function clearDictationAnswer() {
 
 function playDictationWord() {
     if (dictationState.currentWord) {
-        // 清空语音队列，确保听写单词朗读清晰
+        // 清空语音队列，确保听写单词朗读清晰（放慢语速）
         speechQueue.clear();
-        speak(dictationState.currentWord.en, 0.75, 1.1, 0.9);
+        speak(dictationState.currentWord.en, 0.65, 1.1, 0.9);
     }
 }
 
