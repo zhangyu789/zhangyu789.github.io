@@ -1243,48 +1243,7 @@ function displayFlashcardsProgressively(category) {
             speakWordAndExample(item.en, item.example, item.id);
         });
 
-        // 拖拽事件
-        let dragStartTimer = null;
-        let hasStartedDrag = false;
-
-        card.addEventListener('mousedown', (e) => {
-            dragStartTimer = setTimeout(() => {
-                hasStartedDrag = true;
-                handleDragStart(e, card, item);
-            }, 200); // 200ms后开始拖拽
-        });
-
-        card.addEventListener('mouseup', () => {
-            if (dragStartTimer) {
-                clearTimeout(dragStartTimer);
-                dragStartTimer = null;
-            }
-            hasStartedDrag = false;
-        });
-
-        card.addEventListener('mouseleave', () => {
-            if (dragStartTimer) {
-                clearTimeout(dragStartTimer);
-                dragStartTimer = null;
-            }
-            hasStartedDrag = false;
-        });
-
-        // 触摸事件支持
-        card.addEventListener('touchstart', (e) => {
-            dragStartTimer = setTimeout(() => {
-                hasStartedDrag = true;
-                handleDragStart(e, card, item);
-            }, 200);
-        });
-
-        card.addEventListener('touchend', () => {
-            if (dragStartTimer) {
-                clearTimeout(dragStartTimer);
-                dragStartTimer = null;
-            }
-            hasStartedDrag = false;
-        });
+        // 已禁用：长按拖拽排序功能
 
         flashcardContainer.appendChild(card);
     });
