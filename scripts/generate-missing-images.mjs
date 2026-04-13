@@ -7,15 +7,17 @@
  *   npm run generate-images:dry
  *   npm run generate-images
  *   node scripts/generate-missing-images.mjs --limit=5 --max-kb=100
+ *   node scripts/generate-missing-images.mjs --vocabulary=data/vocabulary.json
  */
 
 import { readFileSync, existsSync, mkdirSync, writeFileSync, statSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 const APP_JS = join(ROOT, 'js', 'app.js');
+const DATA_VOCAB_JSON = join(ROOT, 'data', 'vocabulary.json');
 
 function parseArgs(argv) {
   const out = {
@@ -25,6 +27,7 @@ function parseArgs(argv) {
     delayMs: 900,
     heartbeatMs: 8000,
     maxKb: 100,
+    vocabularyPath: null,
   };
   for (const a of argv) {
     if (a === '--dry-run') out.dryRun = true;
@@ -35,6 +38,8 @@ function parseArgs(argv) {
       out.heartbeatMs = Math.max(1000, parseInt(a.slice('--heartbeat='.length), 10) || 8000);
     } else if (a.startsWith('--max-kb=')) {
       out.maxKb = Math.max(8, parseInt(a.slice('--max-kb='.length), 10) || 100);
+    } else if (a.startsWith('--vocabulary=')) {
+      out.vocabularyPath = a.slice('--vocabulary='.length).trim();
     }
   }
   return out;
@@ -96,9 +101,41 @@ function extractVocabularyArrayLiteral(source) {
   throw new Error('vocabulary 数组括号未闭合');
 }
 
-function loadVocabulary() {
-  const source = readFileSync(APP_JS, 'utf8');
-  const literal = extractVocabularyArrayLiteral(source);
+function resolveVocabularyFile(userPath) {
+  if (userPath) {
+    const p = isAbsolute(userPath) ? userPath : join(ROOT, userPath);
+    if (!existsSync(p)) {
+      throw new Error(`--vocabulary 指定的文件不存在：\n  ${p}`);
+    }
+    return p;
+  }
+  if (existsSync(APP_JS)) return APP_JS;
+  if (existsSync(DATA_VOCAB_JSON)) return DATA_VOCAB_JSON;
+  throw new Error(
+    `未找到词汇表文件。可选做法：\n` +
+      `  1) 恢复主站脚本（含 vocabulary）：  git checkout origin/main -- js/app.js\n` +
+      `  2) 自建 JSON 数组：  ${relativePosix(DATA_VOCAB_JSON)}  （每项含 imageUrl，及 english/en、chinese/cn）\n` +
+      `  3) 显式指定：  node scripts/generate-missing-images.mjs --vocabulary=你的文件.json`
+  );
+}
+
+/** 供错误信息里打印相对路径 */
+function relativePosix(absPath) {
+  const r = ROOT.replace(/\\/g, '/');
+  return absPath.replace(/\\/g, '/').replace(r + '/', '');
+}
+
+function loadVocabulary(vocabularyPath) {
+  const filePath = resolveVocabularyFile(vocabularyPath);
+  const text = readFileSync(filePath, 'utf8');
+
+  if (filePath.endsWith('.json')) {
+    const data = JSON.parse(text);
+    if (!Array.isArray(data)) throw new Error(`${filePath}：根类型必须是 JSON 数组`);
+    return data;
+  }
+
+  const literal = extractVocabularyArrayLiteral(text);
   const vocabulary = new Function(`return ${literal}`)();
   if (!Array.isArray(vocabulary)) throw new Error('vocabulary 解析结果不是数组');
   return vocabulary;
@@ -111,12 +148,25 @@ function vocabularyImageToWebpPath(imageUrl) {
   return join(ROOT, rel.replace(/\.png$/i, '.webp'));
 }
 
+/**
+ * 文生图英文描述：卡通写实（形体、色彩可信）+ 严禁拟人化。
+ * 若仓库中有 js/app.js 的在线回退图（如 buildAiFallbackImageUrl），请保持同一套措辞。
+ */
+function buildFlashcardImagePrompt(en, cn) {
+  const hint = cn ? ` Meaning disambiguation: ${cn}.` : '';
+  return (
+    `Educational English flashcard, single clear subject: ${en}.${hint} ` +
+    `Style: semi-realistic cartoon — soft shading, rounded forms, readable textures and colors like a polished reference illustration for kids; cute but faithful to how the real thing looks, not flat corporate clipart. ` +
+    `Strictly non-anthropomorphic: no human-like faces or smiles pasted on animals, no animals standing upright like people, no clothing hats glasses or props that imply human characters, no human hands or arms; ` +
+    `if it is an animal, show a natural species-typical pose; if food or object, show it plainly as itself. ` +
+    `Centered composition, plain white background, gentle even lighting. No text, no letters, no watermark, no logo.`
+  );
+}
+
 function buildPollinationsUrl(item) {
   const en = String(item.english ?? item.en ?? '').trim();
   const cn = String(item.chinese ?? item.cn ?? '').trim();
-  const prompt = encodeURIComponent(
-    `Cute cartoon flashcard for children learning English, single clear subject: ${en}${cn ? '. Chinese meaning: ' + cn : ''}. Flat vector style, bright friendly colors, centered, plain white background, no text, no letters, no watermark`
-  );
+  const prompt = encodeURIComponent(buildFlashcardImagePrompt(en, cn));
   return `https://image.pollinations.ai/prompt/${prompt}?width=512&height=512&nologo=true`;
 }
 
@@ -229,7 +279,7 @@ async function encodeWebpUnderLimit(sharpMod, inputBuffer, maxBytes) {
 }
 
 async function main() {
-  const { dryRun, force, limit, delayMs, heartbeatMs, maxKb } = parseArgs(process.argv.slice(2));
+  const { dryRun, force, limit, delayMs, heartbeatMs, maxKb, vocabularyPath } = parseArgs(process.argv.slice(2));
   const maxBytes = maxKb * 1024;
 
   let sharpMod;
@@ -240,7 +290,7 @@ async function main() {
     process.exit(1);
   }
 
-  const vocabulary = loadVocabulary();
+  const vocabulary = loadVocabulary(vocabularyPath);
   const tasks = [];
 
   for (const item of vocabulary) {
