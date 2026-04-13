@@ -1503,6 +1503,179 @@ function bindWordImageFallback(img, item) {
 
 
 // 语音队列管理
+const ttsState = {
+    voicesLoaded: false,
+    preferredVoice: null,
+    warmedUp: false,
+    settings: {
+        speedPreset: localStorage.getItem('tts.speedPreset') || 'slow',
+        voicePreference: localStorage.getItem('tts.voicePreference') || 'auto',
+        voiceName: localStorage.getItem('tts.voiceName') || ''
+    }
+};
+// 儿童模式语音参数：整体再放慢一点，音高更接近自然说话
+const CHILD_TTS = {
+    rateScaleByPreset: {
+        verySlow: 0.75,
+        slow: 0.88,
+        normal: 1.0
+    },
+    pitchDefault: 1.0,
+    volumeDefault: 1.0
+};
+
+function getTtsRateScale() {
+    return CHILD_TTS.rateScaleByPreset[ttsState.settings.speedPreset] || CHILD_TTS.rateScaleByPreset.slow;
+}
+
+function pickPreferredEnglishVoice(voices) {
+    if (!Array.isArray(voices) || voices.length === 0) return null;
+    const englishVoices = voices.filter(v => /^en(-|_)/i.test(v.lang || ''));
+    const pool = englishVoices.length > 0 ? englishVoices : voices;
+    if (ttsState.settings.voiceName) {
+        const exact = pool.find(v => (v.name || '') === ttsState.settings.voiceName);
+        if (exact) return exact;
+    }
+    const pref = ttsState.settings.voicePreference || 'auto';
+    const femaleHints = ['female', 'woman', 'girl', 'samantha', 'serena', 'zira', 'aria', 'ava', 'emma', 'luna', 'mia'];
+    const maleHints = ['male', 'man', 'boy', 'daniel', 'alex', 'david', 'tom', 'ryan', 'guy', 'james'];
+    const filteredPool = pool.filter((v) => {
+        const name = (v.name || '').toLowerCase();
+        if (pref === 'female') return femaleHints.some(h => name.includes(h));
+        if (pref === 'male') return maleHints.some(h => name.includes(h));
+        return true;
+    });
+    const candidatePool = filteredPool.length > 0 ? filteredPool : pool;
+
+    // 优先更自然/稳定的系统音色（Neural/Natural 往往更接近真人）
+    const preferredNameHints = [
+        'Neural',
+        'Natural',
+        'Google US English',
+        'Google UK English',
+        'Microsoft',
+        'Samantha',
+        'Daniel',
+        'Alex',
+        'Serena'
+    ];
+    for (const hint of preferredNameHints) {
+        const found = candidatePool.find(v => (v.name || '').toLowerCase().includes(hint.toLowerCase()));
+        if (found) return found;
+    }
+
+    const enUS = candidatePool.find(v => (v.lang || '').toLowerCase().startsWith('en-us'));
+    if (enUS) return enUS;
+    return candidatePool[0] || null;
+}
+
+function refreshTtsVoices() {
+    if (!('speechSynthesis' in window)) return;
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices || voices.length === 0) return;
+    ttsState.preferredVoice = pickPreferredEnglishVoice(voices);
+    ttsState.voicesLoaded = true;
+}
+
+function applyTtsSettings(partial = {}) {
+    ttsState.settings = { ...ttsState.settings, ...partial };
+    localStorage.setItem('tts.speedPreset', ttsState.settings.speedPreset);
+    localStorage.setItem('tts.voicePreference', ttsState.settings.voicePreference);
+    localStorage.setItem('tts.voiceName', ttsState.settings.voiceName || '');
+    refreshTtsVoices();
+    updateTtsVoiceOptions();
+}
+
+function updateTtsVoiceOptions() {
+    const voiceListSelect = document.getElementById('tts-voice-list-select');
+    if (!voiceListSelect || !('speechSynthesis' in window)) return;
+    const voices = window.speechSynthesis.getVoices() || [];
+    const englishVoices = voices.filter(v => /^en(-|_)/i.test(v.lang || ''));
+    const list = englishVoices.length > 0 ? englishVoices : voices;
+
+    const prev = ttsState.settings.voiceName || '';
+    voiceListSelect.innerHTML = '<option value="">系统自动选择</option>';
+    list.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v.name || '';
+        opt.textContent = `${v.name} (${v.lang})`;
+        voiceListSelect.appendChild(opt);
+    });
+    voiceListSelect.value = prev;
+    // 若缓存音色在当前浏览器不存在，自动回退
+    if (prev && voiceListSelect.value !== prev) {
+        applyTtsSettings({ voiceName: '' });
+    }
+}
+
+function initTtsControlsUI() {
+    if (!appSubtitle || document.getElementById('tts-controls')) return;
+    const wrap = document.createElement('div');
+    wrap.id = 'tts-controls';
+    wrap.className = 'mt-3 flex flex-wrap items-center justify-center gap-3 text-sm';
+    wrap.innerHTML = `
+      <label class="text-gray-600">朗读速度
+        <select id="tts-speed-select" class="ml-1 px-2 py-1 border rounded-lg">
+          <option value="verySlow">超慢</option>
+          <option value="slow">慢（推荐）</option>
+          <option value="normal">标准</option>
+        </select>
+      </label>
+      <label class="text-gray-600">音色
+        <select id="tts-voice-select" class="ml-1 px-2 py-1 border rounded-lg">
+          <option value="auto">自动</option>
+          <option value="female">女声优先</option>
+          <option value="male">男声优先</option>
+        </select>
+      </label>
+      <label class="text-gray-600">具体音色
+        <select id="tts-voice-list-select" class="ml-1 px-2 py-1 border rounded-lg max-w-xs">
+          <option value="">系统自动选择</option>
+        </select>
+      </label>
+    `;
+    appSubtitle.insertAdjacentElement('afterend', wrap);
+
+    const speedSelect = document.getElementById('tts-speed-select');
+    const voiceSelect = document.getElementById('tts-voice-select');
+    const voiceListSelect = document.getElementById('tts-voice-list-select');
+    if (speedSelect) {
+        speedSelect.value = ttsState.settings.speedPreset;
+        speedSelect.addEventListener('change', () => applyTtsSettings({ speedPreset: speedSelect.value }));
+    }
+    if (voiceSelect) {
+        voiceSelect.value = ttsState.settings.voicePreference;
+        voiceSelect.addEventListener('change', () => applyTtsSettings({ voicePreference: voiceSelect.value }));
+    }
+    if (voiceListSelect) {
+        updateTtsVoiceOptions();
+        voiceListSelect.addEventListener('change', () => applyTtsSettings({ voiceName: voiceListSelect.value || '' }));
+    }
+}
+
+function warmupTtsEngine() {
+    if (!('speechSynthesis' in window) || ttsState.warmedUp) return;
+    try {
+        // 触发部分浏览器的语音引擎初始化，避免首次点击无声
+        window.speechSynthesis.getVoices();
+        window.speechSynthesis.pause();
+        window.speechSynthesis.resume();
+    } catch (e) {
+        console.log('TTS warmup skipped:', e);
+    }
+    ttsState.warmedUp = true;
+}
+
+if ('speechSynthesis' in window) {
+    refreshTtsVoices();
+    window.speechSynthesis.onvoiceschanged = () => {
+        refreshTtsVoices();
+        updateTtsVoiceOptions();
+    };
+    document.addEventListener('click', warmupTtsEngine, { once: true });
+    document.addEventListener('touchstart', warmupTtsEngine, { once: true });
+}
+
 const speechQueue = {
     isPlaying: false,
     queue: [],
@@ -1520,11 +1693,16 @@ const speechQueue = {
         
         try {
     if ('speechSynthesis' in window) {
+        refreshTtsVoices();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'en-US';
-                utterance.rate = options.rate || 0.85;
-                utterance.pitch = options.pitch || 1.1;
-                utterance.volume = options.volume || 0.9;
+                if (ttsState.preferredVoice) {
+                    utterance.voice = ttsState.preferredVoice;
+                }
+                const baseRate = typeof options.rate === 'number' ? options.rate : 0.78;
+                utterance.rate = Math.max(0.45, Math.min(1.0, baseRate * getTtsRateScale()));
+                utterance.pitch = typeof options.pitch === 'number' ? options.pitch : CHILD_TTS.pitchDefault;
+                utterance.volume = typeof options.volume === 'number' ? options.volume : CHILD_TTS.volumeDefault;
                 
                 utterance.onend = () => {
                     this.isPlaying = false;
@@ -1558,7 +1736,7 @@ const speechQueue = {
     }
 };
 
-function speak(text, rate = 0.85, pitch = 1.1, volume = 0.9) {
+function speak(text, rate = 0.78, pitch = 1.0, volume = 1.0) {
     speechQueue.add(text, { rate, pitch, volume });
 }
 
@@ -1575,11 +1753,11 @@ function speakWordAndExample(word, example, wordId = null) {
     speechQueue.clear();
 
     // 先阅读单词（更慢、更清晰，适合儿童）
-    speak(word, 0.65, 1.1, 0.95);
+    speak(word, 0.58, 1.0, 1.0);
     
     // 添加更长停顿后再读例句（更慢）
     setTimeout(() => {
-        speak(example, 0.6, 1.05, 0.9);
+        speak(example, 0.54, 1.0, 1.0);
     }, 2000);
 }
 
@@ -1634,7 +1812,7 @@ function displayFlashcardsProgressively(category) {
             
             // 仅朗读单词
             playSound('click');
-            speak(item.en, 0.65, 1.1, 0.95);
+            speak(item.en, 0.58, 1.0, 1.0);
         });
 
         // 单击例句时朗读例句（与卡片点击分离）
@@ -1645,7 +1823,7 @@ function displayFlashcardsProgressively(category) {
                 playSound('click');
                 // 更慢更清晰地朗读例句
                 speechQueue.clear();
-                speak(item.example, 0.6, 1.05, 0.9);
+                speak(item.example, 0.54, 1.0, 1.0);
             });
         }
 
@@ -1706,7 +1884,7 @@ function generateQuestion() {
     gameQuestionWordEl.textContent = appState.currentQuestion.en;
         // 清空语音队列，确保题目朗读清晰（放慢语速，适合儿童）
         speechQueue.clear();
-        speak(appState.currentQuestion.en, 0.65, 1.1, 0.9);
+        speak(appState.currentQuestion.en, 0.58, 1.0, 1.0);
 
     renderGameChoices(choices);
         appState.isGameLoading = false;
@@ -1735,7 +1913,7 @@ function handleChoiceClick(selectedItem, cardElement) {
         // 先读单词和例句，然后读"Great!"
         speakWordAndExample(selectedItem.en, selectedItem.example, selectedItem.id);
         setTimeout(() => {
-            speak('Great!', 0.9, 1.15, 0.95);
+            speak('Great!', 0.78, 1.0, 1.0);
             playSound('success');
         }, 4500); // 放慢朗读后延长等待时间，避免重叠
         setTimeout(() => {
@@ -1746,7 +1924,7 @@ function handleChoiceClick(selectedItem, cardElement) {
         // 播放错误音效
         playSound('wrong');
         
-        speak('Try again!', 1.0, 1.1, 0.9);
+        speak('Try again!', 0.84, 1.0, 1.0);
         setTimeout(() => {
             cardElement.classList.remove('incorrect');
             gameChoicesGridEl.style.pointerEvents = 'auto';
@@ -2304,7 +2482,7 @@ function playDictationWord() {
     if (dictationState.currentWord) {
         // 清空语音队列，确保听写单词朗读清晰（放慢语速）
         speechQueue.clear();
-        speak(dictationState.currentWord.en, 0.65, 1.1, 0.9);
+        speak(dictationState.currentWord.en, 0.58, 1.0, 1.0);
     }
 }
 
@@ -2337,7 +2515,7 @@ function submitDictationAnswer() {
         
         // 播放鼓励语音
         setTimeout(() => {
-            speak('Excellent!', 1.0, 1.2, 0.9);
+            speak('Excellent!', 0.82, 1.0, 1.0);
         }, 500);
     } else {
         playSound('wrong');
@@ -2353,7 +2531,7 @@ function submitDictationAnswer() {
         
         // 播放鼓励语音
         setTimeout(() => {
-            speak('Keep trying!', 0.9, 1.1, 0.85);
+            speak('Keep trying!', 0.78, 1.0, 1.0);
         }, 500);
         
         // 3秒后自动关闭反馈
@@ -2506,6 +2684,7 @@ function init() {
     // 初始化系统
     learningProgress.init();
     rewardSystem.init();
+    initTtsControlsUI();
     
     // 数据已经在全局作用域中初始化，无需重复加载
     const categories = Object.keys(data);
@@ -2533,7 +2712,7 @@ function init() {
     gameQuestionWordEl.addEventListener('click', () => { 
         if(appState.currentQuestion) {
             speechQueue.clear();
-            speak(appState.currentQuestion.en, 0.8, 1.1, 0.9);
+            speak(appState.currentQuestion.en, 0.66, 1.0, 1.0);
         }
     });
     
