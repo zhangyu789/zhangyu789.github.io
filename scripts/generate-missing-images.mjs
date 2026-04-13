@@ -18,6 +18,17 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 const APP_JS = join(ROOT, 'js', 'app.js');
 const DATA_VOCAB_JSON = join(ROOT, 'data', 'vocabulary.json');
+// 基于 https://gen.pollinations.ai/image/models（image 模态且非 paid_only）整理
+const DEFAULT_FREE_IMAGE_MODELS = [
+  'flux',
+  'zimage',
+  'klein',
+  'gptimage',
+  'gptimage-large',
+  'wan-image',
+  'qwen-image',
+  'kontext',
+];
 
 function parseArgs(argv) {
   const out = {
@@ -28,6 +39,8 @@ function parseArgs(argv) {
     heartbeatMs: 8000,
     maxKb: 100,
     vocabularyPath: null,
+    models: [...DEFAULT_FREE_IMAGE_MODELS],
+    parallelModels: 1,
   };
   for (const a of argv) {
     if (a === '--dry-run') out.dryRun = true;
@@ -40,6 +53,15 @@ function parseArgs(argv) {
       out.maxKb = Math.max(8, parseInt(a.slice('--max-kb='.length), 10) || 100);
     } else if (a.startsWith('--vocabulary=')) {
       out.vocabularyPath = a.slice('--vocabulary='.length).trim();
+    } else if (a.startsWith('--models=')) {
+      const raw = a.slice('--models='.length).trim();
+      const list = raw
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (list.length > 0) out.models = list;
+    } else if (a.startsWith('--parallel-models=')) {
+      out.parallelModels = Math.max(1, parseInt(a.slice('--parallel-models='.length), 10) || 1);
     }
   }
   return out;
@@ -157,25 +179,232 @@ function buildFlashcardImagePrompt(en, cn) {
   return (
     `Educational English flashcard, single clear subject: ${en}.${hint} ` +
     `Style: semi-realistic cartoon — soft shading, rounded forms, readable textures and colors like a polished reference illustration for kids; cute but faithful to how the real thing looks, not flat corporate clipart. ` +
-    `Strictly non-anthropomorphic: no human-like faces or smiles pasted on animals, no animals standing upright like people, no clothing hats glasses or props that imply human characters, no human hands or arms; ` +
+    `Strictly non-anthropomorphic (for animals): no human-like faces or smiles pasted on animals, no animals standing upright like people, no clothing hats glasses or props that imply human characters. ` +
+    `Avoid disembodied human hands/arms or close-up hands. ` +
     `if it is an animal, show a natural species-typical pose; if food or object, show it plainly as itself. ` +
     `Centered composition, plain white background, gentle even lighting. No text, no letters, no watermark, no logo.`
   );
 }
 
-function buildPollinationsUrl(item) {
+/**
+ * 抽象词/形容词/介词/时间等：用“典型场景”来表达概念，而不是硬画一个词。
+ * 规则：
+ * - 尽量不依赖文字（不画 “TODAY/STOP” 等字样）
+ * - 简单、单场景、可视化强
+ */
+function buildScenePromptForItem(item) {
+  const enRaw = String(item.english ?? item.en ?? '').trim();
+  const cnRaw = String(item.chinese ?? item.cn ?? '').trim();
+  const themeId = String(item.themeId ?? '').trim();
+  const id = String(item.id ?? '').trim();
+
+  const base =
+    `Educational English flashcard illustration, concept shown clearly with a simple scene. ` +
+    `Style: semi-realistic cartoon — soft shading, rounded forms, readable textures, kid-friendly, clean and modern. ` +
+    `Plain white background, centered composition, gentle even lighting. ` +
+    `No text, no letters, no watermark, no logo. `;
+
+  const meaning = cnRaw ? `Meaning: ${cnRaw}. ` : '';
+
+  const byId = {
+    // senses
+    'sense-see': 'A pair of eyes looking at a colorful butterfly (no text). ',
+    'sense-hear': 'An ear with simple sound waves in the air (no text). ',
+    'sense-smell': 'A flower with a soft scent swirl (no text). ',
+    'sense-taste': 'A lemon slice and a spoon near a tongue icon (no text). ',
+    'sense-touch': 'A soft plush ball and a smooth wooden block (no hands). ',
+    'sense-loud': 'A big speaker with strong sound waves (no text). ',
+    'sense-quiet': 'A closed door with a soft muted sound wave symbol (no text). ',
+    'sense-sweet': 'A strawberry and a sugar cube (no text). ',
+    'sense-sour': 'A lemon with a sour “pucker” face is NOT allowed; instead show a lemon slice and a splash of juice. ',
+
+    // positions (use ball + boxes/table)
+    'pos-left': 'Two arrows pointing left; or a ball on the left side of a box (no text). ',
+    'pos-right': 'Two arrows pointing right; or a ball on the right side of a box (no text). ',
+    'pos-up': 'A balloon above a box (no text). ',
+    'pos-down': 'A ball rolling downward on a gentle ramp (no text). ',
+    'pos-in': 'A ball inside a transparent box. ',
+    'pos-on': 'A ball on top of a box. ',
+    'pos-under': 'A ball under a table. ',
+    'pos-over': 'A paper airplane flying over a small house. ',
+    'pos-between': 'A ball between two boxes. ',
+    'pos-next-to': 'A ball next to a box. ',
+    'pos-behind': 'A ball behind a box (partially hidden). ',
+    'pos-in-front-of': 'A ball in front of a box. ',
+
+    // opposites
+    'opp-big': 'A big ball next to a small ball. ',
+    'opp-small': 'A small ball next to a big ball. ',
+    'opp-tall': 'A tall tree next to a short bush. ',
+    'opp-short': 'A short pencil next to a long pencil. ',
+    'opp-long': 'A long rope next to a short rope. ',
+    'opp-heavy': 'A heavy rock next to a light feather. ',
+    'opp-light': 'A light feather next to a heavy rock. ',
+    'opp-full': 'A full cup next to an empty cup. ',
+    'opp-empty': 'An empty cup next to a full cup. ',
+    'opp-open': 'An open door next to a closed door. ',
+    'opp-closed': 'A closed door next to an open door. ',
+    'opp-wet': 'A wet towel with visible water drops next to a dry towel. ',
+    'opp-dry': 'A dry towel next to a wet towel with water drops. ',
+
+    // adjectives
+    'adj-soft': 'A soft pillow next to a hard rock. ',
+    'adj-hard': 'A hard rock next to a soft pillow. ',
+    'adj-smooth': 'A smooth glass marble next to a rough rock. ',
+    'adj-rough': 'A rough rock next to a smooth glass marble. ',
+    'adj-clean': 'A clean white plate next to a dirty plate with food stains. ',
+    'adj-dirty': 'A dirty plate with stains next to a clean white plate. ',
+    'adj-bright': 'A bright sun next to a dim lamp. ',
+    'adj-dark': 'A dark room with a small night light. ',
+    'adj-same': 'Two identical socks side by side. ',
+    'adj-different': 'Two different socks side by side (different colors/patterns, no text). ',
+
+    // safety
+    'safety-stop': 'A red traffic light glowing (no letters). ',
+    'safety-wait': 'A pedestrian signal style icon without letters: a standing figure silhouette in red (no text). ',
+    'safety-careful': 'A wet floor with a caution cone (no text). ',
+    'safety-danger': 'A spiky cactus next to a small warning triangle icon (no text). ',
+    'safety-safe': 'A child safety helmet and knee pads neatly placed (no child needed). ',
+    'safety-help': 'A ringing phone with an emergency bell icon (no numbers, no text). ',
+    'safety-emergency': 'An ambulance with lights on (no text). ',
+    'safety-helmet': 'A bicycle helmet centered. ',
+    'safety-seat-belt': 'A seat belt buckle close-up (no hands). ',
+
+    // daily routine
+    'routine-wake-up': 'An alarm clock next to a bed with morning sunlight. ',
+    'routine-brush-teeth': 'A toothbrush and toothpaste next to a sink (no text). ',
+    'routine-wash-hands': 'Soap bubbles above a sink and faucet (no hands). ',
+    'routine-breakfast': 'A simple breakfast: toast, egg, and a glass of milk. ',
+    'routine-go-to-school': 'A school backpack next to a school building. ',
+    'routine-homework': 'A notebook, pencil, and open book on a desk (no letters). ',
+    'routine-dinner': 'A dinner plate with rice and vegetables on a table. ',
+    'routine-shower': 'A shower head with water drops. ',
+    'routine-bedtime': 'A bed with a night lamp and a moon outside the window. ',
+    'routine-nap': 'A small pillow and blanket on a couch. ',
+
+    // polite
+    'polite-please': 'A gift box with a small heart symbol (no text). ',
+    'polite-thank-you': 'A bouquet of flowers and a small heart symbol (no text). ',
+    'polite-sorry': 'A broken toy gently repaired with a bandage (no text). ',
+    'polite-excuse-me': 'A door slightly open with a friendly “after you” gesture implied by an open path (no people, no text). ',
+    'polite-hello': 'A bright sun rising behind a simple house, welcoming mood (no text). ',
+    'polite-goodbye': 'A sunset behind a simple house, calm mood (no text). ',
+    'polite-good-morning': 'A sunrise with a breakfast table. ',
+    'polite-good-night': 'A moon and stars above a bed with night light. ',
+    'polite-you-are-welcome': 'Two simple gift boxes side by side with a heart symbol (no text). ',
+
+    // chores
+    'chore-tidy-up': 'Toys neatly put into a storage box. ',
+    'chore-clean': 'A clean sponge and spray bottle on a countertop (no label text). ',
+    'chore-sweep': 'A broom and dustpan with a small pile of dust. ',
+    'chore-mop': 'A mop and a shiny clean floor reflection. ',
+    'chore-wash-dishes': 'A stack of clean plates with soap bubbles (no hands). ',
+    'chore-take-out-trash': 'A tied trash bag next to a trash bin. ',
+    'chore-make-bed': 'A neatly made bed with pillow and blanket. ',
+    'chore-fold-clothes': 'A folded T-shirt and folded pants stacked neatly. ',
+    'chore-water-plants': 'A watering can next to a potted plant with water drops (no hands). ',
+
+    // sorting
+    'sort-same': 'Two identical blocks side by side. ',
+    'sort-different': 'Two different blocks side by side (different color/shape). ',
+    'sort-group': 'Three groups of blocks separated into piles by color. ',
+    'sort-sort': 'Mixed blocks being arranged into neat rows (no hands). ',
+    'sort-match': 'A matching game: two identical cards placed as a pair (no letters). ',
+    'sort-pair': 'A pair of socks side by side. ',
+
+    // time
+    'time-today': 'A calendar page with the current day highlighted using a colored circle (no letters). ',
+    'time-tomorrow': 'A calendar page with the next day highlighted (no letters). ',
+    'time-yesterday': 'A calendar page with the previous day highlighted (no letters). ',
+    'time-now': 'An analog clock pointing to a clear time (no numbers). ',
+    'time-later': 'Two analog clocks: one now, one later (no numbers). ',
+    'time-morning': 'Sunrise over a breakfast table. ',
+    'time-afternoon': 'Bright sun over a playground. ',
+    'time-evening': 'Warm sunset over a quiet street. ',
+    'time-night': 'Moon and stars over a house. ',
+    'time-week': 'Seven simple colored blocks in a row (no letters). ',
+    'time-month': 'A grid calendar with squares (no letters). ',
+    'time-year': 'Four seasons icons: spring flower, summer sun, autumn leaf, winter snowflake (no text). ',
+
+    // math basics
+    'math-more': 'Two plates: one with fewer apples, one with more apples. ',
+    'math-less': 'Two plates: one with more apples, one with fewer apples. ',
+    'math-equal': 'Two plates with the same number of apples. ',
+    'math-add': 'Two apples plus one apple, shown as three apples grouped together (no symbols). ',
+    'math-subtract': 'Three apples with one moved away, leaving two (no symbols). ',
+    'math-half': 'An apple cut into two equal halves. ',
+    'math-whole': 'A whole apple next to a sliced apple (no symbols). ',
+    'math-count': 'Ten colorful counting blocks in a line (no numbers). ',
+  };
+
+  if (byId[id]) {
+    return base + meaning + byId[id];
+  }
+
+  // 兜底：对这些主题用“概念场景”而不是“单体物品”
+  const abstractThemes = new Set(['senses', 'positions', 'opposites', 'adjectives', 'safety', 'daily', 'polite', 'chores', 'sorting', 'time', 'math']);
+  if (abstractThemes.has(themeId)) {
+    return base + meaning + `Show a simple, kid-friendly scene that clearly illustrates the concept of "${enRaw}" without using any text. `;
+  }
+
+  return null;
+}
+
+function buildPollinationsUrl(item, model) {
   const en = String(item.english ?? item.en ?? '').trim();
   const cn = String(item.chinese ?? item.cn ?? '').trim();
-  const prompt = encodeURIComponent(buildFlashcardImagePrompt(en, cn));
-  return `https://image.pollinations.ai/prompt/${prompt}?width=512&height=512&nologo=true`;
+  const scenePrompt = buildScenePromptForItem(item);
+  const prompt = encodeURIComponent(scenePrompt || buildFlashcardImagePrompt(en, cn));
+  const modelParam = model ? `&model=${encodeURIComponent(model)}` : '';
+  return `https://image.pollinations.ai/prompt/${prompt}?width=512&height=512&nologo=true${modelParam}`;
 }
 
 async function fetchImageBuffer(url) {
   const res = await fetch(url, { redirect: 'follow' });
-  if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+  if (!res.ok) {
+    const retryAfter = res.headers.get('retry-after');
+    const retryAfterMs = parseRetryAfterMs(retryAfter);
+    throw new HttpError(res.status, `${res.status} ${res.statusText}`, retryAfterMs);
+  }
   const buf = Buffer.from(await res.arrayBuffer());
   if (buf.length < 2000) throw new Error('响应过小，可能不是有效图片');
   return buf;
+}
+
+class HttpError extends Error {
+  /** @param {number} status @param {string} message @param {number|null} retryAfterMs */
+  constructor(status, message, retryAfterMs = null) {
+    super(`HTTP ${status} ${message}`);
+    this.name = 'HttpError';
+    this.status = status;
+    this.retryAfterMs = retryAfterMs;
+  }
+}
+
+function parseRetryAfterMs(value) {
+  if (!value) return null;
+  const s = String(value).trim();
+  // most common: seconds
+  const sec = Number(s);
+  if (Number.isFinite(sec) && sec > 0) return Math.round(sec * 1000);
+  // fallback: HTTP-date
+  const t = Date.parse(s);
+  if (Number.isFinite(t)) {
+    const ms = t - Date.now();
+    if (ms > 0) return ms;
+  }
+  return null;
+}
+
+function jitter(ms) {
+  const r = 0.85 + Math.random() * 0.3; // 0.85 ~ 1.15
+  return Math.round(ms * r);
+}
+
+function computeBackoffMs(attemptIndex, baseMs) {
+  // attemptIndex: 1..N
+  const raw = baseMs * Math.pow(2, Math.min(6, attemptIndex - 1));
+  return jitter(Math.min(raw, 180_000));
 }
 
 async function fetchImageBufferWithProgress(url, heartbeatMs) {
@@ -203,6 +432,39 @@ async function fetchImageBufferWithProgress(url, heartbeatMs) {
     console.log(`  → 请求在 ${sec}s 后失败`);
     throw e;
   }
+}
+
+async function fetchImageBufferWithRetry(url, heartbeatMs, opts) {
+  const {
+    maxAttempts = 6,
+    baseBackoffMs = 5000,
+    onBackoff = null,
+    abortOn429 = false,
+  } = opts || {};
+
+  let lastErr = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      if (attempt > 1) {
+        console.log(`  ↻ 重试第 ${attempt}/${maxAttempts} 次…`);
+      }
+      return await fetchImageBufferWithProgress(url, heartbeatMs);
+    } catch (e) {
+      lastErr = e;
+      const status = e && typeof e === 'object' && 'status' in e ? e.status : null;
+      const retryAfterMs = e && typeof e === 'object' && 'retryAfterMs' in e ? e.retryAfterMs : null;
+      if (abortOn429 && status === 429) break;
+
+      const retryable = status === 429 || (typeof status === 'number' && status >= 500 && status <= 599);
+      if (!retryable || attempt >= maxAttempts) break;
+
+      const backoffMs = retryAfterMs ?? computeBackoffMs(attempt, baseBackoffMs);
+      if (typeof onBackoff === 'function') onBackoff({ status, backoffMs, attempt, maxAttempts });
+      console.log(`  ⏳ 收到 ${status}，退避等待 ${(backoffMs / 1000).toFixed(1)}s 后重试…`);
+      await sleep(backoffMs);
+    }
+  }
+  throw lastErr;
 }
 
 function needsWebpFile(webpPath, force, maxBytes) {
@@ -279,8 +541,9 @@ async function encodeWebpUnderLimit(sharpMod, inputBuffer, maxBytes) {
 }
 
 async function main() {
-  const { dryRun, force, limit, delayMs, heartbeatMs, maxKb, vocabularyPath } = parseArgs(process.argv.slice(2));
+  const { dryRun, force, limit, delayMs, heartbeatMs, maxKb, vocabularyPath, models, parallelModels } = parseArgs(process.argv.slice(2));
   const maxBytes = maxKb * 1024;
+  const modelList = Array.isArray(models) && models.length > 0 ? models : [...DEFAULT_FREE_IMAGE_MODELS];
 
   let sharpMod;
   try {
@@ -304,53 +567,107 @@ async function main() {
     }
   }
 
-  console.log(`共 ${vocabulary.length} 条词汇，待写入 WebP（≤${maxKb}KB）: ${tasks.length} 条${dryRun ? '（dry-run）' : ''}`);
+  const selectedTasks = limit > 0 ? tasks.slice(0, limit) : tasks;
+  console.log(`共 ${vocabulary.length} 条词汇，待写入 WebP（≤${maxKb}KB）: ${selectedTasks.length} 条${dryRun ? '（dry-run）' : ''}`);
   if (!dryRun && tasks.length > 0) {
     console.log(`仅写入 .webp，不生成 PNG；超过 ${maxKb}KB 的已有 WebP 也会重压。\n`);
-    console.log(`每条下载期间约每 ${heartbeatMs / 1000}s 打印一次进度；--delay 为每条完成后间隔。\n`);
+    const workerCount = Math.min(Math.max(1, parallelModels), modelList.length, Math.max(1, selectedTasks.length));
+    const workerModels = modelList.slice(0, workerCount);
+    console.log(`模型: ${modelList.join(', ')}（可用 --models=... 自定义）`);
+    console.log(`并行队列: ${workerCount}（--parallel-models=N）；当前队列模型: ${workerModels.join(', ')}`);
+    console.log(`每条下载期间约每 ${heartbeatMs / 1000}s 打印一次进度；--delay 为每个队列项完成后间隔。\n`);
   } else {
     console.log('');
   }
 
-  let done = 0;
-  for (const t of tasks) {
-    if (limit > 0 && done >= limit) {
-      console.log(`已达 --limit=${limit}，停止。`);
-      break;
-    }
-    const { item, webpPath, imageUrl } = t;
-    const label = `${item.id ?? item.english} → ${relativeToRoot(webpPath)}`;
-
-    if (dryRun) {
+  if (dryRun) {
+    for (const t of selectedTasks) {
+      const label = `${t.item.id ?? t.item.english} → ${relativeToRoot(t.webpPath)}`;
       console.log(`[dry-run] ${label}`);
-      done++;
-      continue;
     }
+    console.log(`\n完成: 本轮处理 ${selectedTasks.length} 条。`);
+    return;
+  }
 
-    mkdirSync(dirname(webpPath), { recursive: true });
+  const workerCount = Math.min(Math.max(1, parallelModels), modelList.length, Math.max(1, selectedTasks.length));
+  const workerModels = modelList.slice(0, workerCount);
+  let successCount = 0;
+  let processedCount = 0;
+  const disabledModels = new Set();
 
-    try {
-      const url = buildPollinationsUrl(item);
-      console.log(`\n[${done + 1}/${tasks.length}] 生成中: ${label}`);
-      const raw = await fetchImageBufferWithProgress(url, heartbeatMs);
-      console.log('  → 正在压缩为 WebP（目标 ≤ ' + maxKb + 'KB）…');
-      const { buffer, width, quality, bytes } = await encodeWebpUnderLimit(sharpMod, raw, maxBytes);
-      writeFileSync(webpPath, buffer);
-      console.log(
-        `  已写 WebP ${relativeToRoot(webpPath)}  ${(bytes / 1024).toFixed(1)}KB  (边长约${width}px, q=${quality})`
-      );
-      done++;
-    } catch (e) {
-      console.error(`  失败: ${label}`, e.message || e);
+  function pickActiveModel(startIndex = 0) {
+    if (disabledModels.size >= modelList.length) return null;
+    for (let i = 0; i < modelList.length; i++) {
+      const m = modelList[(startIndex + i) % modelList.length];
+      if (!disabledModels.has(m)) return m;
     }
+    return null;
+  }
 
-    if (delayMs > 0 && done < tasks.length && !(limit > 0 && done >= limit)) {
-      console.log(`  ⏳ 间隔 ${delayMs}ms 后继续下一条…\n`);
-      await sleep(delayMs);
+  async function runWorker(workerId, model) {
+    let adaptiveDelayMs = delayMs;
+    let currentModel = model;
+    for (let idx = workerId; idx < selectedTasks.length; idx += workerCount) {
+      const t = selectedTasks[idx];
+      const { item, webpPath } = t;
+      const label = `${item.id ?? item.english} → ${relativeToRoot(webpPath)}`;
+      mkdirSync(dirname(webpPath), { recursive: true });
+
+      try {
+        if (disabledModels.has(currentModel)) {
+          const switched = pickActiveModel(workerId + idx + 1);
+          if (!switched) {
+            throw new Error('全部模型都已被限流禁用，停止本轮。');
+          }
+          currentModel = switched;
+          console.log(`  ↪ [队列${workerId + 1}] 切换模型为: ${currentModel}`);
+        }
+
+        console.log(`\n[${idx + 1}/${selectedTasks.length}] [队列${workerId + 1}:${currentModel}] 生成中: ${label}`);
+        const url = buildPollinationsUrl(item, currentModel);
+        const raw = await fetchImageBufferWithRetry(url, heartbeatMs, {
+          maxAttempts: 6,
+          baseBackoffMs: Math.max(4000, adaptiveDelayMs || 5000),
+          abortOn429: true,
+          onBackoff: ({ status, backoffMs }) => {
+            if (status === 429) {
+              adaptiveDelayMs = Math.max(adaptiveDelayMs || 0, Math.min(60_000, Math.round(backoffMs * 0.6)));
+            }
+          },
+        });
+        console.log(`  → 正在压缩为 WebP（目标 ≤ ${maxKb}KB）…`);
+        const { buffer, width, quality, bytes } = await encodeWebpUnderLimit(sharpMod, raw, maxBytes);
+        writeFileSync(webpPath, buffer);
+        console.log(`  已写 WebP ${relativeToRoot(webpPath)}  ${(bytes / 1024).toFixed(1)}KB  (边长约${width}px, q=${quality})`);
+        successCount++;
+      } catch (e) {
+        if (e && typeof e === 'object' && 'status' in e && e.status === 429) {
+          if (!disabledModels.has(currentModel)) {
+            disabledModels.add(currentModel);
+            console.log(`  ⚠️ 模型 ${currentModel} 触发 429，已在本轮禁用，不再使用。`);
+          }
+          const switched = pickActiveModel(workerId + idx + 1);
+          if (switched) {
+            currentModel = switched;
+            console.log(`  ↪ [队列${workerId + 1}] 后续改用模型: ${currentModel}`);
+          }
+        }
+        console.error(`  失败: ${label}`, e.message || e);
+      }
+
+      processedCount++;
+      if (adaptiveDelayMs > 0 && idx + workerCount < selectedTasks.length) {
+        console.log(`  ⏳ [队列${workerId + 1}] 间隔 ${adaptiveDelayMs}ms 后继续下一条…\n`);
+        await sleep(adaptiveDelayMs);
+      }
     }
   }
 
-  console.log(`\n完成: 本轮处理 ${done} 条。`);
+  await Promise.all(workerModels.map((model, i) => runWorker(i, model)));
+  if (disabledModels.size > 0) {
+    console.log(`\n本轮已禁用模型（触发 429）: ${Array.from(disabledModels).join(', ')}`);
+  }
+  console.log(`\n完成: 成功 ${successCount} 条，尝试 ${processedCount} 条。`);
 }
 
 main().catch((e) => {
