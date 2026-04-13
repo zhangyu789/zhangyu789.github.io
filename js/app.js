@@ -1453,38 +1453,45 @@ rebuildLearningData(initialAgeLevel);
 
 
 // --- App State ---
-const appState = {
-    currentCategory: Object.keys(data)[0],
-    currentMode: 'flashcards',
-    currentQuestion: null,
-    isGameLoading: false,
-    ageLevel: initialAgeLevel
-};
+const appState = window.AppStateModule
+    ? window.AppStateModule.createAppState(Object.keys(data)[0], initialAgeLevel)
+    : {
+        currentCategory: Object.keys(data)[0],
+        currentMode: 'flashcards',
+        currentQuestion: null,
+        isGameLoading: false,
+        ageLevel: initialAgeLevel
+    };
+appState.useReviewWords = false;
 
 // --- 配对连线状态 ---
-const matchingState = {
-    words: [],
-    images: [],
-    connections: new Map(), // wordId -> imageId
-    selectedWord: null,
-    selectedImage: null,
-    isCompleted: false,
-    isProcessing: false // 防止快速连续点击
-};
+const matchingState = window.AppStateModule
+    ? window.AppStateModule.createMatchingState()
+    : {
+        words: [],
+        images: [],
+        connections: new Map(), // wordId -> imageId
+        selectedWord: null,
+        selectedImage: null,
+        isCompleted: false,
+        isProcessing: false // 防止快速连续点击
+    };
 
 // --- 听写训练状态 ---
-const dictationState = {
-    words: [],
-    currentIndex: 0,
-    currentWord: null,
-    correctCount: 0,
-    totalCount: 0,
-    isCompleted: false,
-    currentLetters: [], // 当前单词的字母数组
-    shuffledLetters: [], // 打乱顺序的字母
-    usedLetters: new Set(), // 已使用的字母索引
-    currentAnswer: [] // 当前拼写的答案
-};
+const dictationState = window.AppStateModule
+    ? window.AppStateModule.createDictationState()
+    : {
+        words: [],
+        currentIndex: 0,
+        currentWord: null,
+        correctCount: 0,
+        totalCount: 0,
+        isCompleted: false,
+        currentLetters: [], // 当前单词的字母数组
+        shuffledLetters: [], // 打乱顺序的字母
+        usedLetters: new Set(), // 已使用的字母索引
+        currentAnswer: [] // 当前拼写的答案
+    };
 
 // --- DOM Elements ---
 const categoryNav = document.getElementById('category-nav');
@@ -1524,6 +1531,13 @@ const dictationFeedbackEl = document.getElementById('dictation-feedback');
 const dictationProgressEl = document.getElementById('dictation-progress');
 const dictationRemainingEl = document.getElementById('dictation-remaining');
 const dictationFeedbackOverlayEl = document.getElementById('dictation-feedback-overlay');
+const insightsStore = window.LearningInsightsModule
+    ? window.LearningInsightsModule.createInsightsStore()
+    : null;
+const perfProfile = window.PerfProfileModule
+    ? window.PerfProfileModule.detectProfile()
+    : { reducedMotion: false, lowPower: false, confettiCount: 120, animationEnabled: true };
+let dashboardPanelEl = null;
 
 function clearMatchingItemSelection() {
     matchingContainer.querySelectorAll('.matching-item').forEach(el => el.classList.remove('selected'));
@@ -1620,16 +1634,18 @@ function bindWordImageFallback(img, item) {
 
 
 // 语音队列管理
-const ttsState = {
-    voicesLoaded: false,
-    preferredVoice: null,
-    warmedUp: false,
-    settings: {
-        speedPreset: localStorage.getItem('tts.speedPreset') || 'slow',
-        voicePreference: localStorage.getItem('tts.voicePreference') || 'auto',
-        voiceName: localStorage.getItem('tts.voiceName') || ''
-    }
-};
+const ttsState = window.AppStateModule
+    ? window.AppStateModule.createTtsState()
+    : {
+        voicesLoaded: false,
+        preferredVoice: null,
+        warmedUp: false,
+        settings: {
+            speedPreset: localStorage.getItem('tts.speedPreset') || 'slow',
+            voicePreference: localStorage.getItem('tts.voicePreference') || 'auto',
+            voiceName: localStorage.getItem('tts.voiceName') || ''
+        }
+    };
 // 儿童模式语音参数：整体再放慢一点，音高更接近自然说话
 const CHILD_TTS = {
     rateScaleByPreset: {
@@ -1645,128 +1661,35 @@ function getTtsRateScale() {
     return CHILD_TTS.rateScaleByPreset[ttsState.settings.speedPreset] || CHILD_TTS.rateScaleByPreset.slow;
 }
 
-function pickPreferredEnglishVoice(voices) {
-    if (!Array.isArray(voices) || voices.length === 0) return null;
-    const englishVoices = voices.filter(v => /^en(-|_)/i.test(v.lang || ''));
-    const pool = englishVoices.length > 0 ? englishVoices : voices;
-    if (ttsState.settings.voiceName) {
-        const exact = pool.find(v => (v.name || '') === ttsState.settings.voiceName);
-        if (exact) return exact;
-    }
-    const pref = ttsState.settings.voicePreference || 'auto';
-    const femaleHints = ['female', 'woman', 'girl', 'samantha', 'serena', 'zira', 'aria', 'ava', 'emma', 'luna', 'mia'];
-    const maleHints = ['male', 'man', 'boy', 'daniel', 'alex', 'david', 'tom', 'ryan', 'guy', 'james'];
-    const filteredPool = pool.filter((v) => {
-        const name = (v.name || '').toLowerCase();
-        if (pref === 'female') return femaleHints.some(h => name.includes(h));
-        if (pref === 'male') return maleHints.some(h => name.includes(h));
-        return true;
-    });
-    const candidatePool = filteredPool.length > 0 ? filteredPool : pool;
-
-    // 优先更自然/稳定的系统音色（Neural/Natural 往往更接近真人）
-    const preferredNameHints = [
-        'Neural',
-        'Natural',
-        'Google US English',
-        'Google UK English',
-        'Microsoft',
-        'Samantha',
-        'Daniel',
-        'Alex',
-        'Serena'
-    ];
-    for (const hint of preferredNameHints) {
-        const found = candidatePool.find(v => (v.name || '').toLowerCase().includes(hint.toLowerCase()));
-        if (found) return found;
-    }
-
-    const enUS = candidatePool.find(v => (v.lang || '').toLowerCase().startsWith('en-us'));
-    if (enUS) return enUS;
-    return candidatePool[0] || null;
-}
-
 function refreshTtsVoices() {
-    if (!('speechSynthesis' in window)) return;
-    const voices = window.speechSynthesis.getVoices();
-    if (!voices || voices.length === 0) return;
-    ttsState.preferredVoice = pickPreferredEnglishVoice(voices);
-    ttsState.voicesLoaded = true;
+    if (window.TtsControllerModule) {
+        window.TtsControllerModule.refreshTtsVoices(ttsState);
+    }
 }
 
 function applyTtsSettings(partial = {}) {
-    ttsState.settings = { ...ttsState.settings, ...partial };
-    localStorage.setItem('tts.speedPreset', ttsState.settings.speedPreset);
-    localStorage.setItem('tts.voicePreference', ttsState.settings.voicePreference);
-    localStorage.setItem('tts.voiceName', ttsState.settings.voiceName || '');
-    refreshTtsVoices();
-    updateTtsVoiceOptions();
+    if (window.TtsControllerModule) {
+        window.TtsControllerModule.applyTtsSettings(ttsState, partial, {
+            onRefresh: refreshTtsVoices,
+            onUpdateOptions: updateTtsVoiceOptions
+        });
+    }
 }
 
 function updateTtsVoiceOptions() {
-    const voiceListSelect = document.getElementById('tts-voice-list-select');
-    if (!voiceListSelect || !('speechSynthesis' in window)) return;
-    const voices = window.speechSynthesis.getVoices() || [];
-    const englishVoices = voices.filter(v => /^en(-|_)/i.test(v.lang || ''));
-    const list = englishVoices.length > 0 ? englishVoices : voices;
-
-    const prev = ttsState.settings.voiceName || '';
-    voiceListSelect.innerHTML = '<option value="">系统自动选择</option>';
-    list.forEach(v => {
-        const opt = document.createElement('option');
-        opt.value = v.name || '';
-        opt.textContent = `${v.name} (${v.lang})`;
-        voiceListSelect.appendChild(opt);
-    });
-    voiceListSelect.value = prev;
-    // 若缓存音色在当前浏览器不存在，自动回退
-    if (prev && voiceListSelect.value !== prev) {
-        applyTtsSettings({ voiceName: '' });
+    if (window.TtsControllerModule) {
+        window.TtsControllerModule.updateTtsVoiceOptions(ttsState, {
+            onInvalidVoiceFallback: () => applyTtsSettings({ voiceName: '' })
+        });
     }
 }
 
 function initTtsControlsUI() {
-    if (!appSubtitle || document.getElementById('tts-controls')) return;
-    const wrap = document.createElement('div');
-    wrap.id = 'tts-controls';
-    wrap.className = 'mt-3 flex flex-wrap items-center justify-center gap-3 text-sm';
-    wrap.innerHTML = `
-      <label class="text-gray-600">朗读速度
-        <select id="tts-speed-select" class="ml-1 px-2 py-1 border rounded-lg">
-          <option value="verySlow">超慢</option>
-          <option value="slow">慢（推荐）</option>
-          <option value="normal">标准</option>
-        </select>
-      </label>
-      <label class="text-gray-600">音色
-        <select id="tts-voice-select" class="ml-1 px-2 py-1 border rounded-lg">
-          <option value="auto">自动</option>
-          <option value="female">女声优先</option>
-          <option value="male">男声优先</option>
-        </select>
-      </label>
-      <label class="text-gray-600">具体音色
-        <select id="tts-voice-list-select" class="ml-1 px-2 py-1 border rounded-lg max-w-xs">
-          <option value="">系统自动选择</option>
-        </select>
-      </label>
-    `;
-    appSubtitle.insertAdjacentElement('afterend', wrap);
-
-    const speedSelect = document.getElementById('tts-speed-select');
-    const voiceSelect = document.getElementById('tts-voice-select');
-    const voiceListSelect = document.getElementById('tts-voice-list-select');
-    if (speedSelect) {
-        speedSelect.value = ttsState.settings.speedPreset;
-        speedSelect.addEventListener('change', () => applyTtsSettings({ speedPreset: speedSelect.value }));
-    }
-    if (voiceSelect) {
-        voiceSelect.value = ttsState.settings.voicePreference;
-        voiceSelect.addEventListener('change', () => applyTtsSettings({ voicePreference: voiceSelect.value }));
-    }
-    if (voiceListSelect) {
-        updateTtsVoiceOptions();
-        voiceListSelect.addEventListener('change', () => applyTtsSettings({ voiceName: voiceListSelect.value || '' }));
+    if (window.TtsControllerModule) {
+        window.TtsControllerModule.initTtsControlsUI(appSubtitle, ttsState, {
+            onApply: applyTtsSettings,
+            onUpdateOptions: updateTtsVoiceOptions
+        });
     }
 }
 
@@ -1834,6 +1757,40 @@ function initAgeLevelControlsUI() {
     syncBtnState();
 }
 
+function updateDashboardPanel() {
+    if (!dashboardPanelEl || !insightsStore) return;
+    const dataBoard = insightsStore.getDashboard();
+    if (!window.DashboardControllerModule) return;
+    window.DashboardControllerModule.renderAndBind(dashboardPanelEl, dataBoard, {
+        onReview: () => {
+            appState.useReviewWords = true;
+            setMode('dictation');
+        },
+        onClear: () => {
+            const reviewWords = insightsStore.getReviewWords();
+            reviewWords.forEach(word => insightsStore.clearReviewWord(word.id));
+            updateDashboardPanel();
+        }
+    });
+}
+
+function initDashboardPanelUI() {
+    if (!appSubtitle || dashboardPanelEl) return;
+    dashboardPanelEl = document.createElement('div');
+    dashboardPanelEl.id = 'learning-dashboard-panel';
+    appSubtitle.insertAdjacentElement('afterend', dashboardPanelEl);
+    updateDashboardPanel();
+}
+
+function recordLearningResult(item, isCorrect) {
+    if (!insightsStore || !item) return;
+    insightsStore.recordResult(item, isCorrect);
+    if (isCorrect && item.id) {
+        insightsStore.clearReviewWord(item.id);
+    }
+    updateDashboardPanel();
+}
+
 function warmupTtsEngine() {
     if (!('speechSynthesis' in window) || ttsState.warmedUp) return;
     try {
@@ -1847,6 +1804,47 @@ function warmupTtsEngine() {
     ttsState.warmedUp = true;
 }
 
+function playFlashcardTapAnimation(card, evt = null) {
+    if (!card) return;
+    if (!perfProfile.animationEnabled) return;
+    const effects = ['anim-card-bounce', 'anim-tap-tilt-left', 'anim-tap-tilt-right'];
+    const cls = effects[Math.floor(Math.random() * effects.length)];
+    card.classList.add(cls);
+    setTimeout(() => card.classList.remove(cls), 820);
+    card.classList.add('flashcard-glow-burst');
+    setTimeout(() => card.classList.remove('flashcard-glow-burst'), 560);
+
+    // 点击波纹（更有“按下反馈”）
+    const rect = card.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    ripple.className = `flashcard-ripple${Math.random() < 0.8 ? ' rainbow' : ''}`;
+    const x = evt ? (evt.clientX - rect.left) : rect.width / 2;
+    const y = evt ? (evt.clientY - rect.top) : rect.height / 2;
+    ripple.style.left = `${x}px`;
+    ripple.style.top = `${y}px`;
+    card.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+
+    // 炫彩粒子（提升趣味）
+    const stars = ['✨', '⭐', '💫', '🌟', '🎉', '🪄'];
+    const particleCount = 6;
+    for (let i = 0; i < particleCount; i++) {
+        const star = document.createElement('span');
+        star.className = 'flashcard-star';
+        star.textContent = stars[Math.floor(Math.random() * stars.length)];
+        const sx = Math.max(16, Math.min(rect.width - 16, x + (Math.random() * 26 - 13)));
+        const sy = Math.max(16, Math.min(rect.height - 16, y + (Math.random() * 20 - 10)));
+        star.style.left = `${sx}px`;
+        star.style.top = `${sy}px`;
+        star.style.color = `hsl(${Math.floor(Math.random() * 360)} 92% 62%)`;
+        star.style.fontSize = `${14 + Math.floor(Math.random() * 8)}px`;
+        star.style.setProperty('--dx', `${Math.round((Math.random() * 2 - 1) * 34)}px`);
+        star.style.setProperty('--dy', `${Math.round(-28 - Math.random() * 22)}px`);
+        card.appendChild(star);
+        setTimeout(() => star.remove(), 760);
+    }
+}
+
 if ('speechSynthesis' in window) {
     refreshTtsVoices();
     window.speechSynthesis.onvoiceschanged = () => {
@@ -1857,65 +1855,18 @@ if ('speechSynthesis' in window) {
     document.addEventListener('touchstart', warmupTtsEngine, { once: true });
 }
 
-const speechQueue = {
-    isPlaying: false,
-    queue: [],
-    
-    add(text, options = {}) {
-        this.queue.push({ text, options });
-        this.process();
-    },
-    
-    process() {
-        if (this.isPlaying || this.queue.length === 0) return;
-        
-        this.isPlaying = true;
-        const { text, options } = this.queue.shift();
-        
-        try {
-    if ('speechSynthesis' in window) {
-        refreshTtsVoices();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US';
-                if (ttsState.preferredVoice) {
-                    utterance.voice = ttsState.preferredVoice;
-                }
-                const baseRate = typeof options.rate === 'number' ? options.rate : 0.78;
-                utterance.rate = Math.max(0.45, Math.min(1.0, baseRate * getTtsRateScale()));
-                utterance.pitch = typeof options.pitch === 'number' ? options.pitch : CHILD_TTS.pitchDefault;
-                utterance.volume = typeof options.volume === 'number' ? options.volume : CHILD_TTS.volumeDefault;
-                
-                utterance.onend = () => {
-                    this.isPlaying = false;
-                    setTimeout(() => this.process(), 200); // 短暂停顿
-                };
-                
-                utterance.onerror = (event) => {
-                    console.log('Speech synthesis error:', event.error);
-                    this.isPlaying = false;
-                    setTimeout(() => this.process(), 200);
-                };
-                
-        window.speechSynthesis.speak(utterance);
-    } else {
-                this.isPlaying = false;
-                setTimeout(() => this.process(), 200);
-            }
-        } catch (error) {
-            console.log('Speech synthesis failed:', error);
-            this.isPlaying = false;
-            setTimeout(() => this.process(), 200);
-        }
-    },
-    
-    clear() {
-        this.queue = [];
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-        }
-        this.isPlaying = false;
-    }
-};
+const speechQueue = window.SpeechQueueModule
+    ? window.SpeechQueueModule.createSpeechQueue({
+        onBeforeSpeak: refreshTtsVoices,
+        getPreferredVoice: () => ttsState.preferredVoice,
+        getRateScale: getTtsRateScale,
+        getDefaultPitch: () => CHILD_TTS.pitchDefault,
+        getDefaultVolume: () => CHILD_TTS.volumeDefault
+    })
+    : {
+        add() {},
+        clear() {}
+    };
 
 function speak(text, rate = 0.78, pitch = 1.0, volume = 1.0) {
     speechQueue.add(text, { rate, pitch, volume });
@@ -1956,7 +1907,7 @@ function displayFlashcardsProgressively(category) {
     const categorySlug = category.replace(/[^a-zA-Z0-9]/g, '');
     const fragment = document.createDocumentFragment();
 
-    words.forEach((item, index) => {
+    words.forEach((item, _index) => {
         if (!item || !item.en) return; // 跳过无效数据
         const card = document.createElement('div');
         const cardId = `card-${categorySlug}-${item.en.replace(/[^a-zA-Z0-9]/g, '')}`;
@@ -1984,12 +1935,7 @@ function displayFlashcardsProgressively(category) {
 
         // 点击事件 - 播放单词
         card.addEventListener('click', (e) => {
-            
-            // 添加弹跳动画效果
-            card.classList.add('anim-card-bounce');
-            setTimeout(() => {
-                card.classList.remove('anim-card-bounce');
-            }, 800);
+            playFlashcardTapAnimation(card, e);
             
             // 仅朗读单词
             playSound('click');
@@ -2022,7 +1968,7 @@ function renderGameChoices(choices) {
     gameChoicesGridEl.innerHTML = '';
     const fragment = document.createDocumentFragment();
 
-    choices.forEach((item, index) => {
+    choices.forEach((item, _index) => {
         const card = document.createElement('div');
         card.className = 'game-choice-card rounded-2xl shadow-lg p-2';
 
@@ -2083,6 +2029,7 @@ function handleChoiceClick(selectedItem, cardElement) {
     cardElement.classList.add(isCorrect ? 'correct' : 'incorrect');
     
     if (isCorrect) {
+        recordLearningResult(selectedItem, true);
         // 播放正确音效
         playSound('correct');
         
@@ -2102,6 +2049,7 @@ function handleChoiceClick(selectedItem, cardElement) {
             gameChoicesGridEl.style.pointerEvents = 'auto';
         }, 6000); // 总等待时间相应延长
     } else {
+        recordLearningResult(selectedItem, false);
         // 播放错误音效
         playSound('wrong');
         
@@ -2140,7 +2088,7 @@ function renderMatchingItems() {
     // 渲染单词列表
     matchingWordsEl.innerHTML = '';
     const wordsFragment = document.createDocumentFragment();
-    matchingState.words.forEach((word, index) => {
+    matchingState.words.forEach((word, _index) => {
         const wordEl = document.createElement('div');
         wordEl.className = 'matching-item';
         wordEl.dataset.wordId = word.id;
@@ -2154,7 +2102,7 @@ function renderMatchingItems() {
     // 渲染图片列表
     matchingImagesEl.innerHTML = '';
     const imagesFragment = document.createDocumentFragment();
-    matchingState.images.forEach((word, index) => {
+    matchingState.images.forEach((word, _index) => {
         const imageEl = document.createElement('div');
         imageEl.className = 'matching-item';
         imageEl.dataset.imageId = word.id;
@@ -2214,10 +2162,9 @@ function selectMatchingImage(imageId, element) {
     if (matchingState.isProcessing) return;
     
     // 检查是否已被连接
-    for (const [, usedImageId] of matchingState.connections.entries()) {
-        if (usedImageId === imageId) {
-            return; // 已被使用的图片不可点击
-        }
+    if (window.MatchingServiceModule
+        && window.MatchingServiceModule.isImageUsed(matchingState.connections, imageId)) {
+        return;
     }
     
     // 播放点击音效
@@ -2253,9 +2200,10 @@ function validateMatchingSelection() {
     const wordEl = matchingWordsEl.querySelector(`[data-word-id="${wordId}"]`);
     const imageEl = matchingImagesEl.querySelector(`[data-image-id="${imageId}"]`);
     
-    // 检查是否已经连接过
-    if (matchingState.connections.has(wordId)) {
-        // 已连接过，直接重置选择
+    const pairState = window.MatchingServiceModule
+        ? window.MatchingServiceModule.canUsePair(matchingState.connections, wordId, imageId)
+        : { canUse: !matchingState.connections.has(wordId), wordUsed: matchingState.connections.has(wordId), imageUsed: false };
+    if (!pairState.canUse) {
         matchingState.selectedWord = null;
         matchingState.selectedImage = null;
         clearMatchingItemSelection();
@@ -2263,22 +2211,10 @@ function validateMatchingSelection() {
         return;
     }
     
-    // 检查图片是否已被使用
-    for (const [, usedImageId] of matchingState.connections.entries()) {
-        if (usedImageId === imageId) {
-            // 已被占用，直接重置选择
-            matchingState.selectedWord = null;
-            matchingState.selectedImage = null;
-            clearMatchingItemSelection();
-            matchingState.isProcessing = false;
-            return;
-        }
-    }
-    
     // 验证配对是否正确 - 通过比较单词的英文
-    const selectedWord = matchingState.words.find(w => w.id === wordId);
-    const selectedImage = matchingState.images.find(i => i.id === imageId);
-    const isCorrect = selectedWord && selectedImage && selectedWord.en === selectedImage.en;
+    const isCorrect = window.MatchingServiceModule
+        ? window.MatchingServiceModule.isCorrectPair(matchingState.words, matchingState.images, wordId, imageId)
+        : false;
     
     if (isCorrect) {
         // 正确：创建连线、半透明禁用、不移除
@@ -2309,8 +2245,10 @@ function validateMatchingSelection() {
     updateMatchingProgress();
     
         // 判断是否全部完成
-        const total = Math.min(4, matchingState.words.length);
-        if (matchingState.connections.size >= total) {
+        const isDone = window.MatchingServiceModule
+            ? window.MatchingServiceModule.isMatchingCompleted(matchingState.words, matchingState.connections)
+            : false;
+        if (isDone) {
             matchingState.isCompleted = true;
             playSound('success');
             if (typeof rewardSystem !== 'undefined') {
@@ -2345,8 +2283,9 @@ function validateMatchingSelection() {
 
 // --- 彩带动画 ---
 function launchConfetti() {
+    if (!perfProfile.animationEnabled || perfProfile.confettiCount <= 0) return;
     const colors = ['#f87171', '#fbbf24', '#34d399', '#60a5fa', '#a78bfa', '#f472b6'];
-    const count = 120;
+    const count = perfProfile.confettiCount;
     const fragment = document.createDocumentFragment();
     for (let i = 0; i < count; i++) {
         const piece = document.createElement('div');
@@ -2419,7 +2358,29 @@ function updateMatchingProgress() {
     matchingTotalEl.textContent = total;
 }
 
-// 旧的整体验证与连线逻辑已不再使用
+function checkMatchingAnswers() {
+    if (!matchingState.words || matchingState.words.length === 0) return;
+    const checkState = window.ModeServicesModule
+        ? window.ModeServicesModule.getMatchingCheckState(matchingState.words, matchingState.connections)
+        : {
+            total: Math.min(4, matchingState.words.length),
+            done: matchingState.connections ? matchingState.connections.size : 0,
+            isCompleted: matchingState.connections && matchingState.connections.size >= Math.min(4, matchingState.words.length)
+        };
+
+    // 当前版本为即时判定连接，检查按钮用于阶段反馈与快速下一题
+    if (checkState.isCompleted) {
+        playSound('success');
+        launchConfetti();
+        setTimeout(() => {
+            initMatchingGame(appState.currentCategory);
+        }, 900);
+        return;
+    }
+
+    playSound('click');
+    speak(`You have matched ${checkState.done} out of ${checkState.total}. Keep going!`, 0.72, 1.0, 1.0);
+}
 
 function resetMatchingGame() {
     initMatchingGame(appState.currentCategory);
@@ -2427,30 +2388,50 @@ function resetMatchingGame() {
 
 // --- 听写训练功能 ---
 function initDictationGame(category) {
-    const categoryWords = data[category] || [];
-    if (categoryWords.length === 0) return;
-    
-    // 随机选择单词
-    const shuffled = [...categoryWords].sort(() => Math.random() - 0.5);
-    const selectedWords = shuffled.slice(0, Math.min(10, categoryWords.length));
-    
-    // 重置状态
-    dictationState.words = selectedWords;
-    dictationState.currentIndex = 0;
-    dictationState.correctCount = 0;
-    dictationState.totalCount = selectedWords.length;
-    dictationState.isCompleted = false;
+    const reviewWords = insightsStore ? insightsStore.getReviewWords() : [];
+    const pickResult = window.ModeServicesModule
+        ? window.ModeServicesModule.pickDictationRoundWords({
+            reviewWords,
+            useReviewWords: appState.useReviewWords,
+            categoryWords: data[category] || [],
+            maxCount: 10
+        })
+        : { selectedWords: data[category] || [], usedReviewWords: false };
+    const selectedWords = pickResult.selectedWords || [];
+    if (selectedWords.length === 0) return;
+    appState.useReviewWords = false;
+
+    // 重置状态（由 service 生成回合基态）
+    const roundState = window.DictationServiceModule
+        ? window.DictationServiceModule.buildRoundState(selectedWords)
+        : {
+            words: selectedWords,
+            currentIndex: 0,
+            correctCount: 0,
+            totalCount: selectedWords.length,
+            isCompleted: false
+        };
+    dictationState.words = roundState.words;
+    dictationState.currentIndex = roundState.currentIndex;
+    dictationState.correctCount = roundState.correctCount;
+    dictationState.totalCount = roundState.totalCount;
+    dictationState.isCompleted = roundState.isCompleted;
     
     startDictationRound();
 }
 
 function startDictationRound() {
-    if (dictationState.currentIndex >= dictationState.words.length) {
+    const finishNow = window.DictationServiceModule
+        ? window.DictationServiceModule.shouldFinish(dictationState.words, dictationState.currentIndex)
+        : dictationState.currentIndex >= dictationState.words.length;
+    if (finishNow) {
         finishDictationGame();
         return;
     }
-    
-    dictationState.currentWord = dictationState.words[dictationState.currentIndex];
+
+    dictationState.currentWord = window.DictationServiceModule
+        ? window.DictationServiceModule.getCurrentWord(dictationState.words, dictationState.currentIndex)
+        : dictationState.words[dictationState.currentIndex];
     dictationState.currentLetters = dictationState.currentWord.en.split('');
     dictationState.shuffledLetters = [...dictationState.currentLetters].sort(() => Math.random() - 0.5);
     dictationState.usedLetters.clear();
@@ -2680,6 +2661,7 @@ function submitDictationAnswer() {
     const isCorrect = userAnswer === correctAnswer;
     
     if (isCorrect) {
+        recordLearningResult(dictationState.currentWord, true);
         dictationState.correctCount++;
         playSound('correct');
         showDictationFeedback('correct', '正确！', `正确答案: ${dictationState.currentWord.en}`);
@@ -2699,6 +2681,7 @@ function submitDictationAnswer() {
             speak('Excellent!', 0.82, 1.0, 1.0);
         }, 500);
     } else {
+        recordLearningResult(dictationState.currentWord, false);
         playSound('wrong');
         showDictationFeedback('incorrect', '不正确', `正确答案: ${dictationState.currentWord.en}`);
         
@@ -2862,56 +2845,60 @@ function toggleDesktopSidebar() {
 
 // --- Initialization ---
 function init() {
-    // 初始化系统
-    learningProgress.init();
-    rewardSystem.init();
-    initAgeLevelControlsUI();
-    initTtsControlsUI();
-    
-    // 数据已经在全局作用域中初始化，无需重复加载
-    renderCategoryButtons();
-    appState.currentCategory = findFirstNonEmptyCategory();
-
-    modeFlashcardsBtn.addEventListener('click', () => setMode('flashcards'));
-    modeGameBtn.addEventListener('click', () => setMode('game'));
-    modeMatchingBtn.addEventListener('click', () => setMode('matching'));
-    modeDictationBtn.addEventListener('click', () => setMode('dictation'));
-    
-    menuToggle.addEventListener('click', toggleMenu);
-    menuBackdrop.addEventListener('click', toggleMenu);
-    desktopSidebarToggle.addEventListener('click', toggleDesktopSidebar);
-    sidebarToggle.addEventListener('click', toggleMenu);
-
-    gameQuestionWordEl.addEventListener('click', () => { 
-        if(appState.currentQuestion) {
-            speechQueue.clear();
-            speak(appState.currentQuestion.en, 0.66, 1.0, 1.0);
-        }
-    });
-    
-    // 配对连线事件监听器
-    matchingCheckBtn.addEventListener('click', checkMatchingAnswers);
-    matchingResetBtn.addEventListener('click', resetMatchingGame);
-    
-    // 听写训练事件监听器
-    dictationPlayBtn.addEventListener('click', playDictationWord);
-    dictationSubmitBtn.addEventListener('click', submitDictationAnswer);
-    dictationSkipBtn.addEventListener('click', skipDictationQuestion);
-    dictationClearBtn.addEventListener('click', clearDictationAnswer);
-    
-    // 覆盖层关闭按钮
     const feedbackCloseBtn = document.getElementById('dictation-feedback-close');
-    if (feedbackCloseBtn) {
-        feedbackCloseBtn.addEventListener('click', hideDictationFeedback);
+    if (window.AppBootstrapModule) {
+        window.AppBootstrapModule.bootstrap({
+            appState,
+            speechQueue,
+            speakWord: speak,
+            gameQuestionWordEl,
+            modeButtons: {
+                flashcards: modeFlashcardsBtn,
+                game: modeGameBtn,
+                matching: modeMatchingBtn,
+                dictation: modeDictationBtn
+            },
+            sidebar: {
+                menuToggle,
+                menuBackdrop,
+                desktopSidebarToggle,
+                sidebarToggle
+            },
+            matchingButtons: {
+                check: matchingCheckBtn,
+                reset: matchingResetBtn
+            },
+            dictationButtons: {
+                play: dictationPlayBtn,
+                submit: dictationSubmitBtn,
+                skip: dictationSkipBtn,
+                clear: dictationClearBtn,
+                feedbackClose: feedbackCloseBtn
+            },
+            systems: {
+                learningProgress,
+                rewardSystem
+            },
+            handlers: {
+                initAgeLevelControlsUI,
+                initTtsControlsUI,
+                initDashboardPanelUI,
+                renderCategoryButtons,
+                findFirstNonEmptyCategory,
+                setMode,
+                toggleMenu,
+                toggleDesktopSidebar,
+                checkMatchingAnswers,
+                resetMatchingGame,
+                playDictationWord,
+                submitDictationAnswer,
+                skipDictationQuestion,
+                clearDictationAnswer,
+                hideDictationFeedback,
+                updateProgressDisplay
+            }
+        });
     }
-    
-    setMode('flashcards');
-    
-    // 检查徽章
-    rewardSystem.checkBadges();
-    
-    // 更新进度显示
-    updateProgressDisplay();
 }
 
 window.onload = init;
