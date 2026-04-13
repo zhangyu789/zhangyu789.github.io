@@ -1313,27 +1313,143 @@ const themeMap = {
     math: '数量概念 (Math Basics)'
 };
 
+// 年龄档位词量控制（不改原始 vocabulary 数据）
+const AGE_LEVEL = {
+    PRESCHOOL: 'preschool',
+    PRIMARY: 'primary'
+};
+
+// 小学版：保留常用词，覆盖面更广
+const primaryWordAllowlistByTheme = {
+    fruits: new Set([
+        'apple', 'banana', 'orange', 'grape', 'strawberry', 'watermelon', 'pear', 'peach', 'cherry',
+        'pineapple', 'mango', 'kiwi', 'lemon', 'lime', 'coconut', 'avocado', 'blueberry', 'blackberry',
+        'raspberry', 'plum'
+    ]),
+    colors: new Set([
+        'red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'brown', 'black', 'white', 'gray',
+        'silver', 'gold', 'beige', 'navy'
+    ]),
+    transportation: new Set([
+        'car', 'bus', 'train', 'airplane', 'boat', 'ship', 'bicycle', 'motorcycle', 'scooter', 'taxi',
+        'truck', 'subway', 'tram', 'helicopter', 'ambulance', 'fire truck', 'police car', 'crosswalk',
+        'traffic-light', 'seat-belt', 'helmet', 'ticket'
+    ]),
+    weather: new Set([
+        'sunny', 'cloudy', 'rainy', 'snowy', 'windy', 'foggy', 'stormy', 'hot', 'cold', 'warm', 'cool',
+        'sun', 'moon', 'star', 'cloud', 'rain', 'snow', 'wind', 'lightning', 'thunder', 'rainbow',
+        'umbrella', 'raincoat', 'weather', 'season', 'spring', 'summer', 'autumn', 'winter'
+    ]),
+    clothing: new Set([
+        'shirt', 't-shirt', 'dress', 'skirt', 'pants', 'shorts', 'jeans', 'jacket', 'coat', 'sweater',
+        'hoodie', 'socks', 'shoes', 'sneakers', 'boots', 'sandals', 'hat', 'cap', 'scarf', 'gloves',
+        'pajamas', 'glasses', 'sunglasses', 'rain-boots', 'face-mask', 'windbreaker'
+    ]),
+    actions: new Set([
+        'run', 'jump', 'eat', 'play', 'sing', 'dance', 'walk', 'swim', 'sleep', 'read', 'write', 'draw',
+        'cook', 'drink', 'talk', 'listen', 'watch', 'smile', 'laugh', 'cry', 'sit', 'stand', 'open',
+        'close', 'start', 'stop', 'wait', 'go', 'come', 'help', 'learn', 'teach'
+    ])
+};
+
+// 幼儿版：只保留核心主题，且词更少更高频
+const preschoolEnabledThemes = new Set([
+    'fruits', 'animals', 'colors', 'numbers', 'family', 'body', 'food', 'toys',
+    'school', 'transportation', 'weather', 'clothing', 'actions', 'home', 'shapes'
+]);
+
+const preschoolWordAllowlistByTheme = {
+    fruits: new Set(['apple', 'banana', 'orange', 'grape', 'strawberry', 'watermelon', 'pear', 'peach', 'cherry', 'mango']),
+    animals: new Set(['cat', 'dog', 'bird', 'fish', 'rabbit', 'horse', 'cow', 'pig', 'duck', 'chicken']),
+    colors: new Set(['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'brown', 'black', 'white']),
+    numbers: new Set(['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten']),
+    family: new Set(['father', 'mother', 'brother', 'sister', 'grandfather', 'grandmother', 'baby', 'friend']),
+    body: new Set(['head', 'eye', 'ear', 'nose', 'mouth', 'hand', 'foot', 'arm', 'leg', 'hair']),
+    food: new Set(['rice', 'bread', 'egg', 'milk', 'water', 'juice', 'apple', 'banana', 'fish', 'chicken']),
+    toys: new Set(['ball', 'doll', 'car', 'blocks', 'kite', 'puzzle', 'bicycle', 'robot']),
+    school: new Set(['teacher', 'student', 'book', 'pen', 'pencil', 'notebook', 'classroom', 'school']),
+    transportation: new Set(['car', 'bus', 'train', 'airplane', 'boat', 'bicycle', 'taxi', 'subway']),
+    weather: new Set(['sunny', 'rainy', 'cloudy', 'snowy', 'hot', 'cold', 'sun', 'rain', 'wind']),
+    clothing: new Set(['t-shirt', 'pants', 'dress', 'jacket', 'shoes', 'hat', 'socks', 'coat']),
+    actions: new Set(['run', 'jump', 'eat', 'drink', 'sleep', 'read', 'write', 'play', 'walk', 'sing']),
+    home: new Set(['bed', 'sofa', 'table', 'chair', 'door', 'window', 'lamp', 'mirror']),
+    shapes: new Set(['circle', 'square', 'triangle', 'rectangle', 'oval', 'diamond'])
+};
+
+function isCommonWord(word, ageLevel = AGE_LEVEL.PRIMARY) {
+    if (!word || !word.id || !word.themeId) return false;
+    if (ageLevel === AGE_LEVEL.PRESCHOOL) {
+        if (!preschoolEnabledThemes.has(word.themeId)) return false;
+        const allowset = preschoolWordAllowlistByTheme[word.themeId];
+        if (!allowset) return false;
+        return allowset.has(word.id);
+    }
+    const allowset = primaryWordAllowlistByTheme[word.themeId];
+    if (!allowset) return true; // 小学版：未限定主题默认保留
+    return allowset.has(word.id);
+}
+
+function normalizeWordForDedup(text) {
+    const raw = String(text || '').toLowerCase().trim();
+    if (!raw) return '';
+    let s = raw
+        .replace(/^the\s+/, '')
+        .replace(/['".,!?()]/g, '')
+        .replace(/[-_/]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    // 简单单复数归一（避免 socks/sock 这类重复）
+    if (s.endsWith('es') && s.length > 4) {
+        s = s.slice(0, -2);
+    } else if (s.endsWith('s') && !s.endsWith('ss') && s.length > 3) {
+        s = s.slice(0, -1);
+    }
+    return s.replace(/\s+/g, '');
+}
+
+function dedupKeyForWord(word) {
+    // 优先按英文词去重，若英文缺失再退化到 id
+    const enKey = normalizeWordForDedup(word.english || word.en);
+    if (enKey) return enKey;
+    return normalizeWordForDedup(word.id);
+}
+
 const data = {};
 for (const theme in themeMap) {
     data[themeMap[theme]] = [];
 }
 
-vocabulary.forEach(word => {
-    if (word && word.themeId && themeMap[word.themeId]) {
-        const categoryName = themeMap[word.themeId];
-        if (!data[categoryName]) {
-            data[categoryName] = [];
+function rebuildLearningData(ageLevel = AGE_LEVEL.PRIMARY) {
+    for (const key in data) data[key] = [];
+    const seenByTheme = new Map(); // themeId -> Set(dedupKey)
+
+    vocabulary.forEach(word => {
+        if (!isCommonWord(word, ageLevel)) return;
+        if (word && word.themeId && themeMap[word.themeId]) {
+            const dedupKey = dedupKeyForWord(word);
+            const seen = seenByTheme.get(word.themeId) || new Set();
+            if (dedupKey && seen.has(dedupKey)) return;
+            if (dedupKey) {
+                seen.add(dedupKey);
+                seenByTheme.set(word.themeId, seen);
+            }
+
+            const categoryName = themeMap[word.themeId];
+            if (!data[categoryName]) data[categoryName] = [];
+            data[categoryName].push({
+                id: word.id,
+                en: word.english,
+                cn: word.chinese,
+                phonetic: word.phonetic || '',
+                example: word.example || '',
+                imageUrl: word.imageUrl || ''
+            });
         }
-        data[categoryName].push({
-            id: word.id,
-            en: word.english,
-            cn: word.chinese,
-            phonetic: word.phonetic || '',
-            example: word.example || '',
-            imageUrl: word.imageUrl || ''
-        });
-    }
-});
+    });
+}
+
+const initialAgeLevel = localStorage.getItem('learning.ageLevel') || AGE_LEVEL.PRIMARY;
+rebuildLearningData(initialAgeLevel);
 
 
 // --- App State ---
@@ -1341,7 +1457,8 @@ const appState = {
     currentCategory: Object.keys(data)[0],
     currentMode: 'flashcards',
     currentQuestion: null,
-    isGameLoading: false
+    isGameLoading: false,
+    ageLevel: initialAgeLevel
 };
 
 // --- 配对连线状态 ---
@@ -1651,6 +1768,70 @@ function initTtsControlsUI() {
         updateTtsVoiceOptions();
         voiceListSelect.addEventListener('change', () => applyTtsSettings({ voiceName: voiceListSelect.value || '' }));
     }
+}
+
+function findFirstNonEmptyCategory() {
+    const categories = Object.keys(data);
+    const nonEmpty = categories.find(c => (data[c] || []).length > 0);
+    return nonEmpty || categories[0];
+}
+
+function renderCategoryButtons() {
+    const categories = Object.keys(data).filter(c => (data[c] || []).length > 0);
+    categoryNav.innerHTML = '<h2 class="px-2 text-2xl font-bold text-sky-600 mb-4">主题分类</h2>';
+    const categoryButtonsFragment = document.createDocumentFragment();
+    categories.forEach(category => {
+        const button = document.createElement('button');
+        button.textContent = category;
+        button.className = 'category-button w-full text-left px-4 py-3 text-lg font-semibold text-gray-700 rounded-lg transition-colors';
+        button.addEventListener('click', () => selectCategory(category));
+        categoryButtonsFragment.appendChild(button);
+    });
+    categoryNav.appendChild(categoryButtonsFragment);
+}
+
+function initAgeLevelControlsUI() {
+    if (!appSubtitle || document.getElementById('age-level-controls')) return;
+    const wrap = document.createElement('div');
+    wrap.id = 'age-level-controls';
+    wrap.className = 'mt-3 flex items-center justify-center gap-2';
+    wrap.innerHTML = `
+      <span class="text-sm text-gray-600 mr-1">词量档位</span>
+      <button id="age-preschool-btn" class="px-3 py-1.5 rounded-full border text-sm font-semibold">幼儿版</button>
+      <button id="age-primary-btn" class="px-3 py-1.5 rounded-full border text-sm font-semibold">小学版</button>
+    `;
+    appSubtitle.insertAdjacentElement('afterend', wrap);
+
+    const preschoolBtn = document.getElementById('age-preschool-btn');
+    const primaryBtn = document.getElementById('age-primary-btn');
+    const syncBtnState = () => {
+        const isPre = appState.ageLevel === AGE_LEVEL.PRESCHOOL;
+        preschoolBtn.className = `px-3 py-1.5 rounded-full border text-sm font-semibold ${isPre ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-700 border-gray-300'}`;
+        primaryBtn.className = `px-3 py-1.5 rounded-full border text-sm font-semibold ${!isPre ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-700 border-gray-300'}`;
+    };
+
+    preschoolBtn.addEventListener('click', async () => {
+        if (appState.ageLevel === AGE_LEVEL.PRESCHOOL) return;
+        appState.ageLevel = AGE_LEVEL.PRESCHOOL;
+        localStorage.setItem('learning.ageLevel', appState.ageLevel);
+        rebuildLearningData(appState.ageLevel);
+        renderCategoryButtons();
+        appState.currentCategory = findFirstNonEmptyCategory();
+        syncBtnState();
+        await selectCategory(appState.currentCategory);
+    });
+    primaryBtn.addEventListener('click', async () => {
+        if (appState.ageLevel === AGE_LEVEL.PRIMARY) return;
+        appState.ageLevel = AGE_LEVEL.PRIMARY;
+        localStorage.setItem('learning.ageLevel', appState.ageLevel);
+        rebuildLearningData(appState.ageLevel);
+        renderCategoryButtons();
+        appState.currentCategory = findFirstNonEmptyCategory();
+        syncBtnState();
+        await selectCategory(appState.currentCategory);
+    });
+
+    syncBtnState();
 }
 
 function warmupTtsEngine() {
@@ -2684,20 +2865,12 @@ function init() {
     // 初始化系统
     learningProgress.init();
     rewardSystem.init();
+    initAgeLevelControlsUI();
     initTtsControlsUI();
     
     // 数据已经在全局作用域中初始化，无需重复加载
-    const categories = Object.keys(data);
-    categoryNav.innerHTML = '<h2 class="px-2 text-2xl font-bold text-sky-600 mb-4">主题分类</h2>';
-    const categoryButtonsFragment = document.createDocumentFragment();
-    categories.forEach(category => {
-        const button = document.createElement('button');
-        button.textContent = category;
-        button.className = 'category-button w-full text-left px-4 py-3 text-lg font-semibold text-gray-700 rounded-lg transition-colors';
-        button.addEventListener('click', () => selectCategory(category));
-        categoryButtonsFragment.appendChild(button);
-    });
-    categoryNav.appendChild(categoryButtonsFragment);
+    renderCategoryButtons();
+    appState.currentCategory = findFirstNonEmptyCategory();
 
     modeFlashcardsBtn.addEventListener('click', () => setMode('flashcards'));
     modeGameBtn.addEventListener('click', () => setMode('game'));
