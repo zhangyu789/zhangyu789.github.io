@@ -1074,7 +1074,11 @@ const dictationClearBtn = document.getElementById('dictation-clear');
 const dictationFeedbackEl = document.getElementById('dictation-feedback');
 const dictationProgressEl = document.getElementById('dictation-progress');
 const dictationRemainingEl = document.getElementById('dictation-remaining');
+const dictationFeedbackOverlayEl = document.getElementById('dictation-feedback-overlay');
 
+function clearMatchingItemSelection() {
+    matchingContainer.querySelectorAll('.matching-item').forEach(el => el.classList.remove('selected'));
+}
 
 // --- Core Functions ---
 
@@ -1096,6 +1100,73 @@ function getImageUrl(originalUrl) {
     
     // 其他格式直接返回
     return originalUrl;
+}
+
+/**
+ * 本地 webp/png 均缺失时的 AI 配图地址（Pollinations 公开接口，无需密钥，便于 GitHub Pages）。
+ * 如需改用 MiniMax 等，可在页面中实现 window.buildCustomAiImageUrl(item) 返回完整图片 URL。
+ */
+function buildAiFallbackImageUrl(item) {
+    if (typeof window.buildCustomAiImageUrl === 'function') {
+        try {
+            const custom = window.buildCustomAiImageUrl(item);
+            if (custom) return custom;
+        } catch (e) {
+            console.warn('buildCustomAiImageUrl failed:', e);
+        }
+    }
+    const en = (item.en || item.english || '').trim();
+    const cn = (item.cn || item.chinese || '').trim();
+    const prompt = encodeURIComponent(
+        `Cute cartoon flashcard for children learning English, single clear subject: ${en}${cn ? '. Chinese meaning: ' + cn : ''}. Flat vector style, bright friendly colors, centered, plain white background, no text, no letters, no watermark`
+    );
+    return `https://image.pollinations.ai/prompt/${prompt}?width=512&height=512&nologo=true`;
+}
+
+/**
+ * 图片加载链：webp → png → AI 生成 URL；全部失败则隐藏 img 并显示占位节点（img.nextElementSibling）。
+ */
+function bindWordImageFallback(img, item) {
+    if (!img || !item) return;
+    const webpUrl = getImageUrl(item.imageUrl);
+    const pngUrl = item.imageUrl || '';
+    const onLoad = () => {
+        img.removeEventListener('error', onErr);
+    };
+    const onErr = () => {
+        if (img.dataset.imgFallback === 'webp') {
+            img.dataset.imgFallback = 'png';
+            if (pngUrl) {
+                img.src = pngUrl;
+                return;
+            }
+            img.dataset.imgFallback = 'ai';
+            img.src = buildAiFallbackImageUrl(item);
+            return;
+        }
+        if (img.dataset.imgFallback === 'png') {
+            img.dataset.imgFallback = 'ai';
+            img.src = buildAiFallbackImageUrl(item);
+            return;
+        }
+        img.removeEventListener('error', onErr);
+        img.removeEventListener('load', onLoad);
+        img.style.display = 'none';
+        const ph = img.nextElementSibling;
+        if (ph) ph.style.display = 'flex';
+    };
+    img.addEventListener('error', onErr);
+    img.addEventListener('load', onLoad);
+    if (webpUrl) {
+        img.dataset.imgFallback = 'webp';
+        img.src = webpUrl;
+    } else if (pngUrl) {
+        img.dataset.imgFallback = 'png';
+        img.src = pngUrl;
+    } else {
+        img.dataset.imgFallback = 'ai';
+        img.src = buildAiFallbackImageUrl(item);
+    }
 }
 
 
@@ -1191,21 +1262,20 @@ function displayFlashcardsProgressively(category) {
     }
     
     flashcardContainer.innerHTML = '';
-
+    const categorySlug = category.replace(/[^a-zA-Z0-9]/g, '');
+    const fragment = document.createDocumentFragment();
 
     words.forEach((item, index) => {
         if (!item || !item.en) return; // 跳过无效数据
         const card = document.createElement('div');
-        const cardId = `card-${category.replace(/[^a-zA-Z0-9]/g, '')}-${item.en.replace(/[^a-zA-Z0-9]/g, '')}`;
+        const cardId = `card-${categorySlug}-${item.en.replace(/[^a-zA-Z0-9]/g, '')}`;
         card.id = cardId;
         card.className = 'flashcard flex flex-col items-center justify-start rounded-2xl shadow-lg p-3 bg-white text-center';
 
-        const webpUrl = getImageUrl(item.imageUrl);
-        const pngUrl = item.imageUrl;
-
+        const safeAlt = String(item.en).replace(/"/g, '&quot;');
         card.innerHTML = `
             <div class="image-container">
-                <img src="${webpUrl}" alt="${item.en}" class="w-full h-full object-contain" loading="lazy" decoding="async" onerror="if(this.src.endsWith('.webp')){this.src='${pngUrl}';}else{this.style.display='none';this.nextElementSibling.style.display='flex';}" />
+                <img alt="${safeAlt}" class="word-card-img w-full h-full object-contain" loading="lazy" decoding="async" />
                 <div class="flex items-center justify-center w-full h-full text-6xl bg-gray-100 rounded-lg" style="display:none;">📷</div>
             </div>
             <div class="flex flex-col flex-grow justify-between">
@@ -1217,6 +1287,9 @@ function displayFlashcardsProgressively(category) {
                 <p class="text-xs text-gray-400 mt-2 italic text-center w-full example-text" style="cursor:pointer" title="点击朗读例句">"${item.example}"</p>
             </div>
         `;
+
+        const wordCardImg = card.querySelector('.word-card-img');
+        bindWordImageFallback(wordCardImg, item);
 
         // 点击事件 - 播放单词
         card.addEventListener('click', (e) => {
@@ -1246,29 +1319,33 @@ function displayFlashcardsProgressively(category) {
 
         // 已禁用：长按拖拽排序功能
 
-        flashcardContainer.appendChild(card);
+        fragment.appendChild(card);
     });
 
+    flashcardContainer.appendChild(fragment);
 }
 
 // 已移除：拖拽功能相关变量和函数（长按拖拽排序已禁用）
 
 function renderGameChoices(choices) {
     gameChoicesGridEl.innerHTML = '';
+    const fragment = document.createDocumentFragment();
 
     choices.forEach((item, index) => {
         const card = document.createElement('div');
         card.className = 'game-choice-card rounded-2xl shadow-lg p-2';
 
-        const webpUrl = getImageUrl(item.imageUrl);
-        const pngUrl = item.imageUrl;
-        
-        card.innerHTML = `<img src="${webpUrl}" alt="${item.en}" class="w-full h-full object-contain" loading="lazy" decoding="async" onerror="if(this.src.endsWith('.webp')){this.src='${pngUrl}';}else{this.style.display='none';this.nextElementSibling.style.display='flex';}" />
+        const safeAlt = String(item.en).replace(/"/g, '&quot;');
+        card.innerHTML = `<img alt="${safeAlt}" class="game-choice-img w-full h-full object-contain" loading="lazy" decoding="async" />
                               <div class="flex items-center justify-center w-full h-full text-6xl bg-gray-100 rounded-lg" style="display:none;">📷</div>`;
 
+        const gameImg = card.querySelector('.game-choice-img');
+        bindWordImageFallback(gameImg, item);
+
         card.addEventListener('click', () => handleChoiceClick(item, card));
-        gameChoicesGridEl.appendChild(card);
+        fragment.appendChild(card);
     });
+    gameChoicesGridEl.appendChild(fragment);
 }
 
 // --- Game Logic ---
@@ -1371,29 +1448,45 @@ function initMatchingGame(category) {
 function renderMatchingItems() {
     // 渲染单词列表
     matchingWordsEl.innerHTML = '';
+    const wordsFragment = document.createDocumentFragment();
     matchingState.words.forEach((word, index) => {
         const wordEl = document.createElement('div');
         wordEl.className = 'matching-item';
         wordEl.dataset.wordId = word.id;
         wordEl.innerHTML = `<div class="matching-word">${word.en}</div>`;
         wordEl.addEventListener('click', () => selectMatchingWord(word.id, wordEl));
-        matchingWordsEl.appendChild(wordEl);
+        wordsFragment.appendChild(wordEl);
         
     });
+    matchingWordsEl.appendChild(wordsFragment);
     
     // 渲染图片列表
     matchingImagesEl.innerHTML = '';
+    const imagesFragment = document.createDocumentFragment();
     matchingState.images.forEach((word, index) => {
         const imageEl = document.createElement('div');
         imageEl.className = 'matching-item';
         imageEl.dataset.imageId = word.id;
-        const webpUrl = getImageUrl(word.imageUrl);
-        const pngUrl = word.imageUrl;
-        imageEl.innerHTML = `<img src="${webpUrl}" alt="${word.en}" class="matching-image" onerror="if(this.src.endsWith('.webp')){this.src='${pngUrl}';}">`;
+        const wrap = document.createElement('div');
+        wrap.className = 'relative w-full h-full flex items-center justify-center';
+        const img = document.createElement('img');
+        img.className = 'matching-image';
+        img.alt = word.en || '';
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        const ph = document.createElement('div');
+        ph.className = 'flex items-center justify-center w-full h-full min-h-[100px] text-5xl bg-gray-100 rounded-lg';
+        ph.style.display = 'none';
+        ph.textContent = '📷';
+        wrap.appendChild(img);
+        wrap.appendChild(ph);
+        imageEl.appendChild(wrap);
+        bindWordImageFallback(img, word);
         imageEl.addEventListener('click', () => selectMatchingImage(word.id, imageEl));
-        matchingImagesEl.appendChild(imageEl);
+        imagesFragment.appendChild(imageEl);
         
     });
+    matchingImagesEl.appendChild(imagesFragment);
 }
 
 function selectMatchingWord(wordId, element) {
@@ -1409,7 +1502,7 @@ function selectMatchingWord(wordId, element) {
     playSound('click');
     
     // 清除之前的选择
-    document.querySelectorAll('.matching-item').forEach(el => el.classList.remove('selected'));
+    clearMatchingItemSelection();
     
     if (matchingState.selectedWord === wordId) {
         matchingState.selectedWord = null;
@@ -1440,7 +1533,7 @@ function selectMatchingImage(imageId, element) {
     playSound('click');
     
     // 清除之前的选择
-    document.querySelectorAll('.matching-item').forEach(el => el.classList.remove('selected'));
+    clearMatchingItemSelection();
     
     if (matchingState.selectedImage === imageId) {
         matchingState.selectedImage = null;
@@ -1466,15 +1559,15 @@ function validateMatchingSelection() {
     const wordId = matchingState.selectedWord;
     const imageId = matchingState.selectedImage;
     
-    const wordEl = document.querySelector(`[data-word-id="${wordId}"]`);
-    const imageEl = document.querySelector(`[data-image-id="${imageId}"]`);
+    const wordEl = matchingWordsEl.querySelector(`[data-word-id="${wordId}"]`);
+    const imageEl = matchingImagesEl.querySelector(`[data-image-id="${imageId}"]`);
     
     // 检查是否已经连接过
     if (matchingState.connections.has(wordId)) {
         // 已连接过，直接重置选择
         matchingState.selectedWord = null;
         matchingState.selectedImage = null;
-        document.querySelectorAll('.matching-item').forEach(el => el.classList.remove('selected'));
+        clearMatchingItemSelection();
         matchingState.isProcessing = false;
         return;
     }
@@ -1485,7 +1578,7 @@ function validateMatchingSelection() {
             // 已被占用，直接重置选择
             matchingState.selectedWord = null;
             matchingState.selectedImage = null;
-            document.querySelectorAll('.matching-item').forEach(el => el.classList.remove('selected'));
+            clearMatchingItemSelection();
             matchingState.isProcessing = false;
             return;
         }
@@ -1518,7 +1611,7 @@ function validateMatchingSelection() {
         // 清除选择高亮
     matchingState.selectedWord = null;
     matchingState.selectedImage = null;
-    document.querySelectorAll('.matching-item').forEach(el => el.classList.remove('selected'));
+    clearMatchingItemSelection();
     
         // 绘制连线与更新进度
     drawMatchingLines();
@@ -1563,6 +1656,7 @@ function validateMatchingSelection() {
 function launchConfetti() {
     const colors = ['#f87171', '#fbbf24', '#34d399', '#60a5fa', '#a78bfa', '#f472b6'];
     const count = 120;
+    const fragment = document.createDocumentFragment();
     for (let i = 0; i < count; i++) {
         const piece = document.createElement('div');
         piece.className = 'confetti-piece';
@@ -1574,17 +1668,18 @@ function launchConfetti() {
         piece.style.opacity = '0.9';
         piece.style.setProperty('--dur', `${1.6 + Math.random() * 1.6}s`);
         piece.style.transform = `translateY(-100vh) rotate(${Math.random() * 360}deg)`;
-        document.body.appendChild(piece);
+        fragment.appendChild(piece);
         setTimeout(() => piece.remove(), 2600);
     }
+    document.body.appendChild(fragment);
 }
 
 function drawMatchingLines() {
     matchingSvgEl.innerHTML = '';
     
     matchingState.connections.forEach((imageId, wordId) => {
-        const wordEl = document.querySelector(`[data-word-id="${wordId}"]`);
-        const imageEl = document.querySelector(`[data-image-id="${imageId}"]`);
+        const wordEl = matchingWordsEl.querySelector(`[data-word-id="${wordId}"]`);
+        const imageEl = matchingImagesEl.querySelector(`[data-image-id="${imageId}"]`);
         
         if (wordEl && imageEl) {
             const wordRect = wordEl.getBoundingClientRect();
@@ -1678,29 +1773,33 @@ function startDictationRound() {
 
 function renderLetterCards() {
     dictationLetterCardsEl.innerHTML = '';
+    const fragment = document.createDocumentFragment();
     dictationState.shuffledLetters.forEach((letter, index) => {
         const card = document.createElement('div');
         card.className = 'letter-card';
         card.textContent = letter.toUpperCase();
         card.dataset.letterIndex = index;
         card.addEventListener('click', () => selectLetter(index, card));
-        dictationLetterCardsEl.appendChild(card);
+        fragment.appendChild(card);
         
         // 听写训练不需要发牌动画，直接显示
     });
+    dictationLetterCardsEl.appendChild(fragment);
 }
 
 function renderWordDisplay() {
     dictationWordDisplayEl.innerHTML = '';
+    const fragment = document.createDocumentFragment();
     dictationState.currentLetters.forEach((letter, index) => {
         const letterEl = document.createElement('div');
         letterEl.className = 'word-letter';
         letterEl.dataset.position = index;
         letterEl.addEventListener('click', () => undoDictationAt(index));
-        dictationWordDisplayEl.appendChild(letterEl);
+        fragment.appendChild(letterEl);
         
         // 听写训练不需要发牌动画，直接显示
     });
+    dictationWordDisplayEl.appendChild(fragment);
 }
 
 function selectLetter(letterIndex, cardElement) {
@@ -1721,7 +1820,7 @@ function selectLetter(letterIndex, cardElement) {
     cardElement.style.pointerEvents = 'none';
     
     // 计算飞行目标位置
-    const targetLetterEl = document.querySelector(`[data-position="${nextPosition}"]`);
+    const targetLetterEl = dictationWordDisplayEl.querySelector(`[data-position="${nextPosition}"]`);
     if (!targetLetterEl) return;
     
     const cardRect = cardElement.getBoundingClientRect();
@@ -1757,7 +1856,7 @@ function selectLetter(letterIndex, cardElement) {
     playSound('click');
         
         // 确保新填入的字母在可视区域内
-        const container = document.getElementById('dictation-word-display');
+        const container = dictationWordDisplayEl;
         if (container && targetLetterEl) {
             const slotRect = targetLetterEl.getBoundingClientRect();
             const contRect = container.getBoundingClientRect();
@@ -1783,11 +1882,11 @@ function undoDictationAt(position) {
     if (!removed) return;
     
     // 找到对应的字母卡片
-    const card = document.querySelector(`.letter-card[data-letter-index="${removed.sourceIndex}"]`);
+    const card = dictationLetterCardsEl.querySelector(`.letter-card[data-letter-index="${removed.sourceIndex}"]`);
     if (!card) return;
     
     // 计算飞行路径（从单词区域飞回卡片位置）
-    const wordSlot = document.querySelector(`[data-position="${position}"]`);
+    const wordSlot = dictationWordDisplayEl.querySelector(`[data-position="${position}"]`);
     if (wordSlot) {
         const cardRect = card.getBoundingClientRect();
         const slotRect = wordSlot.getBoundingClientRect();
@@ -1808,7 +1907,7 @@ function undoDictationAt(position) {
             card.classList.remove('used', 'anim-fly-back');
             
             // 重新渲染已填字母显示（顺序左对齐）
-            const slots = document.querySelectorAll('.word-letter');
+            const slots = dictationWordDisplayEl.querySelectorAll('.word-letter');
             dictationState.currentLetters.forEach((_, idx) => {
                 const slot = slots[idx];
                 if (!slot) return;
@@ -1829,10 +1928,10 @@ function undoDictationAt(position) {
             playSound('click');
 
             // 撤销后如有超出左侧视口，适度回滚
-            const container = document.getElementById('dictation-word-display');
+            const container = dictationWordDisplayEl;
             if (container) {
                 const firstFilledIndex = Math.max(0, dictationState.currentAnswer.length - 1);
-                const firstFilled = document.querySelector(`[data-position="${firstFilledIndex}"]`);
+                const firstFilled = dictationWordDisplayEl.querySelector(`[data-position="${firstFilledIndex}"]`);
                 if (firstFilled) {
                     const slotRect = firstFilled.getBoundingClientRect();
                     const contRect = container.getBoundingClientRect();
@@ -1855,12 +1954,12 @@ function clearDictationAnswer() {
     dictationState.usedLetters.clear();
     
     // 重置字母卡片
-    document.querySelectorAll('.letter-card').forEach(card => {
+    dictationLetterCardsEl.querySelectorAll('.letter-card').forEach(card => {
         card.classList.remove('used');
     });
     
     // 重置单词显示
-    document.querySelectorAll('.word-letter').forEach(letterEl => {
+    dictationWordDisplayEl.querySelectorAll('.word-letter').forEach(letterEl => {
         letterEl.textContent = '';
         letterEl.style.background = '';
         letterEl.style.borderColor = '';
@@ -1895,7 +1994,7 @@ function submitDictationAnswer() {
         showDictationFeedback('correct', '正确！', `正确答案: ${dictationState.currentWord.en}`);
         
         // 显示正确答案的绿色效果
-        document.querySelectorAll('.word-letter').forEach(letterEl => {
+        dictationWordDisplayEl.querySelectorAll('.word-letter').forEach(letterEl => {
             letterEl.style.background = '#dcfce7';
             letterEl.style.borderColor = '#22c55e';
             letterEl.classList.add('anim-pop-in');
@@ -1913,7 +2012,7 @@ function submitDictationAnswer() {
         showDictationFeedback('incorrect', '不正确', `正确答案: ${dictationState.currentWord.en}`);
         
         // 显示错误答案的红色效果
-        document.querySelectorAll('.word-letter').forEach(letterEl => {
+        dictationWordDisplayEl.querySelectorAll('.word-letter').forEach(letterEl => {
             letterEl.style.background = '#fef2f2';
             letterEl.style.borderColor = '#ef4444';
             letterEl.classList.add('anim-shake');
@@ -1945,7 +2044,7 @@ function skipDictationQuestion() {
     
     // 显示正确答案
     dictationState.currentLetters.forEach((letter, index) => {
-        const letterEl = document.querySelector(`[data-position="${index}"]`);
+        const letterEl = dictationWordDisplayEl.querySelector(`[data-position="${index}"]`);
         if (letterEl) {
             letterEl.textContent = letter.toUpperCase();
             letterEl.style.background = '#eff6ff';
@@ -1960,26 +2059,23 @@ function skipDictationQuestion() {
 }
 
 function showDictationFeedback(type, title, message) {
-    const overlay = document.getElementById('dictation-feedback-overlay');
     dictationFeedbackEl.innerHTML = `
         <div class="dictation-feedback ${type}">
             <div class="font-bold text-xl">${title}</div>
             <div class="text-lg mt-2">${message}</div>
         </div>
     `;
-    overlay.classList.remove('hidden');
+    dictationFeedbackOverlayEl.classList.remove('hidden');
 }
 
 function hideDictationFeedback() {
-    const overlay = document.getElementById('dictation-feedback-overlay');
-    overlay.classList.add('hidden');
+    dictationFeedbackOverlayEl.classList.add('hidden');
 }
 
 function finishDictationGame() {
     dictationState.isCompleted = true;
     const accuracy = Math.round((dictationState.correctCount / dictationState.totalCount) * 100);
     
-    const overlay = document.getElementById('dictation-feedback-overlay');
     dictationFeedbackEl.innerHTML = `
         <div class="dictation-feedback ${accuracy >= 80 ? 'correct' : 'incorrect'}">
             <div class="font-bold text-2xl">听写完成！</div>
@@ -1994,7 +2090,7 @@ function finishDictationGame() {
             </div>
         </div>
     `;
-    overlay.classList.remove('hidden');
+    dictationFeedbackOverlayEl.classList.remove('hidden');
     
     if (accuracy >= 80) {
         rewardSystem.giveStar();
@@ -2010,7 +2106,7 @@ function updateActiveUI() {
     modeGameBtn.classList.toggle('active', appState.currentMode === 'game');
     modeMatchingBtn.classList.toggle('active', appState.currentMode === 'matching');
     modeDictationBtn.classList.toggle('active', appState.currentMode === 'dictation');
-    document.querySelectorAll('#category-nav .category-button').forEach(button => {
+    categoryNav.querySelectorAll('.category-button').forEach(button => {
         button.classList.toggle('active-category', button.textContent.trim() === appState.currentCategory);
     });
     
@@ -2082,13 +2178,15 @@ function init() {
     // 数据已经在全局作用域中初始化，无需重复加载
     const categories = Object.keys(data);
     categoryNav.innerHTML = '<h2 class="px-2 text-2xl font-bold text-sky-600 mb-4">主题分类</h2>';
+    const categoryButtonsFragment = document.createDocumentFragment();
     categories.forEach(category => {
         const button = document.createElement('button');
         button.textContent = category;
         button.className = 'category-button w-full text-left px-4 py-3 text-lg font-semibold text-gray-700 rounded-lg transition-colors';
         button.addEventListener('click', () => selectCategory(category));
-        categoryNav.appendChild(button);
+        categoryButtonsFragment.appendChild(button);
     });
+    categoryNav.appendChild(categoryButtonsFragment);
 
     modeFlashcardsBtn.addEventListener('click', () => setMode('flashcards'));
     modeGameBtn.addEventListener('click', () => setMode('game'));
