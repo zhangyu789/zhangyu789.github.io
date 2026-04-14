@@ -2432,10 +2432,19 @@ function startDictationRound() {
     dictationState.currentWord = window.DictationServiceModule
         ? window.DictationServiceModule.getCurrentWord(dictationState.words, dictationState.currentIndex)
         : dictationState.words[dictationState.currentIndex];
-    dictationState.currentLetters = dictationState.currentWord.en.split('');
-    dictationState.shuffledLetters = [...dictationState.currentLetters].sort(() => Math.random() - 0.5);
+    const questionState = window.DictationServiceModule
+        ? window.DictationServiceModule.buildQuestionState(dictationState.currentWord)
+        : {
+            currentLetters: dictationState.currentWord.en.split(''),
+            shuffledLetters: [],
+            currentAnswer: []
+        };
+    dictationState.currentLetters = questionState.currentLetters;
+    dictationState.shuffledLetters = questionState.shuffledLetters.length > 0
+        ? questionState.shuffledLetters
+        : [...dictationState.currentLetters].sort(() => Math.random() - 0.5);
     dictationState.usedLetters.clear();
-    dictationState.currentAnswer = [];
+    dictationState.currentAnswer = questionState.currentAnswer;
     
     renderLetterCards();
     renderWordDisplay();
@@ -2475,150 +2484,26 @@ function renderWordDisplay() {
 }
 
 function selectLetter(letterIndex, cardElement) {
-    if (dictationState.usedLetters.has(letterIndex)) return;
-    
-    // 立即更新状态，防止快速点击时位置冲突
-    const nextPosition = dictationState.currentAnswer.length;
-    if (nextPosition >= dictationState.currentLetters.length) return;
-    
-    // 立即标记为已使用，防止重复点击
-    dictationState.usedLetters.add(letterIndex);
-    
-    // 立即添加字母到答案中（记录来源索引以便撤销）
-    const letter = dictationState.shuffledLetters[letterIndex];
-    dictationState.currentAnswer.push({ letter, sourceIndex: letterIndex });
-    
-    // 立即禁用卡片，防止重复点击
-    cardElement.style.pointerEvents = 'none';
-    
-    // 计算飞行目标位置
-    const targetLetterEl = dictationWordDisplayEl.querySelector(`[data-position="${nextPosition}"]`);
-    if (!targetLetterEl) return;
-    
-    const cardRect = cardElement.getBoundingClientRect();
-    const targetRect = targetLetterEl.getBoundingClientRect();
-    const flyX = targetRect.left - cardRect.left;
-    const flyY = targetRect.top - cardRect.top;
-    
-    // 设置CSS变量用于动画
-    cardElement.style.setProperty('--fly-x', `${flyX}px`);
-    cardElement.style.setProperty('--fly-y', `${flyY}px`);
-    
-    // 添加飞行动画
-    cardElement.classList.add('anim-fly-to-word');
-    
-    // 动画完成后更新显示
-    setTimeout(() => {
-    // 更新显示
-        if (targetLetterEl) {
-            targetLetterEl.textContent = letter.toUpperCase();
-            targetLetterEl.style.background = '#dbeafe';
-            targetLetterEl.style.borderColor = '#3b82f6';
-            targetLetterEl.classList.add('filled', 'pop');
-            setTimeout(() => targetLetterEl.classList.remove('pop'), 250);
-    }
-    
-    // 标记卡片为已使用
-    cardElement.classList.add('used');
-        cardElement.classList.remove('anim-fly-to-word');
-        cardElement.style.opacity = '0.5';
-        cardElement.style.pointerEvents = 'none';
-    
-    // 播放点击音效
-    playSound('click');
-        
-        // 确保新填入的字母在可视区域内
-        const container = dictationWordDisplayEl;
-        if (container && targetLetterEl) {
-            const slotRect = targetLetterEl.getBoundingClientRect();
-            const contRect = container.getBoundingClientRect();
-            if (slotRect.right > contRect.right - 8) {
-                container.scrollLeft += (slotRect.right - contRect.right) + 16;
-            }
-        }
-    
-    // 检查是否完成
-    if (dictationState.currentAnswer.length === dictationState.currentLetters.length) {
-        setTimeout(() => submitDictationAnswer(), 500);
-        }
-    }, 600);
+    if (!window.DictationInteractionModule) return;
+    window.DictationInteractionModule.selectLetter({
+        letterIndex,
+        cardElement,
+        state: dictationState,
+        dictationWordDisplayEl,
+        onPlayClick: () => playSound('click'),
+        onSubmit: submitDictationAnswer
+    });
 }
 
 function undoDictationAt(position) {
-    // 仅当该位置已有字母时允许撤销
-    if (position < 0 || position >= dictationState.currentLetters.length) return;
-    if (position >= dictationState.currentAnswer.length) return;
-    
-    // 取出被撤销的答案项
-    const removed = dictationState.currentAnswer.splice(position, 1)[0];
-    if (!removed) return;
-    
-    // 找到对应的字母卡片
-    const card = dictationLetterCardsEl.querySelector(`.letter-card[data-letter-index="${removed.sourceIndex}"]`);
-    if (!card) return;
-    
-    // 计算飞行路径（从单词区域飞回卡片位置）
-    const wordSlot = dictationWordDisplayEl.querySelector(`[data-position="${position}"]`);
-    if (wordSlot) {
-        const cardRect = card.getBoundingClientRect();
-        const slotRect = wordSlot.getBoundingClientRect();
-        const flyX = cardRect.left - slotRect.left;
-        const flyY = cardRect.top - slotRect.top;
-        
-        // 设置CSS变量用于动画
-        card.style.setProperty('--fly-x', `${flyX}px`);
-        card.style.setProperty('--fly-y', `${flyY}px`);
-        
-        // 先让卡片飞回原位
-        card.classList.add('anim-fly-back');
-        
-        // 动画完成后更新状态
-        setTimeout(() => {
-            // 释放对应字母卡
-            dictationState.usedLetters.delete(removed.sourceIndex);
-            card.classList.remove('used', 'anim-fly-back');
-            
-            // 重新渲染已填字母显示（顺序左对齐）
-            const slots = dictationWordDisplayEl.querySelectorAll('.word-letter');
-            dictationState.currentLetters.forEach((_, idx) => {
-                const slot = slots[idx];
-                if (!slot) return;
-                const ans = dictationState.currentAnswer[idx];
-                if (ans) {
-                    slot.textContent = ans.letter.toUpperCase();
-                    slot.style.background = '#dbeafe';
-                    slot.style.borderColor = '#3b82f6';
-                    slot.classList.add('filled');
-                } else {
-                    slot.textContent = '';
-                    slot.style.background = '';
-                    slot.style.borderColor = '';
-                    slot.classList.remove('filled');
-                }
-            });
-            
-            playSound('click');
-
-            // 撤销后如有超出左侧视口，适度回滚
-            const container = dictationWordDisplayEl;
-            if (container) {
-                const firstFilledIndex = Math.max(0, dictationState.currentAnswer.length - 1);
-                const firstFilled = dictationWordDisplayEl.querySelector(`[data-position="${firstFilledIndex}"]`);
-                if (firstFilled) {
-                    const slotRect = firstFilled.getBoundingClientRect();
-                    const contRect = container.getBoundingClientRect();
-                    if (slotRect.left < contRect.left + 8) {
-                        container.scrollLeft = Math.max(0, container.scrollLeft - (contRect.left + 16 - slotRect.left));
-                    }
-                }
-            }
-        }, 600);
-    } else {
-        // 如果没有找到目标位置，直接更新状态
-        dictationState.usedLetters.delete(removed.sourceIndex);
-        card.classList.remove('used');
-        playSound('click');
-    }
+    if (!window.DictationInteractionModule) return;
+    window.DictationInteractionModule.undoAt({
+        position,
+        state: dictationState,
+        dictationLetterCardsEl,
+        dictationWordDisplayEl,
+        onPlayClick: () => playSound('click')
+    });
 }
 
 function clearDictationAnswer() {
@@ -2655,16 +2540,16 @@ function updateDictationDisplay() {
 }
 
 function submitDictationAnswer() {
-    const userAnswer = dictationState.currentAnswer.map(x => typeof x === 'string' ? x : x.letter).join('').toLowerCase();
-    const correctAnswer = dictationState.currentWord.en.toLowerCase();
-    
-    const isCorrect = userAnswer === correctAnswer;
+    const result = window.DictationServiceModule
+        ? window.DictationServiceModule.evaluateAnswer(dictationState.currentAnswer, dictationState.currentWord)
+        : { isCorrect: false, correctAnswer: (dictationState.currentWord?.en || '') };
+    const isCorrect = result.isCorrect;
     
     if (isCorrect) {
         recordLearningResult(dictationState.currentWord, true);
         dictationState.correctCount++;
         playSound('correct');
-        showDictationFeedback('correct', '正确！', `正确答案: ${dictationState.currentWord.en}`);
+        showDictationFeedback('correct', '正确！', `正确答案: ${result.correctAnswer}`);
         
         // 显示正确答案的绿色效果
         dictationWordDisplayEl.querySelectorAll('.word-letter').forEach(letterEl => {
@@ -2683,7 +2568,7 @@ function submitDictationAnswer() {
     } else {
         recordLearningResult(dictationState.currentWord, false);
         playSound('wrong');
-        showDictationFeedback('incorrect', '不正确', `正确答案: ${dictationState.currentWord.en}`);
+        showDictationFeedback('incorrect', '不正确', `正确答案: ${result.correctAnswer}`);
         
         // 显示错误答案的红色效果
         dictationWordDisplayEl.querySelectorAll('.word-letter').forEach(letterEl => {

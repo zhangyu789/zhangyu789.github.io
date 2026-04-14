@@ -31,7 +31,11 @@ export default [
         files: ['js/core/**/*.js', 'tests/**/*.js'],
         languageOptions: {
             ecmaVersion: 'latest',
-            sourceType: 'module'
+            sourceType: 'module',
+            globals: {
+                process: 'readonly',
+                console: 'readonly'
+            }
         }
     },
     {
