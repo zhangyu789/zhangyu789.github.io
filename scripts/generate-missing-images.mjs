@@ -177,12 +177,16 @@ function vocabularyImageToWebpPath(imageUrl) {
 function buildFlashcardImagePrompt(en, cn) {
   const hint = cn ? ` Meaning disambiguation: ${cn}.` : '';
   return (
-    `Educational English flashcard, single clear subject: ${en}.${hint} ` +
-    `Style: semi-realistic cartoon — soft shading, rounded forms, readable textures and colors like a polished reference illustration for kids; cute but faithful to how the real thing looks, not flat corporate clipart. ` +
-    `Strictly non-anthropomorphic (for animals): no human-like faces or smiles pasted on animals, no animals standing upright like people, no clothing hats glasses or props that imply human characters. ` +
-    `Avoid disembodied human hands/arms or close-up hands. ` +
-    `if it is an animal, show a natural species-typical pose; if food or object, show it plainly as itself. ` +
-    `Centered composition, plain white background, gentle even lighting. No text, no letters, no watermark, no logo.`
+    `Educational English flashcard illustration for the word "${en}".${hint} ` +
+    `The highest priority is that the image clearly communicates the meaning of the word at a glance. ` +
+    `Show the most literal, common visual meaning of the word; use a single clear subject when possible, but use a simple scene or action if that expresses the meaning more clearly. ` +
+    `Style: semi-realistic cartoon with soft shading, rounded forms, readable textures, and faithful real-world colors, like a polished children's reference illustration rather than flat clipart. ` +
+    `If the word refers to an animal, show only the real animal in a natural species-typical pose and do not anthropomorphize it. ` +
+    `If the word refers to a food, object, tool, vehicle, plant, clothing item, or household thing, show that item directly and prominently, not an animal. ` +
+    `If a human action, relation, or everyday situation is necessary to explain the word, include only the minimal people and context needed for clarity. ` +
+    `Avoid disembodied human hands, arms, or close-up body parts unless the word itself specifically requires a human action. ` +
+    `Keep the composition clean and focused, preferably centered, with a plain white or very simple background and gentle even lighting. ` +
+    `Absolutely no text or typography of any kind in the image: no words, no letters, no numbers, no captions, no labels, no watermark, no logo.`
   );
 }
 
@@ -195,14 +199,15 @@ function buildFlashcardImagePrompt(en, cn) {
 function buildScenePromptForItem(item) {
   const enRaw = String(item.english ?? item.en ?? '').trim();
   const cnRaw = String(item.chinese ?? item.cn ?? '').trim();
-  const themeId = String(item.themeId ?? '').trim();
+  const themeId = String(item.themeId ?? '').trim().toLowerCase();
   const id = String(item.id ?? '').trim();
+  const enNorm = enRaw.toLowerCase().trim();
 
   const base =
     `Educational English flashcard illustration, concept shown clearly with a simple scene. ` +
     `Style: semi-realistic cartoon — soft shading, rounded forms, readable textures, kid-friendly, clean and modern. ` +
     `Plain white background, centered composition, gentle even lighting. ` +
-    `No text, no letters, no watermark, no logo. `;
+    `Absolutely no text or typography of any kind: no words, no letters, no numbers, no captions, no labels, no watermark, no logo. `;
 
   const meaning = cnRaw ? `Meaning: ${cnRaw}. ` : '';
 
@@ -341,9 +346,55 @@ function buildScenePromptForItem(item) {
     return base + meaning + byId[id];
   }
 
-  // 兜底：对这些主题用“概念场景”而不是“单体物品”
-  const abstractThemes = new Set(['senses', 'positions', 'opposites', 'adjectives', 'safety', 'daily', 'polite', 'chores', 'sorting', 'time', 'math']);
+  // 兜底一：对这些主题用“概念场景”而不是“单体物品”
+  const abstractThemes = new Set([
+    'sense', 'senses',
+    'position', 'positions',
+    'opposite', 'opposites',
+    'adjective', 'adjectives',
+    'safety',
+    'daily', 'routine', 'routines',
+    'polite', 'manners',
+    'chore', 'chores',
+    'sorting', 'sort',
+    'time',
+    'math', 'math-basics',
+    'action', 'actions',
+    'family', 'relationships',
+  ]);
   if (abstractThemes.has(themeId)) {
+    return base + meaning + `Show a simple, kid-friendly scene that clearly illustrates the concept of "${enRaw}" without using any text. `;
+  }
+
+  // 兜底二：按词义类型自动分流到“场景表达”
+  const conceptWords = new Set([
+    'in', 'on', 'under', 'over', 'between', 'behind', 'in front of', 'next to', 'left', 'right', 'up', 'down',
+    'more', 'less', 'equal', 'same', 'different',
+    'open', 'closed', 'wet', 'dry', 'clean', 'dirty', 'bright', 'dark', 'soft', 'hard', 'smooth', 'rough',
+    'today', 'tomorrow', 'yesterday', 'now', 'later', 'morning', 'afternoon', 'evening', 'night', 'week', 'month', 'year',
+    'please', 'thank you', 'sorry', 'excuse me', 'hello', 'goodbye',
+    'stop', 'wait', 'careful', 'danger', 'safe', 'help', 'emergency',
+  ]);
+  const actionWords = new Set([
+    'pick up', 'put down', 'wash hands', 'brush teeth', 'go to school', 'do homework', 'wake up', 'go to bed',
+    'sweep', 'mop', 'tidy up', 'clean up', 'sort', 'match', 'count', 'add', 'subtract',
+  ]);
+  const familyWords = new Set([
+    'parent', 'parents', 'mother', 'father', 'mom', 'mum', 'dad',
+    'grandparent', 'grandparents', 'grandmother', 'grandfather', 'grandma', 'grandpa',
+    'brother', 'sister', 'sibling', 'siblings', 'baby', 'child', 'children',
+    'son', 'daughter', 'family',
+  ]);
+  const hasPhrasePattern = /\s|-/u.test(enNorm);
+  if (familyWords.has(enNorm)) {
+    return (
+      base +
+      meaning +
+      `Show a clear human family relation for "${enRaw}" with simple everyday clothing and natural proportions. ` +
+      `Use minimal people and context needed to make the relation obvious at a glance, and do not replace people with animals. `
+    );
+  }
+  if (conceptWords.has(enNorm) || actionWords.has(enNorm) || hasPhrasePattern) {
     return base + meaning + `Show a simple, kid-friendly scene that clearly illustrates the concept of "${enRaw}" without using any text. `;
   }
 
