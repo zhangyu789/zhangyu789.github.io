@@ -20,6 +20,64 @@ function playSound(soundName) {
     }
 }
 
+function triggerCorrectImpact(targetEl = null, label = '太棒了！') {
+    if (!document.body) return;
+    const flash = document.createElement('div');
+    flash.className = 'success-screen-flash';
+    document.body.appendChild(flash);
+
+    const floating = document.createElement('div');
+    floating.className = 'success-floating-label';
+    floating.textContent = label;
+    const rect = targetEl && typeof targetEl.getBoundingClientRect === 'function'
+        ? targetEl.getBoundingClientRect()
+        : null;
+    const x = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
+    const y = rect ? rect.top + rect.height / 2 : window.innerHeight / 2;
+    floating.style.left = `${Math.max(24, Math.min(window.innerWidth - 24, x))}px`;
+    floating.style.top = `${Math.max(24, Math.min(window.innerHeight - 24, y))}px`;
+    document.body.appendChild(floating);
+
+    if (targetEl && targetEl.classList) {
+        targetEl.classList.add('epic-correct-pop');
+        setTimeout(() => targetEl.classList.remove('epic-correct-pop'), 620);
+    }
+    setTimeout(() => flash.remove(), 560);
+    setTimeout(() => floating.remove(), 900);
+}
+
+function ensureComboMeter() {
+    if (document.getElementById('combo-meter')) return document.getElementById('combo-meter');
+    const meter = document.createElement('div');
+    meter.id = 'combo-meter';
+    meter.className = 'combo-meter';
+    meter.textContent = 'COMBO x1';
+    document.body.appendChild(meter);
+    return meter;
+}
+
+function playComboCelebrationSound(combo) {
+    if (combo < 2) return;
+    const sound = combo >= 5 ? 'success' : 'correct';
+    setTimeout(() => playSound(sound), 70);
+    if (combo >= 3) setTimeout(() => playSound(sound), 170);
+}
+
+function showComboBurst(anchorEl, combo) {
+    const burst = document.createElement('div');
+    burst.className = 'combo-burst';
+    burst.textContent = combo >= 5 ? `MEGA x${combo}` : `COMBO x${combo}`;
+    const rect = anchorEl && typeof anchorEl.getBoundingClientRect === 'function'
+        ? anchorEl.getBoundingClientRect()
+        : null;
+    const x = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
+    const y = rect ? rect.top + rect.height / 2 : window.innerHeight / 2;
+    burst.style.left = `${Math.max(24, Math.min(window.innerWidth - 24, x))}px`;
+    burst.style.top = `${Math.max(24, Math.min(window.innerHeight - 24, y))}px`;
+    document.body.appendChild(burst);
+    setTimeout(() => burst.remove(), 700);
+}
+
 // --- 学习进度系统 ---
 const learningProgress = {
     totalWords: 0,
@@ -1539,6 +1597,11 @@ const streakChallengeState = {
     target: 5,
     correct: 0
 };
+const comboState = {
+    count: 0,
+    lastCorrectAt: 0,
+    timeoutMs: 5600
+};
 const renderState = {
     flashcardRenderToken: 0
 };
@@ -2156,6 +2219,8 @@ function handleChoiceClick(selectedItem, cardElement) {
     cardElement.classList.add(isCorrect ? 'correct' : 'incorrect');
     
     if (isCorrect) {
+        onCorrectCombo(cardElement);
+        triggerCorrectImpact(cardElement, '答对啦！');
         if (miniPlayState.timedGame.active) {
             miniPlayState.timedGame.total += 1;
             miniPlayState.timedGame.correct += 1;
@@ -2197,6 +2262,7 @@ function handleChoiceClick(selectedItem, cardElement) {
             gameChoicesGridEl.style.pointerEvents = 'auto';
         }, 6000); // 总等待时间相应延长
     } else {
+        resetCombo('连击中断，继续答对可重新累计。');
         if (miniPlayState.timedGame.active) {
             miniPlayState.timedGame.total += 1;
         }
@@ -2375,6 +2441,8 @@ function validateMatchingSelection() {
     if (isCorrect) {
         // 正确：创建连线、半透明禁用、不移除
         playSound('correct');
+        onCorrectCombo(imageEl || wordEl);
+        triggerCorrectImpact(imageEl || wordEl, '配对成功！');
 
         // 记录连接
     matchingState.connections.set(wordId, imageId);
@@ -2422,6 +2490,7 @@ function validateMatchingSelection() {
             }, 300);
         }
     } else {
+        resetCombo('连击中断，继续答对可重新累计。');
         // 错误：红框抖动并取消选择
         playSound('wrong');
         if (wordEl) wordEl.classList.add('incorrect', 'anim-shake', 'anim-shuffle');
@@ -2705,9 +2774,11 @@ function submitDictationAnswer() {
     const isCorrect = result.isCorrect;
     
     if (isCorrect) {
+        onCorrectCombo(dictationWordDisplayEl);
         recordLearningResult(dictationState.currentWord, true);
         dictationState.correctCount++;
         playSound('correct');
+        triggerCorrectImpact(dictationWordDisplayEl, '拼对啦！');
         showDictationFeedback('correct', '正确！', `正确答案: ${result.correctAnswer}`);
         
         // 显示正确答案的绿色效果
@@ -2725,6 +2796,7 @@ function submitDictationAnswer() {
             speak('Excellent!', 0.82, 1.0, 1.0);
         }, 500);
     } else {
+        resetCombo('连击中断，继续答对可重新累计。');
         recordLearningResult(dictationState.currentWord, false);
         playSound('wrong');
         showDictationFeedback('incorrect', '不正确', `正确答案: ${result.correctAnswer}`);
@@ -2913,6 +2985,32 @@ function setFunStatus(message) {
 function setMiniProgress(message) {
     if (!funMiniProgressEl) return;
     funMiniProgressEl.textContent = message;
+}
+
+function onCorrectCombo(anchorEl = null) {
+    const now = Date.now();
+    if (now - comboState.lastCorrectAt <= comboState.timeoutMs) comboState.count += 1;
+    else comboState.count = 1;
+    comboState.lastCorrectAt = now;
+
+    const meter = ensureComboMeter();
+    if (meter) {
+        meter.textContent = comboState.count >= 5 ? `MEGA COMBO x${comboState.count}` : `COMBO x${comboState.count}`;
+        meter.classList.add('show');
+    }
+
+    if (comboState.count >= 2) {
+        showComboBurst(anchorEl, comboState.count);
+        playComboCelebrationSound(comboState.count);
+    }
+}
+
+function resetCombo(reason = '') {
+    comboState.count = 0;
+    comboState.lastCorrectAt = 0;
+    const meter = document.getElementById('combo-meter');
+    if (meter) meter.classList.remove('show');
+    if (reason) setMiniProgress(reason);
 }
 
 function getTodayKey() {
