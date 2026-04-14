@@ -1510,6 +1510,58 @@ const menuToggle = document.getElementById('menu-toggle');
 const menuBackdrop = document.getElementById('menu-backdrop');
 const desktopSidebarToggle = document.getElementById('desktop-sidebar-toggle');
 const sidebarToggle = document.getElementById('sidebar-toggle');
+const mainScrollContainer = document.querySelector('.kid-content-wrap');
+const funRandomCardBtn = document.getElementById('fun-random-card');
+const funSoundTrainBtn = document.getElementById('fun-sound-train');
+const funRandomChallengeBtn = document.getElementById('fun-random-challenge');
+const funStreakChallengeBtn = document.getElementById('fun-streak-challenge');
+const funFindWordBtn = document.getElementById('fun-find-word');
+const funTimedGameBtn = document.getElementById('fun-timed-game');
+const funPlayStatusEl = document.getElementById('fun-play-status');
+const funMiniProgressEl = document.getElementById('fun-mini-progress');
+const funBestStreakEl = document.getElementById('fun-best-streak');
+const funTodayBestEl = document.getElementById('fun-today-best');
+const funChallengeWinsEl = document.getElementById('fun-challenge-wins');
+const funBadgesEl = document.getElementById('fun-badges');
+const recordOverlayEl = document.getElementById('record-overlay');
+const recordDescEl = document.getElementById('record-desc');
+const recordCloseBtn = document.getElementById('record-close-btn');
+const STREAK_BOARD_STORAGE_KEY = 'learning.streakBoard';
+const streakBoard = {
+    bestStreak: 0,
+    todayBest: 0,
+    challengeWins: 0,
+    badges: [],
+    dateKey: ''
+};
+const streakChallengeState = {
+    active: false,
+    target: 5,
+    correct: 0
+};
+const renderState = {
+    flashcardRenderToken: 0
+};
+const uiCache = {
+    categoryButtonByName: new Map(),
+    activeCategoryButton: null
+};
+const miniPlayState = {
+    findWord: {
+        active: false,
+        targetWord: null,
+        correct: 0,
+        goal: 5
+    },
+    timedGame: {
+        active: false,
+        durationSec: 45,
+        endAtMs: 0,
+        total: 0,
+        correct: 0,
+        timerId: null
+    }
+};
 
 // 配对连线相关元素
 const matchingWordsEl = document.getElementById('matching-words');
@@ -1701,16 +1753,46 @@ function findFirstNonEmptyCategory() {
 
 function renderCategoryButtons() {
     const categories = Object.keys(data).filter(c => (data[c] || []).length > 0);
-    categoryNav.innerHTML = '<h2 class="px-2 text-2xl font-bold text-sky-600 mb-4">主题分类</h2>';
-    const categoryButtonsFragment = document.createDocumentFragment();
-    categories.forEach(category => {
-        const button = document.createElement('button');
-        button.textContent = category;
-        button.className = 'category-button w-full text-left px-4 py-3 text-lg font-semibold text-gray-700 rounded-lg transition-colors';
-        button.addEventListener('click', () => selectCategory(category));
-        categoryButtonsFragment.appendChild(button);
-    });
-    categoryNav.appendChild(categoryButtonsFragment);
+    categoryNav.replaceChildren();
+    uiCache.categoryButtonByName.clear();
+    uiCache.activeCategoryButton = null;
+
+    const title = document.createElement('h2');
+    title.className = 'px-2 text-2xl font-bold text-sky-600 mb-4';
+    title.textContent = '主题分类';
+    categoryNav.appendChild(title);
+
+    // 分类按钮较多时，分批挂载可降低长任务阻塞
+    let cursor = 0;
+    const chunkSize = perfProfile.lowPower ? 12 : 24;
+    const appendNextChunk = () => {
+        const fragment = document.createDocumentFragment();
+        const end = Math.min(cursor + chunkSize, categories.length);
+        for (; cursor < end; cursor++) {
+            const category = categories[cursor];
+            const button = document.createElement('button');
+            button.textContent = category;
+            button.className = 'category-button w-full text-left px-4 py-3 text-lg font-semibold text-gray-700 rounded-lg transition-colors';
+            button.addEventListener('click', () => selectCategory(category));
+            uiCache.categoryButtonByName.set(category, button);
+            fragment.appendChild(button);
+        }
+        categoryNav.appendChild(fragment);
+        if (cursor < categories.length) {
+            if (typeof window.requestIdleCallback === 'function') {
+                window.requestIdleCallback(appendNextChunk, { timeout: 120 });
+            } else {
+                setTimeout(appendNextChunk, 0);
+            }
+        } else {
+            const activeBtn = uiCache.categoryButtonByName.get(appState.currentCategory);
+            if (activeBtn) {
+                activeBtn.classList.add('active-category');
+                uiCache.activeCategoryButton = activeBtn;
+            }
+        }
+    };
+    appendNextChunk();
 }
 
 function initAgeLevelControlsUI() {
@@ -1896,70 +1978,107 @@ function speakWordAndExample(word, example, wordId = null) {
 
 // --- UI Rendering & Progressive Loading ---
 
+function scheduleFlashcardChunkRender(task) {
+    const runner = () => {
+        if (task.token !== renderState.flashcardRenderToken) return;
+        task.renderNextChunk();
+    };
+    if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(runner, { timeout: 120 });
+    } else {
+        setTimeout(runner, 0);
+    }
+}
+
 function displayFlashcardsProgressively(category) {
     const words = data[category];
     if (!words || words.length === 0) {
         flashcardContainer.innerHTML = '<p class="text-center text-gray-500 p-8 col-span-full">该分类暂无单词数据</p>';
         return;
     }
-    
+
+    renderState.flashcardRenderToken += 1;
+    const currentToken = renderState.flashcardRenderToken;
     flashcardContainer.innerHTML = '';
     const categorySlug = category.replace(/[^a-zA-Z0-9]/g, '');
-    const fragment = document.createDocumentFragment();
+    const validWords = words.filter((item) => item && item.en);
+    const chunkSize = perfProfile.lowPower ? 8 : 16;
+    let cursor = 0;
 
-    words.forEach((item, _index) => {
-        if (!item || !item.en) return; // 跳过无效数据
-        const card = document.createElement('div');
-        const cardId = `card-${categorySlug}-${item.en.replace(/[^a-zA-Z0-9]/g, '')}`;
-        card.id = cardId;
-        card.className = 'flashcard flex flex-col items-center justify-start rounded-2xl shadow-lg p-3 bg-white text-center';
+    const renderNextChunk = () => {
+        if (currentToken !== renderState.flashcardRenderToken) return;
+        const fragment = document.createDocumentFragment();
+        const end = Math.min(cursor + chunkSize, validWords.length);
+        for (; cursor < end; cursor++) {
+            const item = validWords[cursor];
+            const card = document.createElement('div');
+            const cardId = `card-${categorySlug}-${item.en.replace(/[^a-zA-Z0-9]/g, '')}`;
+            card.id = cardId;
+            card.className = 'flashcard flex flex-col items-center justify-start rounded-2xl shadow-lg p-3 bg-white text-center';
 
-        const safeAlt = String(item.en).replace(/"/g, '&quot;');
-        card.innerHTML = `
-            <div class="image-container">
-                <img alt="${safeAlt}" class="word-card-img w-full h-full object-contain" loading="lazy" decoding="async" />
-                <div class="flex items-center justify-center w-full h-full text-6xl bg-gray-100 rounded-lg" style="display:none;">📷</div>
-            </div>
-            <div class="flex flex-col flex-grow justify-between">
-                <div>
-                    <p class="text-lg font-bold text-gray-800">${item.en}</p>
-                    <p class="text-sm text-gray-500">${item.phonetic}</p>
-                    <p class="text-md font-semibold text-sky-600 mt-1">${item.cn}</p>
+            const safeAlt = String(item.en).replace(/"/g, '&quot;');
+            card.innerHTML = `
+                <div class="image-container">
+                    <img alt="${safeAlt}" class="word-card-img w-full h-full object-contain" loading="lazy" decoding="async" />
+                    <div class="flex items-center justify-center w-full h-full text-6xl bg-gray-100 rounded-lg" style="display:none;">📷</div>
                 </div>
-                <p class="text-xs text-gray-400 mt-2 italic text-center w-full example-text" style="cursor:pointer" title="点击朗读例句">"${item.example}"</p>
-            </div>
-        `;
+                <div class="flex flex-col flex-grow justify-between">
+                    <div>
+                        <p class="text-lg font-bold text-gray-800">${item.en}</p>
+                        <p class="text-sm text-gray-500">${item.phonetic}</p>
+                        <p class="text-md font-semibold text-sky-600 mt-1">${item.cn}</p>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2 italic text-center w-full example-text" style="cursor:pointer" title="点击朗读例句">"${item.example}"</p>
+                </div>
+            `;
 
-        const wordCardImg = card.querySelector('.word-card-img');
-        bindWordImageFallback(wordCardImg, item);
+            const wordCardImg = card.querySelector('.word-card-img');
+            bindWordImageFallback(wordCardImg, item);
 
-        // 点击事件 - 播放单词
-        card.addEventListener('click', (e) => {
-            playFlashcardTapAnimation(card, e);
-            
-            // 仅朗读单词
-            playSound('click');
-            speak(item.en, 0.58, 1.0, 1.0);
-        });
-
-        // 单击例句时朗读例句（与卡片点击分离）
-        const exampleEl = card.querySelector('.example-text');
-        if (exampleEl) {
-            exampleEl.addEventListener('click', (ev) => {
-                ev.stopPropagation();
+            card.addEventListener('click', (e) => {
+                playFlashcardTapAnimation(card, e);
                 playSound('click');
-                // 更慢更清晰地朗读例句
-                speechQueue.clear();
-                speak(item.example, 0.54, 1.0, 1.0);
+                speak(item.en, 0.58, 1.0, 1.0);
+
+                if (miniPlayState.findWord.active && miniPlayState.findWord.targetWord) {
+                    if (item.en === miniPlayState.findWord.targetWord.en) {
+                        miniPlayState.findWord.correct += 1;
+                        rewardSystem.giveStar();
+                        if (miniPlayState.findWord.correct >= miniPlayState.findWord.goal) {
+                            grantChallengeBonusStars(2);
+                            showRecordModal(`找找看完成！你成功找到了 ${miniPlayState.findWord.goal} 个目标词，额外获得 ⭐ 2。`);
+                            stopFindWord(`找找看完成！已获得基础星星 + 额外 ⭐ 2。`);
+                        } else {
+                            pickFindWordTarget();
+                            setFunStatus('答对了！继续找下一个目标词。');
+                            updateFindWordProgressText();
+                        }
+                    } else {
+                        setFunStatus(`再试试：目标是 ${miniPlayState.findWord.targetWord.en}。`);
+                        updateFindWordProgressText();
+                    }
+                }
             });
+
+            const exampleEl = card.querySelector('.example-text');
+            if (exampleEl) {
+                exampleEl.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    playSound('click');
+                    speechQueue.clear();
+                    speak(item.example, 0.54, 1.0, 1.0);
+                });
+            }
+            fragment.appendChild(card);
         }
+        flashcardContainer.appendChild(fragment);
 
-        // 已禁用：长按拖拽排序功能
+        if (cursor < validWords.length) {
+            scheduleFlashcardChunkRender({ token: currentToken, renderNextChunk });
+        }
+    };
 
-        fragment.appendChild(card);
-    });
-
-    flashcardContainer.appendChild(fragment);
+    scheduleFlashcardChunkRender({ token: currentToken, renderNextChunk });
 }
 
 // 已移除：拖拽功能相关变量和函数（长按拖拽排序已禁用）
@@ -1992,6 +2111,10 @@ function generateQuestion() {
     if (words.length < 4) {
         gameChoicesGridEl.innerHTML = '<p class="text-center col-span-full text-gray-500 p-8">这个类别单词太少，无法开始游戏哦！</p>';
         gameQuestionWordEl.textContent = '';
+        if (streakChallengeState.active) {
+            streakChallengeState.active = false;
+            setFunStatus('连胜挑战已中断：当前主题题量不足。');
+        }
         return;
     }
 
@@ -2020,6 +2143,10 @@ function generateQuestion() {
 
 function handleChoiceClick(selectedItem, cardElement) {
     if (appState.isGameLoading) return;
+    if (miniPlayState.timedGame.active && Date.now() > miniPlayState.timedGame.endAtMs) {
+        stopTimedGame('finished');
+        return;
+    }
     const isCorrect = selectedItem.en === appState.currentQuestion.en;
     
     // 记录答题结果
@@ -2029,6 +2156,15 @@ function handleChoiceClick(selectedItem, cardElement) {
     cardElement.classList.add(isCorrect ? 'correct' : 'incorrect');
     
     if (isCorrect) {
+        if (miniPlayState.timedGame.active) {
+            miniPlayState.timedGame.total += 1;
+            miniPlayState.timedGame.correct += 1;
+        }
+        if (streakChallengeState.active) {
+            streakChallengeState.correct += 1;
+            updateStreakBoardByProgress(streakChallengeState.correct);
+            setFunStatus(`连胜挑战进行中：${streakChallengeState.correct}/${streakChallengeState.target}`);
+        }
         recordLearningResult(selectedItem, true);
         // 播放正确音效
         playSound('correct');
@@ -2045,10 +2181,30 @@ function handleChoiceClick(selectedItem, cardElement) {
             playSound('success');
         }, 4500); // 放慢朗读后延长等待时间，避免重叠
         setTimeout(() => {
+            if (streakChallengeState.active && streakChallengeState.correct >= streakChallengeState.target) {
+                streakChallengeState.active = false;
+                grantChallengeBonusStars(streakChallengeState.target);
+                streakBoard.challengeWins += 1;
+                if (streakBoard.challengeWins >= 3) ensureBadge('champion');
+                saveStreakBoard();
+                renderStreakBoard();
+                launchConfetti();
+                setFunStatus(`挑战成功！已连续答对 ${streakChallengeState.target} 题，额外奖励 ⭐ ${streakChallengeState.target}（双倍星星生效）。`);
+                showRecordModal(`连胜挑战完成！本次额外获得 ⭐ ${streakChallengeState.target}，累计完成 ${streakBoard.challengeWins} 次。`);
+                speak('Challenge complete!', 0.78, 1.0, 1.0);
+            }
             generateQuestion();
             gameChoicesGridEl.style.pointerEvents = 'auto';
         }, 6000); // 总等待时间相应延长
     } else {
+        if (miniPlayState.timedGame.active) {
+            miniPlayState.timedGame.total += 1;
+        }
+        if (streakChallengeState.active) {
+            streakChallengeState.active = false;
+            streakChallengeState.correct = 0;
+            setFunStatus(`挑战失败：本轮未连胜 ${streakChallengeState.target} 题。当前最高连胜 ${streakBoard.bestStreak}。点击“连胜挑战”可重新开始。`);
+        }
         recordLearningResult(selectedItem, false);
         // 播放错误音效
         playSound('wrong');
@@ -2299,9 +2455,12 @@ function launchConfetti() {
         piece.style.setProperty('--dur', `${1.6 + Math.random() * 1.6}s`);
         piece.style.transform = `translateY(-100vh) rotate(${Math.random() * 360}deg)`;
         fragment.appendChild(piece);
-        setTimeout(() => piece.remove(), 2600);
     }
-    document.body.appendChild(fragment);
+    const layer = document.createElement('div');
+    layer.className = 'confetti-layer';
+    layer.appendChild(fragment);
+    document.body.appendChild(layer);
+    setTimeout(() => layer.remove(), 2700);
 }
 
 function drawMatchingLines() {
@@ -2337,12 +2496,12 @@ function drawMatchingLines() {
             
             matchingSvgEl.appendChild(line);
             
-            // 动画显示连线
-            setTimeout(() => {
+            // 动画显示连线（批量在下一帧执行，避免多次定时器）
+            requestAnimationFrame(() => {
                 line.style.transition = 'opacity 0.3s ease, stroke-dashoffset 0.5s ease';
                 line.style.opacity = '1';
                 line.style.strokeDashoffset = '0';
-            }, 50);
+            });
         }
     });
 }
@@ -2665,9 +2824,14 @@ function updateActiveUI() {
     modeGameBtn.classList.toggle('active', appState.currentMode === 'game');
     modeMatchingBtn.classList.toggle('active', appState.currentMode === 'matching');
     modeDictationBtn.classList.toggle('active', appState.currentMode === 'dictation');
-    categoryNav.querySelectorAll('.category-button').forEach(button => {
-        button.classList.toggle('active-category', button.textContent.trim() === appState.currentCategory);
-    });
+    const nextActive = uiCache.categoryButtonByName.get(appState.currentCategory) || null;
+    if (uiCache.activeCategoryButton && uiCache.activeCategoryButton !== nextActive) {
+        uiCache.activeCategoryButton.classList.remove('active-category');
+    }
+    if (nextActive && nextActive !== uiCache.activeCategoryButton) {
+        nextActive.classList.add('active-category');
+    }
+    uiCache.activeCategoryButton = nextActive;
     
     const subtitles = {
         'flashcards': '🌟 点击卡片学习单词，听发音和看例句！',
@@ -2679,17 +2843,25 @@ function updateActiveUI() {
 }
 
 async function setMode(mode) {
+    if (mode !== 'flashcards' && miniPlayState.findWord.active) {
+        stopFindWord('你已离开卡片认读模式，“找找看”已结束。');
+    }
+    if (mode !== 'game' && miniPlayState.timedGame.active) {
+        stopTimedGame('你已离开看词选图模式，限时闯关已结束。');
+    }
+    if (mode !== 'game' && streakChallengeState.active) {
+        streakChallengeState.active = false;
+        streakChallengeState.correct = 0;
+        setFunStatus('你已离开看词选图模式，连胜挑战已结束。');
+    }
     appState.currentMode = mode;
     flashcardContainer.classList.toggle('hidden', mode !== 'flashcards');
     gameContainer.classList.toggle('hidden', mode !== 'game');
     matchingContainer.classList.toggle('hidden', mode !== 'matching');
     dictationContainer.classList.toggle('hidden', mode !== 'dictation');
     
-    // 滚动到页面顶部
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
+    // 滚动到学习视口顶部（避免触发布局抖动）
+    scrollLearningViewportTop('smooth');
     
     await selectCategory(appState.currentCategory);
 }
@@ -2708,11 +2880,8 @@ async function selectCategory(category) {
         initDictationGame(category);
     }
 
-    // 滚动到页面顶部
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
+    // 滚动到学习视口顶部（避免触发布局抖动）
+    scrollLearningViewportTop('smooth');
 
     if (window.innerWidth < 768) {
         toggleMenu();
@@ -2728,8 +2897,340 @@ function toggleDesktopSidebar() {
     document.body.classList.toggle('sidebar-hidden');
 }
 
+function scrollLearningViewportTop(behavior = 'smooth') {
+    if (mainScrollContainer && typeof mainScrollContainer.scrollTo === 'function') {
+        mainScrollContainer.scrollTo({ top: 0, behavior });
+        return;
+    }
+    window.scrollTo({ top: 0, behavior });
+}
+
+function setFunStatus(message) {
+    if (!funPlayStatusEl) return;
+    funPlayStatusEl.textContent = message;
+}
+
+function setMiniProgress(message) {
+    if (!funMiniProgressEl) return;
+    funMiniProgressEl.textContent = message;
+}
+
+function getTodayKey() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
+function saveStreakBoard() {
+    try {
+        localStorage.setItem(STREAK_BOARD_STORAGE_KEY, JSON.stringify(streakBoard));
+    } catch (error) {
+        console.warn('saveStreakBoard failed:', error);
+    }
+}
+
+function renderStreakBadges() {
+    if (!funBadgesEl) return;
+    const badgeLabels = {
+        streak3: '🥉 连胜3题',
+        streak5: '🥈 连胜5题',
+        streak10: '🥇 连胜10题',
+        champion: '👑 闯关达人'
+    };
+    const badgeIds = Array.isArray(streakBoard.badges) ? streakBoard.badges : [];
+    if (badgeIds.length === 0) {
+        funBadgesEl.innerHTML = '<span class="fun-badge">暂无勋章，开始挑战吧！</span>';
+        return;
+    }
+    funBadgesEl.innerHTML = badgeIds
+        .map((id) => `<span class="fun-badge">${badgeLabels[id] || id}</span>`)
+        .join('');
+}
+
+function renderStreakBoard() {
+    if (funBestStreakEl) funBestStreakEl.textContent = String(streakBoard.bestStreak || 0);
+    if (funTodayBestEl) funTodayBestEl.textContent = String(streakBoard.todayBest || 0);
+    if (funChallengeWinsEl) funChallengeWinsEl.textContent = String(streakBoard.challengeWins || 0);
+    renderStreakBadges();
+}
+
+function ensureBadge(id) {
+    if (!id) return;
+    if (!Array.isArray(streakBoard.badges)) streakBoard.badges = [];
+    if (!streakBoard.badges.includes(id)) {
+        streakBoard.badges.push(id);
+    }
+}
+
+function showRecordModal(message) {
+    if (!recordOverlayEl || !recordDescEl) return;
+    recordDescEl.textContent = message;
+    recordOverlayEl.classList.add('show');
+}
+
+function hideRecordModal() {
+    if (!recordOverlayEl) return;
+    recordOverlayEl.classList.remove('show');
+}
+
+function loadStreakBoard() {
+    const todayKey = getTodayKey();
+    try {
+        const raw = localStorage.getItem(STREAK_BOARD_STORAGE_KEY);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            streakBoard.bestStreak = Math.max(0, Number(parsed.bestStreak) || 0);
+            streakBoard.todayBest = Math.max(0, Number(parsed.todayBest) || 0);
+            streakBoard.challengeWins = Math.max(0, Number(parsed.challengeWins) || 0);
+            streakBoard.badges = Array.isArray(parsed.badges) ? parsed.badges : [];
+            streakBoard.dateKey = String(parsed.dateKey || '');
+        }
+    } catch (error) {
+        console.warn('loadStreakBoard failed:', error);
+    }
+    if (streakBoard.dateKey !== todayKey) {
+        streakBoard.todayBest = 0;
+        streakBoard.dateKey = todayKey;
+        saveStreakBoard();
+    }
+    renderStreakBoard();
+}
+
+function updateStreakBoardByProgress(currentStreak) {
+    const streak = Math.max(0, Number(currentStreak) || 0);
+    let hasRecordBreak = false;
+    if (streak > streakBoard.bestStreak) {
+        streakBoard.bestStreak = streak;
+        hasRecordBreak = true;
+    }
+    if (streak > streakBoard.todayBest) {
+        streakBoard.todayBest = streak;
+    }
+    if (streak >= 3) ensureBadge('streak3');
+    if (streak >= 5) ensureBadge('streak5');
+    if (streak >= 10) ensureBadge('streak10');
+    saveStreakBoard();
+    renderStreakBoard();
+    if (hasRecordBreak) {
+        showRecordModal(`新的最高连胜：${streak} 题！继续冲刺更高纪录吧！`);
+    }
+}
+
+function stopTimedGame(reason = '') {
+    if (!miniPlayState.timedGame.active) return;
+    miniPlayState.timedGame.active = false;
+    if (miniPlayState.timedGame.timerId) {
+        clearInterval(miniPlayState.timedGame.timerId);
+        miniPlayState.timedGame.timerId = null;
+    }
+    const total = miniPlayState.timedGame.total;
+    const correct = miniPlayState.timedGame.correct;
+    const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+    if (reason === 'finished') {
+        if (total >= 5 && accuracy >= 80) {
+            grantChallengeBonusStars(3);
+            setFunStatus(`限时闯关完成：${correct}/${total}，正确率 ${accuracy}% ，奖励 ⭐ 3！`);
+            showRecordModal(`限时闯关完成！正确率 ${accuracy}% ，额外获得 ⭐ 3。`);
+        } else {
+            setFunStatus(`限时闯关结束：${correct}/${total}，正确率 ${accuracy}%。再试一次冲击奖励吧！`);
+        }
+    } else if (reason) {
+        setFunStatus(reason);
+    }
+    setMiniProgress('当前没有进行中的趣味任务。');
+}
+
+function stopFindWord(reason = '') {
+    if (!miniPlayState.findWord.active) return;
+    miniPlayState.findWord.active = false;
+    miniPlayState.findWord.targetWord = null;
+    miniPlayState.findWord.correct = 0;
+    if (reason) setFunStatus(reason);
+    setMiniProgress('当前没有进行中的趣味任务。');
+}
+
+function pickFindWordTarget() {
+    const words = (data[appState.currentCategory] || []).filter((item) => item && item.en);
+    if (words.length === 0) return null;
+    const next = randomPick(words);
+    miniPlayState.findWord.targetWord = next;
+    return next;
+}
+
+function updateFindWordProgressText() {
+    if (!miniPlayState.findWord.active || !miniPlayState.findWord.targetWord) return;
+    const target = miniPlayState.findWord.targetWord;
+    setMiniProgress(`找找看进度：${miniPlayState.findWord.correct}/${miniPlayState.findWord.goal}。目标：${target.en}（${target.cn || target.chinese || ''}）`);
+}
+
+function grantChallengeBonusStars(count) {
+    const safeCount = Math.max(0, Number(count) || 0);
+    if (safeCount <= 0) return;
+    rewardSystem.stars += safeCount;
+    rewardSystem.saveRewards();
+    updateProgressDisplay();
+}
+
+function randomPick(list) {
+    if (!Array.isArray(list) || list.length === 0) return null;
+    return list[Math.floor(Math.random() * list.length)];
+}
+
+function buildCardDomId(category, enWord) {
+    const categorySlug = String(category || '').replace(/[^a-zA-Z0-9]/g, '');
+    const wordSlug = String(enWord || '').replace(/[^a-zA-Z0-9]/g, '');
+    return `card-${categorySlug}-${wordSlug}`;
+}
+
+async function runRandomCardPlay() {
+    const words = data[appState.currentCategory] || [];
+    if (words.length === 0) {
+        setFunStatus('当前主题没有单词，先换一个主题吧。');
+        return;
+    }
+    await setMode('flashcards');
+    const chosen = randomPick(words);
+    if (!chosen) return;
+
+    const cardId = buildCardDomId(appState.currentCategory, chosen.en);
+    const card = document.getElementById(cardId);
+    if (card) {
+        flashcardContainer.querySelectorAll('.fun-highlight-card').forEach((el) => el.classList.remove('fun-highlight-card'));
+        card.classList.add('fun-highlight-card');
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => card.classList.remove('fun-highlight-card'), 2400);
+    }
+
+    speechQueue.clear();
+    speak(chosen.en, 0.58, 1.0, 1.0);
+    setFunStatus(`已抽到：${chosen.en}（${chosen.cn || chosen.chinese || ''}）`);
+}
+
+function runSoundTrainPlay() {
+    const words = [...(data[appState.currentCategory] || [])].filter((item) => item && item.en);
+    if (words.length === 0) {
+        setFunStatus('当前主题没有可播放的单词。');
+        return;
+    }
+    for (let i = words.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [words[i], words[j]] = [words[j], words[i]];
+    }
+    const queue = words.slice(0, Math.min(5, words.length));
+    speechQueue.clear();
+    queue.forEach((item, idx) => {
+        setTimeout(() => {
+            speak(item.en, 0.58, 1.0, 1.0);
+        }, idx * 1150);
+    });
+    setFunStatus(`语音连播开始：${queue.map((w) => w.en).join(' · ')}`);
+}
+
+async function runRandomChallengePlay() {
+    const categories = Object.keys(data).filter((c) => (data[c] || []).length > 0);
+    if (categories.length === 0) {
+        setFunStatus('没有可用主题，无法开启闯关。');
+        return;
+    }
+    const randomCategory = randomPick(categories);
+    const challengeModes = ['game', 'matching', 'dictation'];
+    const randomMode = randomPick(challengeModes);
+    appState.currentCategory = randomCategory;
+    await setMode(randomMode);
+    updateActiveUI();
+    setFunStatus(`闯关已开启：主题「${randomCategory}」，模式「${randomMode === 'game' ? '看词选图' : randomMode === 'matching' ? '配对连线' : '听写训练'}」`);
+}
+
+async function runStreakChallengePlay() {
+    const words = data[appState.currentCategory] || [];
+    if (words.length < 4) {
+        setFunStatus('连胜挑战需要当前主题至少 4 个单词。');
+        return;
+    }
+    streakChallengeState.active = true;
+    streakChallengeState.correct = 0;
+    await setMode('game');
+    setFunStatus(`连胜挑战开始：连续答对 ${streakChallengeState.target} 题可获得双倍星星奖励（进度 0/${streakChallengeState.target}）。`);
+    setMiniProgress('当前进行：连胜挑战。');
+}
+
+async function runFindWordPlay() {
+    const words = (data[appState.currentCategory] || []).filter((item) => item && item.en);
+    if (words.length < 4) {
+        setFunStatus('找找看至少需要当前主题有 4 个单词。');
+        return;
+    }
+    stopTimedGame();
+    streakChallengeState.active = false;
+    miniPlayState.findWord.active = true;
+    miniPlayState.findWord.correct = 0;
+    await setMode('flashcards');
+    const target = pickFindWordTarget();
+    if (!target) {
+        stopFindWord('当前主题无法启动找找看。');
+        return;
+    }
+    setFunStatus('找找看开始：点击与目标词对应的卡片。');
+    updateFindWordProgressText();
+}
+
+async function runTimedGamePlay() {
+    const words = data[appState.currentCategory] || [];
+    if (words.length < 4) {
+        setFunStatus('限时闯关需要当前主题至少 4 个单词。');
+        return;
+    }
+    stopFindWord();
+    streakChallengeState.active = false;
+    if (miniPlayState.timedGame.timerId) {
+        clearInterval(miniPlayState.timedGame.timerId);
+        miniPlayState.timedGame.timerId = null;
+    }
+    miniPlayState.timedGame.active = true;
+    miniPlayState.timedGame.total = 0;
+    miniPlayState.timedGame.correct = 0;
+    miniPlayState.timedGame.endAtMs = Date.now() + miniPlayState.timedGame.durationSec * 1000;
+    await setMode('game');
+    setFunStatus(`限时闯关开始：${miniPlayState.timedGame.durationSec} 秒内尽量答对更多题。`);
+    miniPlayState.timedGame.timerId = setInterval(() => {
+        const remainMs = miniPlayState.timedGame.endAtMs - Date.now();
+        if (remainMs <= 0) {
+            stopTimedGame('finished');
+            return;
+        }
+        const remainSec = Math.ceil(remainMs / 1000);
+        const total = miniPlayState.timedGame.total;
+        const correct = miniPlayState.timedGame.correct;
+        const acc = total > 0 ? Math.round((correct / total) * 100) : 0;
+        setMiniProgress(`限时闯关：剩余 ${remainSec}s，得分 ${correct}/${total}（正确率 ${acc}%）`);
+    }, 1000);
+}
+
+function initFunPlayUI() {
+    loadStreakBoard();
+    if (!funRandomCardBtn || !funSoundTrainBtn || !funRandomChallengeBtn || !funStreakChallengeBtn || !funFindWordBtn || !funTimedGameBtn) return;
+    funRandomCardBtn.addEventListener('click', runRandomCardPlay);
+    funSoundTrainBtn.addEventListener('click', runSoundTrainPlay);
+    funRandomChallengeBtn.addEventListener('click', runRandomChallengePlay);
+    funStreakChallengeBtn.addEventListener('click', runStreakChallengePlay);
+    funFindWordBtn.addEventListener('click', runFindWordPlay);
+    funTimedGameBtn.addEventListener('click', runTimedGamePlay);
+    recordCloseBtn?.addEventListener('click', hideRecordModal);
+    recordOverlayEl?.addEventListener('click', (event) => {
+        if (event.target === recordOverlayEl) hideRecordModal();
+    });
+}
+
 // --- Initialization ---
 function init() {
+    if (perfProfile.lowPower) {
+        document.body.classList.add('perf-low-power');
+    }
+    if (perfProfile.reducedMotion) {
+        document.body.classList.add('perf-reduced-motion');
+    }
     const feedbackCloseBtn = document.getElementById('dictation-feedback-close');
     if (window.AppBootstrapModule) {
         window.AppBootstrapModule.bootstrap({
@@ -2784,6 +3285,7 @@ function init() {
             }
         });
     }
+    initFunPlayUI();
 }
 
 window.onload = init;

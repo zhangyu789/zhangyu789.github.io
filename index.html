@@ -746,6 +746,12 @@
             animation: confettiFall var(--dur, 2s) linear forwards;
             will-change: transform, opacity;
         }
+        .confetti-layer {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9999;
+        }
         
         /* 增强的悬停效果 - 仅在非触摸设备上生效 */
         @media (hover: hover) and (pointer: fine) {
@@ -1188,6 +1194,26 @@
                 scroll-behavior: auto !important;
             }
         }
+        body.perf-low-power .flashcard,
+        body.perf-low-power .game-choice-card,
+        body.perf-low-power .matching-item,
+        body.perf-low-power .letter-card {
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12) !important;
+            transform: none !important;
+        }
+        body.perf-low-power .flashcard:hover,
+        body.perf-low-power .game-choice-card:hover,
+        body.perf-low-power .matching-item:hover,
+        body.perf-low-power .letter-card:hover {
+            transform: none !important;
+        }
+        body.perf-low-power .kid-header {
+            backdrop-filter: none;
+        }
+        body.perf-reduced-motion .confetti-piece {
+            animation: none !important;
+            opacity: 0 !important;
+        }
         .word-letter.filled { box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2); }
         .word-letter.pop { animation: popIn 0.25s ease-out; }
         .word-letter:empty {
@@ -1358,6 +1384,125 @@
         .kid-stage {
             max-width: 74rem;
             margin: 0 auto;
+        }
+        .kid-fun-toolbar {
+            max-width: 72rem;
+            margin: 0 auto 1rem;
+            padding: 0.75rem;
+            border-radius: 16px;
+            border: 1px solid rgba(14, 165, 233, 0.22);
+            background: linear-gradient(135deg, rgba(224, 242, 254, 0.92), rgba(238, 242, 255, 0.92));
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.12);
+        }
+        .kid-fun-btn {
+            min-height: 48px;
+            padding: 0.55rem 0.95rem;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1f2937;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: #fff;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+        }
+        .kid-fun-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 16px rgba(30, 64, 175, 0.16);
+        }
+        #fun-play-status {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #334155;
+            min-height: 1.4rem;
+        }
+        .fun-stats-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 0.45rem;
+        }
+        .fun-stat-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.32rem;
+            padding: 0.28rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #1e293b;
+            background: rgba(255, 255, 255, 0.93);
+            border: 1px solid rgba(148, 163, 184, 0.33);
+        }
+        .fun-badges {
+            margin-top: 0.45rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.35rem;
+        }
+        .fun-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #334155;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px dashed rgba(99, 102, 241, 0.36);
+        }
+        .record-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 60;
+            background: rgba(15, 23, 42, 0.48);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .record-overlay.show {
+            display: flex;
+        }
+        .record-modal {
+            width: min(92vw, 420px);
+            border-radius: 18px;
+            background: linear-gradient(135deg, #fff7ed, #fef3c7);
+            border: 2px solid rgba(251, 146, 60, 0.48);
+            box-shadow: 0 18px 44px rgba(251, 146, 60, 0.3);
+            padding: 1rem 1rem 0.9rem;
+            text-align: center;
+        }
+        .record-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #9a3412;
+        }
+        .record-desc {
+            margin-top: 0.4rem;
+            font-size: 0.98rem;
+            font-weight: 600;
+            color: #7c2d12;
+        }
+        .record-close-btn {
+            margin-top: 0.8rem;
+            min-height: 44px;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            box-shadow: 0 8px 18px rgba(234, 88, 12, 0.28);
+        }
+        .fun-highlight-card {
+            outline: 4px solid rgba(56, 189, 248, 0.45);
+            box-shadow: 0 0 0 8px rgba(147, 197, 253, 0.26), 0 16px 30px rgba(37, 99, 235, 0.22) !important;
+            animation: funCardPulse 1.15s ease-out 2;
+        }
+        @keyframes funCardPulse {
+            0% { transform: scale(1); }
+            35% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
         #flashcard-container.kid-stage {
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1540,6 +1685,25 @@
                     </button>
                 </div>
 
+                <section class="kid-fun-toolbar" aria-label="趣味玩法工具条">
+                    <div class="flex flex-wrap items-center justify-center gap-2 md:gap-3">
+                        <button id="fun-random-card" class="kid-fun-btn" type="button">🎲 幸运抽卡</button>
+                        <button id="fun-sound-train" class="kid-fun-btn" type="button">🔊 语音连播</button>
+                        <button id="fun-random-challenge" class="kid-fun-btn" type="button">🚀 随机闯关</button>
+                        <button id="fun-streak-challenge" class="kid-fun-btn" type="button">🔥 连胜挑战</button>
+                        <button id="fun-find-word" class="kid-fun-btn" type="button">🕵️ 找找看</button>
+                        <button id="fun-timed-game" class="kid-fun-btn" type="button">⏱️ 限时闯关</button>
+                    </div>
+                    <p id="fun-play-status" class="text-center mt-2">点击上方按钮，开始一个趣味玩法。</p>
+                    <p id="fun-mini-progress" class="text-center mt-1 text-sm font-semibold text-slate-600">当前没有进行中的趣味任务。</p>
+                    <div class="fun-stats-row" aria-label="连胜排行信息">
+                        <span class="fun-stat-chip">🏅 最高连胜 <strong id="fun-best-streak">0</strong></span>
+                        <span class="fun-stat-chip">📆 今日最佳 <strong id="fun-today-best">0</strong></span>
+                        <span class="fun-stat-chip">✅ 挑战完成 <strong id="fun-challenge-wins">0</strong></span>
+                    </div>
+                    <div id="fun-badges" class="fun-badges" aria-label="挑战勋章"></div>
+                </section>
+
                 <main id="flashcard-container" class="kid-stage grid">
                     <!-- 闪卡将由JS动态生成 -->
                 </main>
@@ -1711,5 +1875,13 @@
     <script src="js/modules/app-bootstrap.js" defer></script>
     <script src="js/modules/perf-profile.js" defer></script>
     <script src="js/app.js" defer></script>
+
+    <div id="record-overlay" class="record-overlay" aria-live="polite">
+        <div class="record-modal" role="dialog" aria-modal="true" aria-labelledby="record-title">
+            <div id="record-title" class="record-title">🎉 打破纪录！</div>
+            <p id="record-desc" class="record-desc">你创造了新的连胜纪录！</p>
+            <button id="record-close-btn" type="button" class="record-close-btn">太棒了，继续</button>
+        </div>
+    </div>
 </body>
 </html>
