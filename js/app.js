@@ -1491,7 +1491,8 @@ function getImageSourceMode() {
     const raw = (localStorage.getItem(IMAGE_SOURCE_MODE_KEY) || '').trim().toLowerCase();
     if (raw === IMAGE_SOURCE_MODE.UNSPLASH) return IMAGE_SOURCE_MODE.UNSPLASH;
     if (raw === IMAGE_SOURCE_MODE.POLLINATIONS) return IMAGE_SOURCE_MODE.POLLINATIONS;
-    return IMAGE_SOURCE_MODE.LOCAL;
+    // 默认走公共图片库（无需 key，适合 GitHub Pages）
+    return IMAGE_SOURCE_MODE.UNSPLASH;
 }
 
 function hashStringToUint32(str = '') {
