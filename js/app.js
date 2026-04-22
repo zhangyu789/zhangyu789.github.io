@@ -66,7 +66,11 @@ function playComboCelebrationSound(combo) {
 function showComboBurst(anchorEl, combo) {
     const burst = document.createElement('div');
     burst.className = 'combo-burst';
-    burst.textContent = combo >= 5 ? `MEGA x${combo}` : `COMBO x${combo}`;
+    if (typeof combo === 'number') {
+        burst.textContent = combo >= 5 ? `MEGA x${combo}` : `COMBO x${combo}`;
+    } else {
+        burst.textContent = String(combo);
+    }
     const rect = anchorEl && typeof anchorEl.getBoundingClientRect === 'function'
         ? anchorEl.getBoundingClientRect()
         : null;
@@ -1472,6 +1476,50 @@ function dedupKeyForWord(word) {
     return normalizeWordForDedup(word.id);
 }
 
+// --- 图片来源（图片库/本地）配置 ---
+// local: 使用词表里写死的 /images/... 路径
+// unsplash: 从 Unsplash Source 按关键词取图（无需密钥，适合 GitHub Pages）
+// pollinations: 直接用 Pollinations 生成“可爱卡通配图”（无需密钥）
+const IMAGE_SOURCE_MODE_KEY = 'learning.imageSourceMode';
+const IMAGE_SOURCE_MODE = {
+    LOCAL: 'local',
+    UNSPLASH: 'unsplash',
+    POLLINATIONS: 'pollinations'
+};
+
+function getImageSourceMode() {
+    const raw = (localStorage.getItem(IMAGE_SOURCE_MODE_KEY) || '').trim().toLowerCase();
+    if (raw === IMAGE_SOURCE_MODE.UNSPLASH) return IMAGE_SOURCE_MODE.UNSPLASH;
+    if (raw === IMAGE_SOURCE_MODE.POLLINATIONS) return IMAGE_SOURCE_MODE.POLLINATIONS;
+    return IMAGE_SOURCE_MODE.LOCAL;
+}
+
+function hashStringToUint32(str = '') {
+    // FNV-1a 32-bit
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 0x01000193);
+    }
+    return h >>> 0;
+}
+
+function buildUnsplashLibraryUrl(item) {
+    const q = (item.en || item.english || item.id || '').trim();
+    const theme = (item.themeId || '').trim();
+    const query = encodeURIComponent([q, theme].filter(Boolean).join(', '));
+    const sig = hashStringToUint32(`${q}__${theme}`).toString();
+    // 600x600：卡片/游戏格子显示更稳定；sig 让同一单词相对稳定
+    return `https://source.unsplash.com/600x600/?${query}&sig=${sig}`;
+}
+
+function getPreferredImageUrlForItem(item) {
+    const mode = getImageSourceMode();
+    if (mode === IMAGE_SOURCE_MODE.UNSPLASH) return buildUnsplashLibraryUrl(item);
+    if (mode === IMAGE_SOURCE_MODE.POLLINATIONS) return buildAiFallbackImageUrl(item);
+    return (item.imageUrl || item.localImageUrl || '');
+}
+
 const data = {};
 for (const theme in themeMap) {
     data[themeMap[theme]] = [];
@@ -1494,13 +1542,17 @@ function rebuildLearningData(ageLevel = AGE_LEVEL.PRIMARY) {
 
             const categoryName = themeMap[word.themeId];
             if (!data[categoryName]) data[categoryName] = [];
+            const localImageUrl = word.imageUrl || '';
             data[categoryName].push({
                 id: word.id,
                 en: word.english,
                 cn: word.chinese,
                 phonetic: word.phonetic || '',
                 example: word.example || '',
-                imageUrl: word.imageUrl || ''
+                // imageUrl：当前渲染用的“首选图片来源”
+                // localImageUrl：你仓库中现有的本地图片路径（用于回退）
+                imageUrl: getPreferredImageUrlForItem({ ...word, en: word.english, cn: word.chinese }) || localImageUrl,
+                localImageUrl
             });
         }
     });
@@ -1575,8 +1627,19 @@ const funRandomChallengeBtn = document.getElementById('fun-random-challenge');
 const funStreakChallengeBtn = document.getElementById('fun-streak-challenge');
 const funFindWordBtn = document.getElementById('fun-find-word');
 const funTimedGameBtn = document.getElementById('fun-timed-game');
+const funQuickTapBtn = document.getElementById('fun-quick-tap');
+const funParentPlayBtn = document.getElementById('fun-parent-play');
 const funPlayStatusEl = document.getElementById('fun-play-status');
 const funMiniProgressEl = document.getElementById('fun-mini-progress');
+const parentPlayPanelEl = document.getElementById('parent-play-panel');
+const parentPlayTitleEl = document.getElementById('parent-play-title');
+const parentPlayDescEl = document.getElementById('parent-play-desc');
+const parentPlayStepsEl = document.getElementById('parent-play-steps');
+const parentPlayTimerEl = document.getElementById('parent-play-timer');
+const parentPlayNextBtn = document.getElementById('parent-play-next');
+const parentPlayStartTimerBtn = document.getElementById('parent-play-start-timer');
+const parentPlayDoneBtn = document.getElementById('parent-play-done');
+const parentPlayCloseBtn = document.getElementById('parent-play-close');
 const funBestStreakEl = document.getElementById('fun-best-streak');
 const funTodayBestEl = document.getElementById('fun-today-best');
 const funChallengeWinsEl = document.getElementById('fun-challenge-wins');
@@ -1623,8 +1686,49 @@ const miniPlayState = {
         total: 0,
         correct: 0,
         timerId: null
+    },
+    quickTap: {
+        active: false,
+        durationSec: 20,
+        endAtMs: 0,
+        score: 0,
+        streak: 0,
+        lastWord: '',
+        timerId: null
+    },
+    parentPlay: {
+        active: false,
+        timerId: null,
+        currentTask: null
     }
 };
+const parentPlayTaskPool = [
+    {
+        title: '单词炸弹',
+        desc: '轮流抽卡，读到炸弹卡就做夸张爆炸动作并喊 Boom!',
+        steps: ['准备 5-10 张单词卡，指定 1 张为炸弹卡。', '抽到普通卡大声读单词。', '抽到炸弹卡：抱头蹲下或做鬼脸并喊 “Boom!”。']
+    },
+    {
+        title: '动作猜词',
+        desc: '家长和孩子轮流做动作，另一方猜英语单词。',
+        steps: ['先从 run/eat/sleep/jump 开始。', '猜对后立刻互换角色。', '家长可故意猜错，激发孩子纠正和开口。']
+    },
+    {
+        title: '寻宝大挑战',
+        desc: '按英文指令在家中找物品，跑回来并说完整句子。',
+        steps: ['家长发指令：Find something red / Find a cup。', '孩子快速找实物并拿回。', '说句子：I find a cup! 然后击掌。']
+    },
+    {
+        title: '单词接龙',
+        desc: '首尾接龙或同类接龙，训练词汇联想速度。',
+        steps: ['首尾接龙示例：Apple → Elephant → Tiger。', '低龄可改同类接龙：Cat → Dog → Pig。', '卡住 10 秒可换下一个主题。']
+    },
+    {
+        title: 'Simon Says',
+        desc: '听到 Simon says 才能做动作，训练听力和抑制控制。',
+        steps: ['Simon says, touch your nose：必须做。', 'Touch your nose（无前缀）：不能动。', '动错了就做一个搞笑小动作。']
+    }
+];
 
 // 配对连线相关元素
 const matchingWordsEl = document.getElementById('matching-words');
@@ -1666,6 +1770,10 @@ function clearMatchingItemSelection() {
 function getImageUrl(originalUrl) {
     if (!originalUrl) return '';
     
+    // 仅对本地 png 做 webp 优先（远程图库 URL 不做后缀替换）
+    const isLocal = originalUrl.startsWith('/') || !/^https?:\/\//i.test(originalUrl);
+    if (!isLocal) return originalUrl;
+
     // 如果已经是webp格式，直接返回
     if (originalUrl.endsWith('.webp')) {
         return originalUrl;
@@ -1706,25 +1814,32 @@ function buildAiFallbackImageUrl(item) {
  */
 function bindWordImageFallback(img, item) {
     if (!img || !item) return;
-    const webpUrl = getImageUrl(item.imageUrl);
-    const pngUrl = item.imageUrl || '';
+
+    const mode = getImageSourceMode();
+    const preferredUrl = getPreferredImageUrlForItem(item);
+    const localPngUrl = item.localImageUrl || item.imageUrl || '';
+    const localWebpUrl = getImageUrl(localPngUrl);
+
+    // 构造尝试链：优先（图片库/本地） → 本地 webp/png → AI
+    const candidates = [];
+    if (preferredUrl) candidates.push({ key: 'preferred', url: preferredUrl });
+    // 若首选不是本地，则仍尝试本地回退（避免图库不稳定/被墙）
+    if (mode !== IMAGE_SOURCE_MODE.LOCAL) {
+        if (localWebpUrl && localWebpUrl !== preferredUrl) candidates.push({ key: 'localWebp', url: localWebpUrl });
+        if (localPngUrl && localPngUrl !== localWebpUrl && localPngUrl !== preferredUrl) candidates.push({ key: 'localPng', url: localPngUrl });
+    }
+    const aiUrl = buildAiFallbackImageUrl(item);
+    if (aiUrl) candidates.push({ key: 'ai', url: aiUrl });
+
+    let idx = 0;
     const onLoad = () => {
         img.removeEventListener('error', onErr);
     };
     const onErr = () => {
-        if (img.dataset.imgFallback === 'webp') {
-            img.dataset.imgFallback = 'png';
-            if (pngUrl) {
-                img.src = pngUrl;
-                return;
-            }
-            img.dataset.imgFallback = 'ai';
-            img.src = buildAiFallbackImageUrl(item);
-            return;
-        }
-        if (img.dataset.imgFallback === 'png') {
-            img.dataset.imgFallback = 'ai';
-            img.src = buildAiFallbackImageUrl(item);
+        idx += 1;
+        if (idx < candidates.length && candidates[idx]?.url) {
+            img.dataset.imgFallback = candidates[idx].key;
+            img.src = candidates[idx].url;
             return;
         }
         img.removeEventListener('error', onErr);
@@ -1735,15 +1850,14 @@ function bindWordImageFallback(img, item) {
     };
     img.addEventListener('error', onErr);
     img.addEventListener('load', onLoad);
-    if (webpUrl) {
-        img.dataset.imgFallback = 'webp';
-        img.src = webpUrl;
-    } else if (pngUrl) {
-        img.dataset.imgFallback = 'png';
-        img.src = pngUrl;
+    if (candidates.length > 0) {
+        img.dataset.imgFallback = candidates[0].key;
+        img.src = candidates[0].url;
     } else {
-        img.dataset.imgFallback = 'ai';
-        img.src = buildAiFallbackImageUrl(item);
+        img.dataset.imgFallback = 'none';
+        img.style.display = 'none';
+        const ph = img.nextElementSibling;
+        if (ph) ph.style.display = 'flex';
     }
 }
 
@@ -2102,6 +2216,26 @@ function displayFlashcardsProgressively(category) {
                 playFlashcardTapAnimation(card, e);
                 playSound('click');
                 speak(item.en, 0.58, 1.0, 1.0);
+
+                if (miniPlayState.quickTap.active) {
+                    if (Date.now() > miniPlayState.quickTap.endAtMs) {
+                        stopQuickTap('finished');
+                        return;
+                    }
+                    const repeated = miniPlayState.quickTap.lastWord === item.en;
+                    miniPlayState.quickTap.streak = repeated ? 1 : (miniPlayState.quickTap.streak + 1);
+                    miniPlayState.quickTap.lastWord = item.en;
+                    const gain = miniPlayState.quickTap.streak >= 6 ? 3 : miniPlayState.quickTap.streak >= 3 ? 2 : 1;
+                    miniPlayState.quickTap.score += gain;
+                    showComboBurst(card, `+${gain}`);
+                    triggerCorrectImpact(card, gain >= 2 ? '连击加分！' : '加分！');
+                    if (miniPlayState.quickTap.score % 10 === 0) {
+                        rewardSystem.giveStar();
+                        launchConfetti();
+                    }
+                    const remainSec = Math.max(0, Math.ceil((miniPlayState.quickTap.endAtMs - Date.now()) / 1000));
+                    setMiniProgress(`快速点点：剩余 ${remainSec}s，得分 ${miniPlayState.quickTap.score}，连击 ${miniPlayState.quickTap.streak}`);
+                }
 
                 if (miniPlayState.findWord.active && miniPlayState.findWord.targetWord) {
                     if (item.en === miniPlayState.findWord.targetWord.en) {
@@ -2915,6 +3049,12 @@ function updateActiveUI() {
 }
 
 async function setMode(mode) {
+    if (mode !== 'flashcards' && miniPlayState.parentPlay.active) {
+        closeParentPlayMode();
+    }
+    if (mode !== 'flashcards' && miniPlayState.quickTap.active) {
+        stopQuickTap('你已离开卡片认读模式，快速点点已结束。');
+    }
     if (mode !== 'flashcards' && miniPlayState.findWord.active) {
         stopFindWord('你已离开卡片认读模式，“找找看”已结束。');
     }
@@ -3140,6 +3280,94 @@ function stopTimedGame(reason = '') {
     setMiniProgress('当前没有进行中的趣味任务。');
 }
 
+function stopQuickTap(reason = '') {
+    if (!miniPlayState.quickTap.active) return;
+    miniPlayState.quickTap.active = false;
+    if (miniPlayState.quickTap.timerId) {
+        clearInterval(miniPlayState.quickTap.timerId);
+        miniPlayState.quickTap.timerId = null;
+    }
+    const score = miniPlayState.quickTap.score;
+    const reward = score >= 40 ? 5 : score >= 25 ? 3 : score >= 12 ? 1 : 0;
+    if (reason === 'finished') {
+        if (reward > 0) {
+            grantChallengeBonusStars(reward);
+            setFunStatus(`快速点点完成！得分 ${score}，奖励 ⭐ ${reward}。`);
+            showRecordModal(`快速点点结算：得分 ${score}，额外获得 ⭐ ${reward}。`);
+            launchConfetti();
+        } else {
+            setFunStatus(`快速点点结束：得分 ${score}。再来一局冲高分！`);
+        }
+    } else if (reason) {
+        setFunStatus(reason);
+    }
+    miniPlayState.quickTap.score = 0;
+    miniPlayState.quickTap.streak = 0;
+    miniPlayState.quickTap.lastWord = '';
+    setMiniProgress('当前没有进行中的趣味任务。');
+}
+
+function stopParentPlayTimer() {
+    if (miniPlayState.parentPlay.timerId) {
+        clearInterval(miniPlayState.parentPlay.timerId);
+        miniPlayState.parentPlay.timerId = null;
+    }
+    if (parentPlayTimerEl) parentPlayTimerEl.textContent = '';
+}
+
+function renderParentPlayTask(task) {
+    if (!task || !parentPlayTitleEl || !parentPlayDescEl || !parentPlayStepsEl) return;
+    parentPlayTitleEl.textContent = `亲子互动：${task.title}`;
+    parentPlayDescEl.textContent = task.desc;
+    parentPlayStepsEl.innerHTML = task.steps.map((s) => `<li>${s}</li>`).join('');
+}
+
+function pickParentPlayTask() {
+    const task = randomPick(parentPlayTaskPool);
+    miniPlayState.parentPlay.currentTask = task;
+    renderParentPlayTask(task);
+}
+
+function runParentPlayMode() {
+    if (!parentPlayPanelEl) return;
+    miniPlayState.parentPlay.active = true;
+    parentPlayPanelEl.classList.remove('hidden');
+    pickParentPlayTask();
+    setFunStatus('亲子互动模式已开启：边玩边说英语，重点是动起来。');
+    setMiniProgress('亲子互动进行中：完成当前任务后可点“下一题”。');
+}
+
+function startParentPlayTimer(seconds = 20) {
+    if (!parentPlayTimerEl) return;
+    stopParentPlayTimer();
+    let remain = seconds;
+    parentPlayTimerEl.textContent = `倒计时：${remain}s`;
+    miniPlayState.parentPlay.timerId = setInterval(() => {
+        remain -= 1;
+        if (remain <= 0) {
+            stopParentPlayTimer();
+            parentPlayTimerEl.textContent = '时间到！做个击掌庆祝，然后换下一题。';
+            playSound('success');
+            return;
+        }
+        parentPlayTimerEl.textContent = `倒计时：${remain}s`;
+    }, 1000);
+}
+
+function completeParentPlayTask() {
+    rewardSystem.giveStar();
+    launchConfetti();
+    setFunStatus('亲子互动任务完成！已奖励 ⭐ 1。');
+    setMiniProgress('继续保持：再玩一题，孩子会更投入。');
+}
+
+function closeParentPlayMode() {
+    miniPlayState.parentPlay.active = false;
+    stopParentPlayTimer();
+    if (parentPlayPanelEl) parentPlayPanelEl.classList.add('hidden');
+    setMiniProgress('当前没有进行中的趣味任务。');
+}
+
 function stopFindWord(reason = '') {
     if (!miniPlayState.findWord.active) return;
     miniPlayState.findWord.active = false;
@@ -3306,15 +3534,54 @@ async function runTimedGamePlay() {
     }, 1000);
 }
 
+async function runQuickTapPlay() {
+    const words = (data[appState.currentCategory] || []).filter((item) => item && item.en);
+    if (words.length === 0) {
+        setFunStatus('快速点点需要当前主题有可点击卡片。');
+        return;
+    }
+    stopFindWord();
+    stopTimedGame();
+    streakChallengeState.active = false;
+
+    if (miniPlayState.quickTap.timerId) {
+        clearInterval(miniPlayState.quickTap.timerId);
+        miniPlayState.quickTap.timerId = null;
+    }
+    miniPlayState.quickTap.active = true;
+    miniPlayState.quickTap.score = 0;
+    miniPlayState.quickTap.streak = 0;
+    miniPlayState.quickTap.lastWord = '';
+    miniPlayState.quickTap.endAtMs = Date.now() + miniPlayState.quickTap.durationSec * 1000;
+
+    await setMode('flashcards');
+    setFunStatus(`快速点点开始：${miniPlayState.quickTap.durationSec} 秒内尽量多点卡片拿分！`);
+    miniPlayState.quickTap.timerId = setInterval(() => {
+        const remainMs = miniPlayState.quickTap.endAtMs - Date.now();
+        if (remainMs <= 0) {
+            stopQuickTap('finished');
+            return;
+        }
+        const remainSec = Math.ceil(remainMs / 1000);
+        setMiniProgress(`快速点点：剩余 ${remainSec}s，得分 ${miniPlayState.quickTap.score}，连击 ${miniPlayState.quickTap.streak}`);
+    }, 1000);
+}
+
 function initFunPlayUI() {
     loadStreakBoard();
-    if (!funRandomCardBtn || !funSoundTrainBtn || !funRandomChallengeBtn || !funStreakChallengeBtn || !funFindWordBtn || !funTimedGameBtn) return;
+    if (!funRandomCardBtn || !funSoundTrainBtn || !funRandomChallengeBtn || !funStreakChallengeBtn || !funFindWordBtn || !funTimedGameBtn || !funQuickTapBtn || !funParentPlayBtn) return;
     funRandomCardBtn.addEventListener('click', runRandomCardPlay);
     funSoundTrainBtn.addEventListener('click', runSoundTrainPlay);
     funRandomChallengeBtn.addEventListener('click', runRandomChallengePlay);
     funStreakChallengeBtn.addEventListener('click', runStreakChallengePlay);
     funFindWordBtn.addEventListener('click', runFindWordPlay);
     funTimedGameBtn.addEventListener('click', runTimedGamePlay);
+    funQuickTapBtn.addEventListener('click', runQuickTapPlay);
+    funParentPlayBtn.addEventListener('click', runParentPlayMode);
+    parentPlayNextBtn?.addEventListener('click', pickParentPlayTask);
+    parentPlayStartTimerBtn?.addEventListener('click', () => startParentPlayTimer(20));
+    parentPlayDoneBtn?.addEventListener('click', completeParentPlayTask);
+    parentPlayCloseBtn?.addEventListener('click', closeParentPlayMode);
     recordCloseBtn?.addEventListener('click', hideRecordModal);
     recordOverlayEl?.addEventListener('click', (event) => {
         if (event.target === recordOverlayEl) hideRecordModal();
