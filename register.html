@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KoxMail Sign Up - Start Your Journey</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="register">
+  <header class="site-header" id="siteHeader">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" data-i18n-aria="brand.aria">
+        <span class="brand-mark">K</span>
+        <span class="brand-text">KoxMail</span>
+      </a>
+      <button class="menu-toggle" id="menuToggle" aria-expanded="false" aria-controls="mainNav" data-i18n-aria="nav.open">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="nav" id="mainNav" data-i18n-aria="nav.main">
+        <a href="index.html#home" data-i18n="nav.home">Home</a>
+        <a href="index.html#features" data-i18n="nav.features">Features</a>
+        <a href="index.html#pricing" data-i18n="nav.pricing">Pricing</a>
+        <a href="index.html#about" data-i18n="nav.about">About</a>
+        <a href="index.html#faq" data-i18n="nav.faq">FAQ</a>
+        <a href="index.html#blog" data-i18n="nav.blog">Blog</a>
+      </nav>
+      <div class="header-actions">
+        <button type="button" class="lang-btn" id="langToggle" aria-label="Switch to Chinese">中文</button>
+        <a class="btn btn-ghost" href="login.html" data-i18n="common.login">Sign in</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="subpage-main">
+    <section class="section">
+      <div class="container">
+        <div class="auth-box">
+          <p class="eyebrow" data-i18n="register.eyebrow">✦ Sign up now</p>
+          <h1 data-i18n="register.title">Start your journey</h1>
+          <p class="lead" data-i18n="register.lead">Create an account in 30 seconds — 30 days of Pro free</p>
+          <form class="auth-form" action="login.html" method="get">
+            <div class="field">
+              <label for="regName" data-i18n="register.name">Full name</label>
+              <input id="regName" type="text" data-i18n-placeholder="register.namePh" placeholder="Your name" required>
+            </div>
+            <div class="field">
+              <label for="regEmail" data-i18n="register.email">Email</label>
+              <input id="regEmail" type="email" placeholder="name@company.com" required>
+            </div>
+            <div class="field">
+              <label for="regPassword" data-i18n="register.password">Password</label>
+              <input id="regPassword" type="password" data-i18n-placeholder="register.passwordPh" placeholder="Password (min. 8 characters)" required>
+            </div>
+            <div class="field">
+              <label for="regPlan" data-i18n="register.plan">Choose plan</label>
+              <select id="regPlan">
+                <option data-i18n="register.plan.basic">Basic — 5 GB storage</option>
+                <option selected data-i18n="register.plan.pro">Pro — unlimited storage</option>
+                <option data-i18n="register.plan.enterprise">Enterprise — custom</option>
+              </select>
+            </div>
+            <button class="btn btn-accent full" type="submit">
+              <span data-i18n="register.submit">Create account</span>
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </form>
+          <p class="muted-line" data-i18n-html="register.terms">By signing up you agree to our <a href="terms.html">Terms of Service</a> and <a href="privacy.html">Privacy Policy</a></p>
+          <div class="divider">
+            <span data-i18n="register.or">or</span>
+          </div>
+          <a class="btn btn-outline full" href="login.html" data-i18n="register.signin">Already have an account? Sign in</a>
+        </div>
+        <div class="auth-sidebar">
+          <h3 data-i18n="register.sidebar.title">Member benefits</h3>
+          <ul class="doc-list">
+            <li data-i18n="register.sidebar.li1">✦ 30-day full-feature trial</li>
+            <li data-i18n="register.sidebar.li2">✦ Unlimited cloud storage</li>
+            <li data-i18n="register.sidebar.li3">✦ AI smart classification</li>
+            <li data-i18n="register.sidebar.li4">✦ Cross-platform sync</li>
+            <li data-i18n="register.sidebar.li5">✦ End-to-end encryption</li>
+            <li data-i18n="register.sidebar.li6">✦ 24/7 dedicated support</li>
+          </ul>
+          <a class="btn btn-ghost full" href="subscribe.html" data-i18n="register.sidebar.proLink">Learn about Pro</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <h4 data-i18n="footer.features">Features</h4>
+        <a href="index.html#features" data-i18n="footer.features.ai">AI inbox management</a>
+        <a href="index.html#features" data-i18n="footer.features.sync">Cross-platform sync</a>
+        <a href="index.html#pricing" data-i18n="footer.features.storage">Unlimited cloud storage</a>
+      </div>
+      <div>
+        <h4 data-i18n="footer.business">Business</h4>
+        <a href="index.html#about" data-i18n="footer.business.about">About KoxMail</a>
+        <a href="business.html" data-i18n="footer.business.solutions">Enterprise solutions</a>
+        <a href="index.html#pricing" data-i18n="footer.business.custom">Custom plans</a>
+      </div>
+      <div>
+        <h4 data-i18n="footer.security">Security & compliance</h4>
+        <a href="privacy.html">ISO 27001</a>
+        <a href="privacy.html">SOC 2</a>
+        <a href="privacy.html" data-i18n="footer.security.gdpr">GDPR compliant</a>
+      </div>
+      <div>
+        <h4 data-i18n="footer.support">Support</h4>
+        <a href="index.html#faq" data-i18n="footer.support.faq">FAQ</a>
+        <a href="support.html" data-i18n="footer.support.tech">24/7 technical support</a>
+        <a href="support.html" data-i18n="footer.support.sales">Contact sales</a>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p data-i18n="footer.copyright">© 2026 KoxMail. Redefining communication in the digital age.</p>
+      <div class="footer-links">
+        <a href="privacy.html" data-i18n="footer.privacy">Privacy Policy</a>
+        <a href="terms.html" data-i18n="footer.terms">Terms of Service</a>
+        <a href="support.html" data-i18n="footer.weibo" aria-label="Weibo">Weibo</a>
+        <a href="support.html" data-i18n="footer.wechat" aria-label="WeChat">WeChat</a>
+        <a href="support.html" aria-label="LinkedIn">LinkedIn</a>
+      </div>
+    </div>
+  </footer>
+
+  <div class="floating-actions" id="floatingActions">
+    <button class="float-btn" id="scrollTopBtn" data-i18n-title="float.scrollTop" data-i18n-aria="float.scrollTop" title="Back to top" aria-label="Back to top">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12l7-7 7 7"/>
+      </svg>
+    </button>
+    <button class="float-btn" id="darkModeBtn" data-i18n-title="float.theme" data-i18n-aria="float.theme" title="Toggle theme" aria-label="Toggle theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+  </div>
+
+  <script src="i18n.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

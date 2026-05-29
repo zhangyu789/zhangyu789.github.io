@@ -1,2049 +1,712 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+<!doctype html>
+<html lang="en">
 <head>
-    <meta name="baidu-site-verification" content="codeva-MCIbitwnRV" />
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>儿童英语乐园</title>
-    <link rel="preconnect" href="https://cdn.tailwindcss.com">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23ff6b9d;stop-opacity:1' /%3E%3Cstop offset='50%25' style='stop-color:%239c88ff;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%2367d9ff;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' fill='url(%23grad)'/%3E%3Ctext x='50' y='60' font-family='Arial, sans-serif' font-size='40' font-weight='bold' text-anchor='middle' fill='white'%3E🌟%3C/text%3E%3C/svg%3E">
-    <link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='grad32' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23ff6b9d;stop-opacity:1' /%3E%3Cstop offset='50%25' style='stop-color:%239c88ff;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%2367d9ff;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='16' cy='16' r='14' fill='url(%23grad32)'/%3E%3Ctext x='16' y='20' font-family='Arial, sans-serif' font-size='12' font-weight='bold' text-anchor='middle' fill='white'%3E🌟%3C/text%3E%3C/svg%3E">
-    <link rel="icon" type="image/png" sizes="16x16" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cdefs%3E%3ClinearGradient id='grad16' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23ff6b9d;stop-opacity:1' /%3E%3Cstop offset='50%25' style='stop-color:%239c88ff;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%2367d9ff;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='8' cy='8' r='7' fill='url(%23grad16)'/%3E%3Ctext x='8' y='10' font-family='Arial, sans-serif' font-size='6' font-weight='bold' text-anchor='middle' fill='white'%3E🌟%3C/text%3E%3C/svg%3E">
-    <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cdefs%3E%3ClinearGradient id='grad180' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23ff6b9d;stop-opacity:1' /%3E%3Cstop offset='50%25' style='stop-color:%239c88ff;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%2367d9ff;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='90' cy='90' r='80' fill='url(%23grad180)'/%3E%3Ctext x='90' y='110' font-family='Arial, sans-serif' font-size='70' font-weight='bold' text-anchor='middle' fill='white'%3E🌟%3C/text%3E%3C/svg%3E">
-    <link rel="shortcut icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23ff6b9d;stop-opacity:1' /%3E%3Cstop offset='50%25' style='stop-color:%239c88ff;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%2367d9ff;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' fill='url(%23grad)'/%3E%3Ctext x='50' y='60' font-family='Arial, sans-serif' font-size='40' font-weight='bold' text-anchor='middle' fill='white'%3E🌟%3C/text%3E%3C/svg%3E">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', 'Noto Sans SC', sans-serif;
-            background: 
-                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%),
-                linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            overflow: hidden;
-            min-height: 100vh;
-            position: relative;
-        }
-        
-        /* 桌子背景效果 */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(ellipse at center, rgba(139, 69, 19, 0.1) 0%, transparent 70%),
-                linear-gradient(45deg, rgba(160, 82, 45, 0.05) 25%, transparent 25%),
-                linear-gradient(-45deg, rgba(160, 82, 45, 0.05) 25%, transparent 25%),
-                linear-gradient(45deg, transparent 75%, rgba(160, 82, 45, 0.05) 75%),
-                linear-gradient(-45deg, transparent 75%, rgba(160, 82, 45, 0.05) 75%);
-            background-size: 100% 100%, 20px 20px, 20px 20px, 20px 20px, 20px 20px;
-            background-position: 0 0, 0 0, 0 10px, 10px -10px, -10px 0px;
-            pointer-events: none;
-            z-index: -1;
-        }
-        
-        /* 桌子边缘阴影 */
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, transparent 20px),
-                linear-gradient(to top, rgba(0,0,0,0.1) 0%, transparent 20px),
-                linear-gradient(to right, rgba(0,0,0,0.1) 0%, transparent 20px),
-                linear-gradient(to left, rgba(0,0,0,0.1) 0%, transparent 20px);
-            pointer-events: none;
-            z-index: -1;
-        }
-        
-        /* 幼童友好的主色调 */
-        :root {
-            --primary-color: #ff6b6b;
-            --secondary-color: #4ecdc4;
-            --accent-color: #45b7d1;
-            --success-color: #96ceb4;
-            --warning-color: #feca57;
-            --error-color: #ff9ff3;
-            --text-primary: #2c3e50;
-            --text-secondary: #7f8c8d;
-        }
-        
-        /* 幼童友好的侧边栏按钮 */
-        #category-nav .category-button {
-            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
-            border: 3px solid transparent;
-            border-radius: 20px;
-            margin: 8px 0;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        #category-nav .category-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            transition: left 0.5s;
-        }
-        #category-nav .category-button:hover::before {
-            left: 100%;
-        }
-        #category-nav .category-button:hover {
-            background: linear-gradient(135deg, var(--primary-color), #ff8a8a);
-            color: white;
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
-            border-color: #ff5252;
-        }
-        #category-nav .active-category {
-            background: linear-gradient(135deg, var(--accent-color), #5bc0de);
-            color: white;
-            box-shadow: 0 6px 20px rgba(69, 183, 209, 0.4);
-            border-color: #3498db;
-            transform: scale(1.05);
-        }
-        #category-nav .active-category:hover {
-            background: linear-gradient(135deg, #3498db, var(--accent-color));
-            transform: scale(1.08);
-        }
-
-        /* 拟物化卡片设计 - 散落在桌子上的卡片 */
-        .flashcard {
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            cursor: pointer;
-            background: 
-                linear-gradient(145deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%);
-            border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 16px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 
-                0 4px 8px rgba(0,0,0,0.1),
-                0 2px 4px rgba(0,0,0,0.06),
-                inset 0 1px 0 rgba(255,255,255,0.8);
-            transform: rotate(var(--card-rotation, 0deg)) translateY(var(--card-offset, 0px));
-            transform-origin: center;
-            contain: content;
-            backface-visibility: hidden;
-            content-visibility: auto;
-            contain-intrinsic-size: 240px 300px;
-        }
-        
-        /* 随机卡片角度和位置 */
-        .flashcard:nth-child(odd) {
-            --card-rotation: -2deg;
-            --card-offset: 2px;
-        }
-        .flashcard:nth-child(even) {
-            --card-rotation: 1.5deg;
-            --card-offset: -1px;
-        }
-        .flashcard:nth-child(3n) {
-            --card-rotation: 0.8deg;
-            --card-offset: 3px;
-        }
-        .flashcard:nth-child(4n) {
-            --card-rotation: -1.2deg;
-            --card-offset: -2px;
-        }
-        
-        
-        
-        .flashcard::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
-            border-radius: 16px;
-            pointer-events: none;
-        }
-        
-        .flashcard:hover {
-            transform: rotate(0deg) translateY(-12px) scale(1.15);
-            box-shadow: 
-                0 25px 50px rgba(0,0,0,0.3),
-                0 12px 24px rgba(0,0,0,0.15),
-                inset 0 1px 0 rgba(255,255,255,0.9);
-            z-index: 10;
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-        
-        .flashcard:active {
-            transform: rotate(0deg) translateY(-8px) scale(1.02);
-            transition: all 0.1s ease;
-        }
-        .flashcard .image-container {
-            position: relative; /* Needed for download button positioning */
-            width: 100%;
-            aspect-ratio: 1 / 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #f8fafc;
-            border-radius: 0.75rem;
-            margin-bottom: 0.75rem;
-            box-shadow: inset 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-        }
-        .flashcard img {
-            max-width: 90%;
-            max-height: 90%;
-            object-fit: contain;
-            border-radius: 0.5rem;
-        }
-        .download-btn {
-            position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-            background-color: rgba(0, 0, 0, 0.5);
-            color: white;
-            border-radius: 9999px;
-            width: 2rem;
-            height: 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.2s;
-            cursor: pointer;
-        }
-        .flashcard .image-container:hover .download-btn {
-            opacity: 1;
-        }
-        
-        /* 幼童友好的模式切换按钮 */
-        .mode-toggle { 
-            transition: all 0.3s ease;
-            border-radius: 25px;
-            border: 3px solid transparent;
-            position: relative;
-            overflow: hidden;
-            font-weight: 600;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-        .mode-toggle::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transition: left 0.5s;
-        }
-        .mode-toggle:hover::before {
-            left: 100%;
-        }
-        .mode-toggle:hover {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        }
-        .mode-toggle.active { 
-            background: linear-gradient(135deg, var(--accent-color), #5bc0de);
-            color: white; 
-            box-shadow: 0 6px 20px rgba(69, 183, 209, 0.4);
-            border-color: #3498db;
-            transform: scale(1.05);
-        }
-        .mode-toggle.active:hover {
-            background: linear-gradient(135deg, #3498db, var(--accent-color));
-            transform: scale(1.08);
-        }
-        /* 拟物化游戏选择卡片 */
-        .game-choice-card { 
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
-            cursor: pointer; 
-            border: 1px solid rgba(0,0,0,0.1);
-            background: 
-                linear-gradient(145deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%);
-            aspect-ratio: 1 / 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 120px;
-            border-radius: 16px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 
-                0 6px 12px rgba(0,0,0,0.15),
-                0 2px 4px rgba(0,0,0,0.1),
-                inset 0 1px 0 rgba(255,255,255,0.8);
-            transform: rotate(var(--game-card-rotation, 0deg)) translateY(var(--game-card-offset, 0px));
-            contain: content;
-            backface-visibility: hidden;
-            content-visibility: auto;
-            contain-intrinsic-size: 160px 160px;
-        }
-        
-        /* 游戏卡片随机角度 */
-        .game-choice-card:nth-child(1) { --game-card-rotation: -1deg; --game-card-offset: 2px; }
-        .game-choice-card:nth-child(2) { --game-card-rotation: 1.5deg; --game-card-offset: -1px; }
-        .game-choice-card:nth-child(3) { --game-card-rotation: 0.8deg; --game-card-offset: 3px; }
-        .game-choice-card:nth-child(4) { --game-card-rotation: -1.2deg; --game-card-offset: -2px; }
-        
-        
-        
-        .game-choice-card::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
-            border-radius: 16px;
-            pointer-events: none;
-        }
-        .game-choice-card:hover { 
-            transform: rotate(0deg) translateY(-8px) scale(1.05);
-            box-shadow: 
-                0 20px 40px rgba(0,0,0,0.2),
-                0 8px 16px rgba(0,0,0,0.1),
-                inset 0 1px 0 rgba(255,255,255,0.9);
-            z-index: 10;
-        }
-        .game-choice-card.correct { 
-            border-color: var(--success-color); 
-            background: linear-gradient(145deg, #d4edda 0%, #c3e6cb 50%, #b8dacc 100%);
-            animation: pulse-green 0.5s; 
-            transform: rotate(0deg) scale(1.05) translateY(-4px);
-            box-shadow: 
-                0 12px 24px rgba(34, 197, 94, 0.3),
-                0 4px 8px rgba(34, 197, 94, 0.2),
-                inset 0 1px 0 rgba(255,255,255,0.9);
-        }
-        .game-choice-card.incorrect { 
-            border-color: var(--error-color); 
-            background: linear-gradient(145deg, #f8d7da 0%, #f5c6cb 50%, #f1b0b7 100%);
-            animation: shake 0.5s; 
-            transform: rotate(0deg) translateY(-2px);
-        }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
-        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
-
-        /* --- Loader --- */
-        .loader {
-            width: 48px;
-            height: 48px;
-            border: 5px solid #d1d5db;
-            border-bottom-color: #3b82f6;
-            border-radius: 50%;
-            display: inline-block;
-            box-sizing: border-box;
-            animation: rotation 1s linear infinite;
-        }
-        @keyframes rotation {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .loader-text {
-            font-size: 0.9rem;
-            color: #6b7280;
-            margin-top: 0.5rem;
-        }
-        
-        /* --- 儿童友好动画效果 --- */
-        @keyframes starPop {
-            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
-            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
-        }
-        
-        @keyframes slideInRight {
-            0% { transform: translateX(100%); opacity: 0; }
-            100% { transform: translateX(0); opacity: 1; }
-        }
-        
-        @keyframes bounce {
-            0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
-            40%, 43% { transform: translate3d(0, -8px, 0); }
-            70% { transform: translate3d(0, -4px, 0); }
-            90% { transform: translate3d(0, -2px, 0); }
-        }
-        
-        @keyframes wiggle {
-            0%, 7% { transform: rotateZ(0); }
-            15% { transform: rotateZ(-15deg); }
-            20% { transform: rotateZ(10deg); }
-            25% { transform: rotateZ(-10deg); }
-            30% { transform: rotateZ(6deg); }
-            35% { transform: rotateZ(-4deg); }
-            40%, 100% { transform: rotateZ(0); }
-        }
-        
-        /* 现代化过渡动画 */
-        @keyframes popIn {
-            0% { 
-                transform: scale(0.7) rotate(-5deg); 
-                opacity: 0; 
-                filter: blur(4px);
-            }
-            50% { 
-                transform: scale(1.1) rotate(2deg); 
-                opacity: 0.8; 
-                filter: blur(1px);
-            }
-            100% { 
-                transform: scale(1) rotate(0deg); 
-                opacity: 1; 
-                filter: blur(0px);
-            }
-        }
-        
-        @keyframes fadeOutScale {
-            0% { 
-                transform: scale(1) rotate(0deg); 
-                opacity: 1; 
-                filter: blur(0px);
-            }
-            50% { 
-                transform: scale(1.1) rotate(5deg); 
-                opacity: 0.5; 
-                filter: blur(2px);
-            }
-            100% { 
-                transform: scale(0.8) rotate(10deg); 
-                opacity: 0; 
-                filter: blur(4px);
-            }
-        }
-        
-        @keyframes cardBounce {
-            0% { 
-                transform: translateY(0) rotate(0deg) scale(1);
-                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            }
-            15% { 
-                transform: translateY(-15px) rotate(-3deg) scale(1.02);
-                box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-            }
-            30% { 
-                transform: translateY(-30px) rotate(2deg) scale(1.05);
-                box-shadow: 0 12px 24px rgba(0,0,0,0.2);
-            }
-            45% { 
-                transform: translateY(-40px) rotate(-1deg) scale(1.08);
-                box-shadow: 0 16px 32px rgba(0,0,0,0.25);
-            }
-            60% { 
-                transform: translateY(-25px) rotate(1deg) scale(1.05);
-                box-shadow: 0 10px 20px rgba(0,0,0,0.18);
-            }
-            75% { 
-                transform: translateY(-10px) rotate(-0.5deg) scale(1.02);
-                box-shadow: 0 6px 12px rgba(0,0,0,0.12);
-            }
-            90% { 
-                transform: translateY(-3px) rotate(0.2deg) scale(1.01);
-                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            }
-            100% { 
-                transform: translateY(0) rotate(0deg) scale(1);
-                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            }
-        }
-        
-        @keyframes cardShuffle {
-            0% { transform: translateX(0) rotate(0deg); }
-            25% { transform: translateX(10px) rotate(2deg); }
-            50% { transform: translateX(-5px) rotate(-1deg); }
-            75% { transform: translateX(5px) rotate(1deg); }
-            100% { transform: translateX(0) rotate(0deg); }
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-10px) rotate(1deg); }
-        }
-        
-        @keyframes dealCard {
-            0% {
-                transform: translate(100vw, 100vh) rotate(180deg) scale(0.5);
-                opacity: 0;
-                z-index: 1000;
-                position: fixed;
-            }
-            20% {
-                transform: translate(80vw, 80vh) rotate(90deg) scale(0.7);
-                opacity: 0.3;
-                position: fixed;
-            }
-            40% {
-                transform: translate(60vw, 60vh) rotate(45deg) scale(0.8);
-                opacity: 0.6;
-                position: fixed;
-            }
-            60% {
-                transform: translate(40vw, 40vh) rotate(20deg) scale(0.9);
-                opacity: 0.8;
-                position: fixed;
-            }
-            80% {
-                transform: translate(20vw, 20vh) rotate(5deg) scale(0.95);
-                opacity: 0.9;
-                position: fixed;
-            }
-            100% {
-                transform: translate(0, 0) rotate(var(--card-rotation, 0deg)) scale(1);
-                opacity: 1;
-                z-index: auto;
-                position: static;
-            }
-        }
-        
-        @keyframes dealCardReverse {
-            0% {
-                transform: translate(100vw, 100vh) rotate(-180deg) scale(0.5);
-                opacity: 0;
-                z-index: 1000;
-                position: fixed;
-            }
-            20% {
-                transform: translate(80vw, 80vh) rotate(-90deg) scale(0.7);
-                opacity: 0.3;
-                position: fixed;
-            }
-            40% {
-                transform: translate(60vw, 60vh) rotate(-45deg) scale(0.8);
-                opacity: 0.6;
-                position: fixed;
-            }
-            60% {
-                transform: translate(40vw, 40vh) rotate(-20deg) scale(0.9);
-                opacity: 0.8;
-                position: fixed;
-            }
-            80% {
-                transform: translate(20vw, 20vh) rotate(-5deg) scale(0.95);
-                opacity: 0.9;
-                position: fixed;
-            }
-            100% {
-                transform: translate(0, 0) rotate(var(--card-rotation, 0deg)) scale(1);
-                opacity: 1;
-                z-index: auto;
-                position: static;
-            }
-        }
-        
-        @keyframes cardFlip {
-            0% {
-                transform: translateY(0) rotateY(0deg) scale(1);
-            }
-            25% {
-                transform: translateY(-30px) rotateY(90deg) scale(1.05);
-            }
-            50% {
-                transform: translateY(-50px) rotateY(180deg) scale(1.1);
-            }
-            75% {
-                transform: translateY(-30px) rotateY(270deg) scale(1.05);
-            }
-            100% {
-                transform: translateY(0) rotateY(360deg) scale(1);
-            }
-        }
-        
-        @keyframes simpleDeal {
-            0% {
-                transform: translate(50vw, 50vh) rotate(45deg) scale(0.3);
-                opacity: 0;
-                z-index: 1000;
-            }
-            50% {
-                transform: translate(25vw, 25vh) rotate(20deg) scale(0.7);
-                opacity: 0.7;
-                z-index: 1000;
-            }
-            100% {
-                transform: translate(0, 0) rotate(var(--card-rotation, 0deg)) scale(1);
-                opacity: 1;
-                z-index: auto;
-            }
-        }
-        
-        @keyframes flyToWord {
-            0% {
-                transform: translate(0, 0) scale(1) rotate(0deg);
-                opacity: 1;
-                z-index: 1000;
-            }
-            50% {
-                transform: translate(var(--fly-x, 0), var(--fly-y, -100px)) scale(0.8) rotate(180deg);
-                opacity: 0.8;
-                z-index: 1000;
-            }
-            100% {
-                transform: translate(var(--fly-x, 0), var(--fly-y, -100px)) scale(0.6) rotate(360deg);
-                opacity: 0;
-                z-index: 1000;
-            }
-        }
-        
-        @keyframes flyBackToCard {
-            0% {
-                transform: translate(var(--fly-x, 0), var(--fly-y, -100px)) scale(0.6) rotate(0deg);
-                opacity: 0;
-                z-index: 1000;
-            }
-            50% {
-                transform: translate(var(--fly-x, 0), var(--fly-y, -50px)) scale(0.8) rotate(180deg);
-                opacity: 0.8;
-                z-index: 1000;
-            }
-            100% {
-                transform: translate(0, 0) scale(1) rotate(360deg);
-                opacity: 1;
-                z-index: auto;
-            }
-        }
-        
-        .anim-pop-in { 
-            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-        }
-        .anim-fade-out { 
-            animation: fadeOutScale 0.4s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards; 
-        }
-        .anim-shake { 
-            animation: shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97); 
-        }
-        .anim-flip { 
-            animation: cardFlip 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-        }
-        .anim-shuffle { 
-            animation: cardShuffle 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
-        }
-        .anim-float { 
-            animation: float 3s ease-in-out infinite; 
-        }
-        .anim-deal-card { 
-            animation: dealCard 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3) !important;
-        }
-        .anim-deal-card-reverse { 
-            animation: dealCardReverse 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3) !important;
-        }
-        .anim-card-flip { 
-            animation: cardFlip 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        }
-        
-        .anim-card-bounce {
-            animation: cardBounce 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            z-index: 20;
-        }
-        @keyframes tapTiltLeft {
-            0% { transform: translateY(0) rotate(0deg) scale(1); }
-            35% { transform: translateY(-8px) rotate(-2.5deg) scale(1.03); }
-            70% { transform: translateY(2px) rotate(1deg) scale(0.99); }
-            100% { transform: translateY(0) rotate(0deg) scale(1); }
-        }
-        @keyframes tapTiltRight {
-            0% { transform: translateY(0) rotate(0deg) scale(1); }
-            35% { transform: translateY(-8px) rotate(2.5deg) scale(1.03); }
-            70% { transform: translateY(2px) rotate(-1deg) scale(0.99); }
-            100% { transform: translateY(0) rotate(0deg) scale(1); }
-        }
-        .anim-tap-tilt-left { animation: tapTiltLeft 520ms cubic-bezier(0.2, 0.8, 0.2, 1); }
-        .anim-tap-tilt-right { animation: tapTiltRight 520ms cubic-bezier(0.2, 0.8, 0.2, 1); }
-        .flashcard-ripple {
-            position: absolute;
-            width: 14px;
-            height: 14px;
-            border-radius: 9999px;
-            background: rgba(56, 189, 248, 0.35);
-            transform: translate(-50%, -50%) scale(0.2);
-            pointer-events: none;
-            z-index: 30;
-            animation: flashcardRipple 520ms ease-out forwards;
-        }
-        .flashcard-ripple.rainbow {
-            background: conic-gradient(
-                from 0deg,
-                rgba(255, 99, 132, 0.45),
-                rgba(255, 206, 86, 0.45),
-                rgba(75, 192, 192, 0.45),
-                rgba(54, 162, 235, 0.45),
-                rgba(153, 102, 255, 0.45),
-                rgba(255, 99, 132, 0.45)
-            );
-            box-shadow: 0 0 16px rgba(99, 102, 241, 0.45), 0 0 24px rgba(236, 72, 153, 0.3);
-            animation: flashcardRippleRainbow 700ms ease-out forwards;
-        }
-        @keyframes flashcardRipple {
-            0% { opacity: 0.9; transform: translate(-50%, -50%) scale(0.2); }
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(9); }
-        }
-        @keyframes flashcardRippleRainbow {
-            0% { opacity: 0.95; transform: translate(-50%, -50%) scale(0.2) rotate(0deg); filter: saturate(1.2); }
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(11) rotate(180deg); filter: saturate(1.8); }
-        }
-        .flashcard-star {
-            position: absolute;
-            font-size: 16px;
-            line-height: 1;
-            pointer-events: none;
-            z-index: 31;
-            animation: flashcardStarBurst 620ms ease-out forwards;
-            text-shadow: 0 0 8px rgba(255, 255, 255, 0.85), 0 0 14px rgba(99, 102, 241, 0.5);
-        }
-        @keyframes flashcardStarBurst {
-            0% { opacity: 0.95; transform: translate(0, 0) scale(0.8) rotate(0deg); }
-            100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.25) rotate(120deg); }
-        }
-        .flashcard-glow-burst {
-            animation: flashcardGlowBurst 520ms ease-out;
-        }
-        @keyframes flashcardGlowBurst {
-            0% { box-shadow: 0 0 0 rgba(236, 72, 153, 0.0); }
-            50% {
-                box-shadow:
-                    0 0 0 4px rgba(255,255,255,0.75),
-                    0 0 18px rgba(236,72,153,0.55),
-                    0 0 28px rgba(59,130,246,0.45),
-                    0 0 36px rgba(34,197,94,0.35);
-            }
-            100% { box-shadow: 0 0 0 rgba(236, 72, 153, 0.0); }
-        }
-        .anim-simple-deal { 
-            animation: simpleDeal 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        }
-        .anim-fly-to-word { 
-            animation: flyToWord 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        }
-        .anim-fly-back { 
-            animation: flyBackToCard 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        }
-        
-        /* 彩带动画 */
-        @keyframes confettiFall {
-            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-        }
-        .confetti-piece {
-            position: fixed;
-            top: -12px;
-            width: 10px;
-            height: 14px;
-            border-radius: 2px;
-            z-index: 9999;
-            animation: confettiFall var(--dur, 2s) linear forwards;
-            will-change: transform, opacity;
-        }
-        .confetti-layer {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 9999;
-        }
-        
-        /* 增强的悬停效果 - 仅在非触摸设备上生效 */
-        @media (hover: hover) and (pointer: fine) {
-        .flashcard:hover {
-            transform: scale(1.15) translateY(-8px);
-            box-shadow: 0 25px 50px -5px rgba(0, 0, 0, 0.2), 0 15px 25px -5px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-        
-        .game-choice-card:hover {
-            transform: translateY(-8px) scale(1.1);
-            box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.15), 0 10px 20px -5px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-        
-            .matching-item:hover {
-                border-color: #3b82f6;
-                transform: translateY(-6px) scale(1.08);
-                box-shadow: 0 12px 24px rgba(59, 130, 246, 0.2), 0 6px 12px rgba(59, 130, 246, 0.1);
-                transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            }
-            
-            .letter-card:hover {
-                transform: translateY(-6px) scale(1.12);
-                box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25), 0 8px 16px rgba(0, 0, 0, 0.15);
-                background: linear-gradient(135deg, #3b82f6, #2563eb);
-                transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            }
-            
-            .word-letter:hover {
-                transform: translateY(-2px);
-            }
-        }
-        
-        /* 触摸设备上的点击反馈 */
-        @media (hover: none) and (pointer: coarse) {
-            .flashcard:active {
-                transform: scale(0.98);
-                transition: transform 0.1s ease;
-            }
-            
-            .game-choice-card:active {
-                transform: scale(0.95);
-                transition: transform 0.1s ease;
-            }
-            
-            .matching-item:active {
-                transform: scale(0.98);
-                transition: transform 0.1s ease;
-            }
-            
-            .letter-card:active {
-                transform: scale(0.95);
-                transition: transform 0.1s ease;
-            }
-        }
-        
-        /* 拟物化配对连线卡片 - 正方形设计 */
-        .matching-item {
-            background: 
-                linear-gradient(145deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%);
-            border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 16px;
-            padding: 1rem;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            position: relative;
-            width: 120px;
-            height: 120px;
-            max-width: 360px; /* 高度的3倍 */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 
-                0 6px 12px rgba(0,0,0,0.15),
-                0 2px 4px rgba(0,0,0,0.1),
-                inset 0 1px 0 rgba(255,255,255,0.8);
-            transform: rotate(var(--matching-rotation, 0deg)) translateY(var(--matching-offset, 0px));
-            margin: 0 auto;
-            contain: content;
-            backface-visibility: hidden;
-            content-visibility: auto;
-            contain-intrinsic-size: 120px 120px;
-        }
-        
-        /* 单词卡片特殊样式 - 允许宽度扩展 */
-        .matching-item:has(.matching-word) {
-            width: auto;
-            min-width: 120px;
-            max-width: 360px;
-            padding: 0.75rem 1rem;
-        }
-        
-        /* 配对卡片随机角度 */
-        .matching-item:nth-child(odd) {
-            --matching-rotation: -1.5deg;
-            --matching-offset: 2px;
-        }
-        .matching-item:nth-child(even) {
-            --matching-rotation: 1.2deg;
-            --matching-offset: -1px;
-        }
-        
-        
-        
-        .matching-item::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
-            border-radius: 16px;
-            pointer-events: none;
-        }
-        .matching-item:hover {
-            transform: rotate(0deg) translateY(-8px) scale(1.05);
-            box-shadow: 
-                0 20px 40px rgba(0,0,0,0.2),
-                0 8px 16px rgba(0,0,0,0.1),
-                inset 0 1px 0 rgba(255,255,255,0.9);
-            z-index: 10;
-        }
-        
-        .matching-item.selected {
-            border-color: var(--accent-color);
-            background: linear-gradient(145deg, #e3f2fd 0%, #bbdefb 50%, #90caf9 100%);
-            box-shadow: 
-                0 0 0 4px rgba(69, 183, 209, 0.3),
-                0 12px 24px rgba(69, 183, 209, 0.2),
-                inset 0 1px 0 rgba(255,255,255,0.9);
-            transform: rotate(0deg) scale(1.05) translateY(-4px);
-        }
-        .matching-item.correct {
-            border-color: var(--success-color);
-            background: linear-gradient(145deg, #d4edda 0%, #c3e6cb 50%, #b8dacc 100%);
-            animation: pulse-green 0.5s;
-            transform: rotate(0deg) scale(1.02) translateY(-2px);
-            box-shadow: 
-                0 12px 24px rgba(34, 197, 94, 0.3),
-                0 4px 8px rgba(34, 197, 94, 0.2),
-                inset 0 1px 0 rgba(255,255,255,0.9);
-        }
-        .matching-item.incorrect {
-            border-color: var(--error-color);
-            background: linear-gradient(145deg, #f8d7da 0%, #f5c6cb 50%, #f1b0b7 100%);
-            animation: shake 0.5s;
-            transform: rotate(0deg) translateY(-2px);
-        }
-        .matching-word {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #1f2937;
-            text-align: center;
-            line-height: 1.2;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            padding: 0.5rem;
-            max-width: 100%;
-        }
-        
-        .matching-image {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            border-radius: 0.5rem;
-        }
-        .matching-line {
-            stroke: #3b82f6;
-            stroke-width: 3;
-            fill: none;
-            stroke-dasharray: 5,5;
-            animation: dash 1s linear infinite;
-        }
-        .matching-line.correct {
-            stroke: #22c55e;
-            stroke-dasharray: none;
-        }
-        .matching-line.incorrect {
-            stroke: #ef4444;
-            stroke-dasharray: none;
-        }
-        @keyframes dash {
-            to { stroke-dashoffset: -10; }
-        }
-        
-        /* --- 卡片交互样式 --- */
-        .flashcard {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            cursor: pointer;
-            user-select: none;
-        }
-        
-        .flashcard:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-        }
-        
-        .flashcard.dragging {
-            transform: scale(1.1) rotate(5deg);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
-            z-index: 1000;
-            opacity: 0.9;
-        }
-        
-        .flashcard.drag-over {
-            transform: scale(1.02);
-            border: 2px dashed #3b82f6;
-            background-color: #eff6ff;
-        }
-        
-        .flashcard.drag-placeholder {
-            opacity: 0.3;
-            border: 2px dashed #94a3b8;
-            background-color: #f1f5f9;
-        }
-        
-        /* 拖拽时的全局样式 */
-        body.dragging {
-            cursor: grabbing;
-        }
-        
-        body.dragging * {
-            pointer-events: none;
-        }
-        
-        body.dragging .flashcard {
-            pointer-events: auto;
-        }
-        
-        /* --- 听写训练样式 --- */
-        .dictation-feedback {
-            padding: 1rem;
-            border-radius: 0.75rem;
-            margin: 1rem 0;
-            font-weight: 600;
-        }
-        .dictation-feedback.correct {
-            background-color: #f0fdf4;
-            color: #166534;
-            border: 2px solid #22c55e;
-        }
-        .dictation-feedback.incorrect {
-            background-color: #fef2f2;
-            color: #991b1b;
-            border: 2px solid #ef4444;
-        }
-        .dictation-feedback.show-answer {
-            background-color: #eff6ff;
-            color: #1e40af;
-            border: 2px solid #3b82f6;
-        }
-        
-        /* 覆盖层反馈样式 */
-        #dictation-feedback-overlay {
-            backdrop-filter: blur(4px);
-        }
-        
-        #dictation-feedback-overlay .dictation-feedback {
-            margin: 0;
-            padding: 2rem;
-            font-size: 1.25rem;
-            line-height: 1.6;
-        }
-        
-        #dictation-feedback-overlay .dictation-feedback.correct {
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-            border: 3px solid #22c55e;
-            box-shadow: 0 10px 25px rgba(34, 197, 94, 0.2);
-        }
-        
-        #dictation-feedback-overlay .dictation-feedback.incorrect {
-            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-            border: 3px solid #ef4444;
-            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.2);
-        }
-        
-        #dictation-feedback-overlay .dictation-feedback.show-answer {
-            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-            border: 3px solid #3b82f6;
-            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
-        }
-        #dictation-input {
-            font-family: 'Inter', monospace;
-            letter-spacing: 0.1em;
-        }
-        #dictation-input:focus {
-            transform: scale(1.02);
-            transition: transform 0.2s ease;
-        }
-        
-        /* 拟物化字母卡片样式 */
-        .letter-card {
-            width: 60px;
-            height: 60px;
-            background: 
-                linear-gradient(145deg, #60a5fa 0%, #3b82f6 50%, #1d4ed8 100%);
-            color: white;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            box-shadow: 
-                0 8px 16px rgba(59, 130, 246, 0.3),
-                0 4px 8px rgba(59, 130, 246, 0.2),
-                inset 0 1px 0 rgba(255,255,255,0.3),
-                inset 0 -1px 0 rgba(0,0,0,0.1);
-            user-select: none;
-            position: relative;
-            transform: rotate(var(--letter-rotation, 0deg)) translateY(var(--letter-offset, 0px));
-            contain: content;
-            backface-visibility: hidden;
-        }
-        
-        /* 字母卡片随机角度 */
-        .letter-card:nth-child(odd) {
-            --letter-rotation: -2deg;
-            --letter-offset: 1px;
-        }
-        .letter-card:nth-child(even) {
-            --letter-rotation: 1.5deg;
-            --letter-offset: -1px;
-        }
-        .letter-card:nth-child(3n) {
-            --letter-rotation: 0.8deg;
-            --letter-offset: 2px;
-        }
-        .letter-card:nth-child(4n) {
-            --letter-rotation: -1.2deg;
-            --letter-offset: -1px;
-        }
-        
-        .letter-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
-            border-radius: 16px;
-            pointer-events: none;
-        }
-        .letter-card:hover {
-            transform: rotate(0deg) translateY(-6px) scale(1.1);
-            box-shadow: 
-                0 16px 32px rgba(59, 130, 246, 0.4),
-                0 8px 16px rgba(59, 130, 246, 0.3),
-                inset 0 1px 0 rgba(255,255,255,0.4),
-                inset 0 -1px 0 rgba(0,0,0,0.1);
-            z-index: 10;
-        }
-        
-        .letter-card:active {
-            transform: rotate(0deg) translateY(-3px) scale(1.05);
-            transition: all 0.1s ease;
-        }
-        
-        .letter-card.used {
-            background: linear-gradient(145deg, #c7d2fe 0%, #93c5fd 50%, #7c3aed 100%);
-            cursor: not-allowed;
-            opacity: 0.6;
-            transform: rotate(0deg) scale(0.95);
-            box-shadow: 
-                0 4px 8px rgba(124, 58, 237, 0.2),
-                0 2px 4px rgba(124, 58, 237, 0.1),
-                inset 0 1px 0 rgba(255,255,255,0.2);
-        }
-        .letter-card.used:hover {
-            transform: rotate(0deg) scale(0.95);
-            box-shadow: 
-                0 4px 8px rgba(124, 58, 237, 0.2),
-                0 2px 4px rgba(124, 58, 237, 0.1),
-                inset 0 1px 0 rgba(255,255,255,0.2);
-        }
-        
-        /* 单词显示区域样式 */
-        .word-letter {
-            display: inline-block;
-            min-width: 40px;
-            height: 50px;
-            background: white;
-            border: 2px solid #3b82f6;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #1f2937;
-            margin: 0 2px;
-            transition: all 0.2s ease;
-            contain: content;
-            backface-visibility: hidden;
-        }
-
-        /* 侧边栏隐藏状态 */
-        .sidebar-hidden #category-nav {
-            transform: translateX(-100%);
-        }
-        .sidebar-hidden .flex-1 {
-            margin-left: 0;
-            width: 100%;
-        }
-        .sidebar-hidden #desktop-sidebar-toggle svg {
-            transform: rotate(180deg);
-        }
-        
-        /* 确保侧边栏隐藏时主内容区域占满全宽 */
-        @media (min-width: 768px) {
-            .sidebar-hidden #category-nav {
-                position: absolute !important;
-                left: -100% !important;
-                width: 0 !important;
-                overflow: hidden !important;
-                z-index: -1 !important;
-            }
-            .sidebar-hidden .flex-1 {
-                flex: none !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                margin-left: 0 !important;
-            }
-            .sidebar-hidden .md\\:flex {
-                display: block !important;
-            }
-        }
-        
-        /* 系统偏好：减少动态效果 */
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation: none !important;
-                transition: none !important;
-                scroll-behavior: auto !important;
-            }
-        }
-        body.perf-low-power .flashcard,
-        body.perf-low-power .game-choice-card,
-        body.perf-low-power .matching-item,
-        body.perf-low-power .letter-card {
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12) !important;
-            transform: none !important;
-        }
-        body.perf-low-power .flashcard:hover,
-        body.perf-low-power .game-choice-card:hover,
-        body.perf-low-power .matching-item:hover,
-        body.perf-low-power .letter-card:hover {
-            transform: none !important;
-        }
-        body.perf-low-power .kid-header {
-            backdrop-filter: none;
-        }
-        body.perf-reduced-motion .confetti-piece {
-            animation: none !important;
-            opacity: 0 !important;
-        }
-        .word-letter.filled { box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2); }
-        .word-letter.pop { animation: popIn 0.25s ease-out; }
-        .word-letter:empty {
-            border-color: #d1d5db;
-            background: #f9fafb;
-        }
-        .word-letter:empty::after {
-            content: '_';
-            color: #9ca3af;
-        }
-        
-        /* 听写：长单词在手机端横向滚动显示 */
-        #dictation-word-display {
-            overflow-x: auto;
-            overflow-y: hidden;
-            flex-wrap: nowrap;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-            mask-image: linear-gradient(to right, transparent 0, black 16px, black calc(100% - 16px), transparent 100%);
-        }
-        #dictation-word-display::-webkit-scrollbar {
-            height: 6px;
-        }
-        #dictation-word-display::-webkit-scrollbar-thumb {
-            background: rgba(0,0,0,0.2);
-            border-radius: 9999px;
-        }
-        @media (max-width: 640px) {
-            #dictation-word-display {
-                justify-content: flex-start !important;
-                padding-left: 12px;
-                padding-right: 12px;
-                gap: 8px;
-            }
-            .word-letter {
-                min-width: 36px;
-                height: 44px;
-                font-size: 1.25rem;
-            }
-        }
-
-        /* 学习统计面板 */
-        .learning-dashboard-card {
-            margin-top: 0.9rem;
-            max-width: 64rem;
-            margin-left: auto;
-            margin-right: auto;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(243, 244, 255, 0.95));
-            border: 1px solid rgba(99, 102, 241, 0.18);
-            border-radius: 20px;
-            box-shadow: 0 10px 28px rgba(59, 130, 246, 0.14);
-            padding: 0.9rem 1rem;
-            color: #374151;
-        }
-        .learning-dashboard-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-            padding: 0.35rem 0.65rem;
-            border-radius: 9999px;
-            background: rgba(255, 255, 255, 0.82);
-            border: 1px solid rgba(148, 163, 184, 0.35);
-            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
-            font-size: 0.78rem;
-            font-weight: 600;
-        }
-        .learning-dashboard-btn {
-            border-radius: 9999px;
-            padding: 0.45rem 0.9rem;
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: #fff;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-            box-shadow: 0 6px 14px rgba(99, 102, 241, 0.24);
-        }
-        .learning-dashboard-btn:hover {
-            transform: translateY(-1px);
-            filter: brightness(1.05);
-        }
-        .learning-dashboard-btn.review {
-            background: linear-gradient(135deg, #8b5cf6, #6366f1);
-        }
-        .learning-dashboard-btn.clear {
-            background: linear-gradient(135deg, #64748b, #475569);
-        }
-        .learning-theme-list li {
-            display: flex;
-            justify-content: space-between;
-            gap: 0.75rem;
-            padding: 0.25rem 0;
-            border-bottom: 1px dashed rgba(148, 163, 184, 0.32);
-            font-size: 0.78rem;
-        }
-        .learning-theme-list li:last-child {
-            border-bottom: none;
-        }
-
-        /* --- 儿童友好布局增强 --- */
-        .kid-app-shell {
-            height: 100dvh;
-            display: flex;
-            overflow: hidden;
-        }
-        .kid-main-panel {
-            flex: 1;
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            height: 100%;
-        }
-        .kid-header {
-            padding: 0.9rem 1rem;
-            border-bottom: 1px solid rgba(99, 102, 241, 0.12);
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(8px);
-        }
-        .kid-title {
-            font-size: clamp(1.35rem, 2.5vw, 2.15rem);
-            line-height: 1.15;
-            font-weight: 800;
-            letter-spacing: 0.01em;
-        }
-        .kid-content-wrap {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1rem;
-        }
-        .kid-intro-card {
-            max-width: 72rem;
-            margin: 0 auto 1rem;
-            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(245, 243, 255, 0.95));
-            border: 1px solid rgba(99, 102, 241, 0.18);
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.12);
-            padding: 1rem 1.1rem;
-        }
-        .kid-tip-chip {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.45rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.86rem;
-            font-weight: 700;
-            border: 1px solid rgba(148, 163, 184, 0.28);
-            background: rgba(255, 255, 255, 0.9);
-        }
-        .kid-mode-strip {
-            max-width: 72rem;
-            margin: 0 auto 1.1rem;
-            padding: 0.5rem;
-            border-radius: 18px;
-            background: linear-gradient(90deg, rgba(244, 114, 182, 0.16), rgba(59, 130, 246, 0.16));
-            box-shadow: 0 10px 22px rgba(59, 130, 246, 0.12);
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 0.5rem;
-        }
-        .kid-mode-strip .mode-toggle {
-            width: 100%;
-            min-height: 78px;
-            border-radius: 16px;
-            font-size: 0.95rem;
-            line-height: 1.2;
-            padding: 0.55rem 0.4rem;
-        }
-        .kid-stage {
-            max-width: 74rem;
-            margin: 0 auto;
-        }
-        .kid-fun-toolbar {
-            max-width: 72rem;
-            margin: 0 auto 1rem;
-            padding: 0.75rem;
-            border-radius: 16px;
-            border: 1px solid rgba(14, 165, 233, 0.22);
-            background: linear-gradient(135deg, rgba(224, 242, 254, 0.92), rgba(238, 242, 255, 0.92));
-            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.12);
-        }
-        .kid-fun-btn {
-            min-height: 48px;
-            padding: 0.55rem 0.95rem;
-            border-radius: 14px;
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: #1f2937;
-            border: 1px solid rgba(148, 163, 184, 0.35);
-            background: #fff;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-        }
-        .kid-fun-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 16px rgba(30, 64, 175, 0.16);
-        }
-        #fun-play-status {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #334155;
-            min-height: 1.4rem;
-        }
-        .fun-stats-row {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 0.5rem;
-            margin-top: 0.45rem;
-        }
-        .fun-stat-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.32rem;
-            padding: 0.28rem 0.6rem;
-            border-radius: 9999px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: #1e293b;
-            background: rgba(255, 255, 255, 0.93);
-            border: 1px solid rgba(148, 163, 184, 0.33);
-        }
-        .fun-badges {
-            margin-top: 0.45rem;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 0.35rem;
-        }
-        .fun-badge {
-            padding: 0.25rem 0.5rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #334155;
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px dashed rgba(99, 102, 241, 0.36);
-        }
-        .record-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 60;
-            background: rgba(15, 23, 42, 0.48);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-        }
-        .record-overlay.show {
-            display: flex;
-        }
-        .record-modal {
-            width: min(92vw, 420px);
-            border-radius: 18px;
-            background: linear-gradient(135deg, #fff7ed, #fef3c7);
-            border: 2px solid rgba(251, 146, 60, 0.48);
-            box-shadow: 0 18px 44px rgba(251, 146, 60, 0.3);
-            padding: 1rem 1rem 0.9rem;
-            text-align: center;
-        }
-        .record-title {
-            font-size: 1.35rem;
-            font-weight: 800;
-            color: #9a3412;
-        }
-        .record-desc {
-            margin-top: 0.4rem;
-            font-size: 0.98rem;
-            font-weight: 600;
-            color: #7c2d12;
-        }
-        .record-close-btn {
-            margin-top: 0.8rem;
-            min-height: 44px;
-            padding: 0.5rem 1rem;
-            border-radius: 9999px;
-            font-size: 0.92rem;
-            font-weight: 700;
-            color: #fff;
-            background: linear-gradient(135deg, #f97316, #ea580c);
-            box-shadow: 0 8px 18px rgba(234, 88, 12, 0.28);
-        }
-        .parent-play-panel {
-            max-width: 72rem;
-            margin: 0 auto 1rem;
-            padding: 0.9rem;
-            border-radius: 16px;
-            border: 1px solid rgba(16, 185, 129, 0.28);
-            background: linear-gradient(135deg, rgba(236, 253, 245, 0.96), rgba(239, 246, 255, 0.96));
-            box-shadow: 0 8px 18px rgba(16, 185, 129, 0.14);
-        }
-        .parent-play-title {
-            font-size: 1.05rem;
-            font-weight: 800;
-            color: #065f46;
-        }
-        .parent-play-desc {
-            margin-top: 0.35rem;
-            font-size: 0.92rem;
-            font-weight: 600;
-            color: #1f2937;
-        }
-        .parent-play-step {
-            margin-top: 0.5rem;
-            display: grid;
-            gap: 0.35rem;
-            font-size: 0.86rem;
-            color: #334155;
-        }
-        .parent-play-step li {
-            background: rgba(255, 255, 255, 0.85);
-            border: 1px dashed rgba(148, 163, 184, 0.35);
-            border-radius: 10px;
-            padding: 0.35rem 0.55rem;
-            list-style: none;
-        }
-        .parent-play-actions {
-            margin-top: 0.6rem;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.45rem;
-        }
-        .parent-play-btn {
-            min-height: 40px;
-            padding: 0.42rem 0.78rem;
-            border-radius: 9999px;
-            font-size: 0.84rem;
-            font-weight: 700;
-            color: #fff;
-            background: linear-gradient(135deg, #10b981, #059669);
-            box-shadow: 0 8px 16px rgba(5, 150, 105, 0.24);
-        }
-        .parent-play-btn.secondary {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.24);
-        }
-        .parent-play-btn.ghost {
-            background: linear-gradient(135deg, #64748b, #475569);
-            box-shadow: 0 8px 16px rgba(71, 85, 105, 0.24);
-        }
-        #parent-play-timer {
-            margin-top: 0.45rem;
-            font-size: 0.86rem;
-            font-weight: 700;
-            color: #0f766e;
-        }
-        .fun-highlight-card {
-            outline: 4px solid rgba(56, 189, 248, 0.45);
-            box-shadow: 0 0 0 8px rgba(147, 197, 253, 0.26), 0 16px 30px rgba(37, 99, 235, 0.22) !important;
-            animation: funCardPulse 1.15s ease-out 2;
-        }
-        @keyframes funCardPulse {
-            0% { transform: scale(1); }
-            35% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        .epic-correct-pop {
-            animation: epicCorrectPop 560ms cubic-bezier(0.2, 0.85, 0.25, 1);
-        }
-        @keyframes epicCorrectPop {
-            0% { transform: scale(1); filter: saturate(1); }
-            35% { transform: scale(1.12); filter: saturate(1.25); }
-            70% { transform: scale(1.04); }
-            100% { transform: scale(1); filter: saturate(1); }
-        }
-        .success-screen-flash {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 70;
-            background: radial-gradient(circle at center, rgba(250, 204, 21, 0.35), rgba(34, 197, 94, 0.28), rgba(59, 130, 246, 0.22), transparent 70%);
-            animation: successScreenFlash 520ms ease-out forwards;
-        }
-        @keyframes successScreenFlash {
-            0% { opacity: 0.9; }
-            100% { opacity: 0; }
-        }
-        .success-floating-label {
-            position: fixed;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            z-index: 75;
-            font-size: clamp(1.1rem, 2.6vw, 1.9rem);
-            font-weight: 800;
-            color: #ffffff;
-            padding: 0.35rem 0.8rem;
-            border-radius: 9999px;
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            box-shadow: 0 10px 24px rgba(22, 163, 74, 0.35);
-            text-shadow: 0 1px 2px rgba(0,0,0,0.25);
-            animation: successFloatUp 780ms cubic-bezier(0.22, 0.9, 0.24, 1) forwards;
-        }
-        @keyframes successFloatUp {
-            0% { opacity: 0; transform: translate(-50%, -20%) scale(0.9); }
-            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.02); }
-            100% { opacity: 0; transform: translate(-50%, -160%) scale(1.08); }
-        }
-        .combo-meter {
-            position: fixed;
-            right: 14px;
-            top: 82px;
-            z-index: 76;
-            pointer-events: none;
-            padding: 0.45rem 0.7rem;
-            border-radius: 14px;
-            color: #fff;
-            font-weight: 800;
-            font-size: 0.9rem;
-            background: linear-gradient(135deg, #f59e0b, #ef4444);
-            box-shadow: 0 10px 24px rgba(239, 68, 68, 0.32);
-            opacity: 0;
-            transform: translateY(-8px) scale(0.95);
-            transition: opacity 180ms ease, transform 180ms ease;
-        }
-        .combo-meter.show {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-        .combo-burst {
-            position: fixed;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            z-index: 77;
-            font-size: clamp(1rem, 2.8vw, 2rem);
-            font-weight: 900;
-            color: #fff;
-            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
-            background: linear-gradient(135deg, #f97316, #ef4444);
-            padding: 0.3rem 0.72rem;
-            border-radius: 9999px;
-            box-shadow: 0 10px 22px rgba(239, 68, 68, 0.35);
-            animation: comboBurst 620ms cubic-bezier(0.22, 0.9, 0.24, 1) forwards;
-        }
-        @keyframes comboBurst {
-            0% { opacity: 0; transform: translate(-50%, -10%) scale(0.88); }
-            28% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); }
-            100% { opacity: 0; transform: translate(-50%, -150%) scale(1.12); }
-        }
-        #flashcard-container.kid-stage {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 0.85rem;
-        }
-        @media (min-width: 768px) {
-            .kid-content-wrap {
-                padding: 1.1rem 1.4rem 1.4rem;
-            }
-            .kid-mode-strip {
-                grid-template-columns: repeat(4, minmax(0, 1fr));
-            }
-            #flashcard-container.kid-stage {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-                gap: 1rem;
-            }
-        }
-        @media (min-width: 1100px) {
-            #flashcard-container.kid-stage {
-                grid-template-columns: repeat(4, minmax(0, 1fr));
-            }
-        }
-        @media (max-width: 767px) {
-            #category-nav {
-                width: 82vw;
-                max-width: 320px;
-            }
-            .kid-title {
-                font-size: 1.28rem;
-            }
-            .kid-tip-chip {
-                font-size: 0.78rem;
-                padding: 0.4rem 0.58rem;
-            }
-        }
-
-        /* --- 低龄模式（3-6岁） --- */
-        body.kid-low-age .kid-title {
-            letter-spacing: 0;
-        }
-        body.kid-low-age #app-subtitle {
-            font-size: 1.08rem;
-            line-height: 1.55;
-            color: #334155;
-        }
-        body.kid-low-age .kid-mode-strip .mode-toggle {
-            min-height: 88px;
-            font-size: 1rem;
-            font-weight: 700;
-        }
-        body.kid-low-age .kid-mode-strip .mode-toggle span:first-child {
-            font-size: 1.35rem;
-            line-height: 1;
-        }
-        body.kid-low-age #game-question-word {
-            font-size: clamp(2rem, 6vw, 2.8rem);
-            padding: 0.9rem;
-        }
-        body.kid-low-age #dictation-play,
-        body.kid-low-age #dictation-submit,
-        body.kid-low-age #dictation-clear,
-        body.kid-low-age #dictation-skip,
-        body.kid-low-age #matching-check,
-        body.kid-low-age #matching-reset {
-            min-height: 52px;
-            font-size: 1rem;
-            font-weight: 700;
-        }
-        body.kid-low-age .flashcard,
-        body.kid-low-age .game-choice-card,
-        body.kid-low-age .matching-item,
-        body.kid-low-age .letter-card {
-            transform: none !important;
-            transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease !important;
-        }
-        body.kid-low-age .flashcard:hover,
-        body.kid-low-age .game-choice-card:hover,
-        body.kid-low-age .matching-item:hover,
-        body.kid-low-age .letter-card:hover {
-            transform: none !important;
-        }
-        body.kid-low-age .anim-pop-in,
-        body.kid-low-age .anim-fade-out,
-        body.kid-low-age .anim-shake,
-        body.kid-low-age .anim-flip,
-        body.kid-low-age .anim-shuffle,
-        body.kid-low-age .anim-float,
-        body.kid-low-age .anim-deal-card,
-        body.kid-low-age .anim-deal-card-reverse,
-        body.kid-low-age .anim-card-flip,
-        body.kid-low-age .anim-card-bounce,
-        body.kid-low-age .anim-simple-deal,
-        body.kid-low-age .anim-fly-to-word,
-        body.kid-low-age .anim-fly-back {
-            animation-duration: 0.28s !important;
-        }
-        @media (max-width: 767px) {
-            body.kid-low-age .kid-mode-strip .mode-toggle {
-                min-height: 92px;
-            }
-            body.kid-low-age #flashcard-container.kid-stage {
-                gap: 0.7rem;
-            }
-        }
-        
-    </style>
+  <meta name="baidu-site-verification" content="codeva-MCIbitwnRV" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KoxMail - Secure, Efficient Cloud Email</title>
+  <meta name="description" content="KoxMail delivers bank-grade encryption and fast, reliable cloud email." data-i18n-meta="meta.index.description">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body class="kid-low-age">
-    <div class="relative kid-app-shell">
-        <!-- Mobile Menu Backdrop -->
-        <div id="menu-backdrop" class="fixed inset-0 bg-black/50 z-20 hidden md:hidden"></div>
+<body data-page="index">
+  <header class="site-header" id="siteHeader">
+    <div class="container header-inner">
+      <a class="brand" href="index.html#home" data-i18n-aria="brand.aria">
+        <span class="brand-mark">K</span>
+        <span class="brand-text">KoxMail</span>
+      </a>
 
-        <!-- Sidebar -->
-        <nav id="category-nav" class="bg-white border-r border-gray-200 fixed inset-y-0 left-0 z-30 w-72 p-4 space-y-2 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:h-screen md:overflow-y-auto">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="px-2 text-2xl font-bold text-sky-600">主题分类</h2>
-                <button id="sidebar-toggle" class="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-200 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            <!-- 类别按钮将由JS动态生成 -->
-        </nav>
+      <button class="menu-toggle" id="menuToggle" aria-expanded="false" aria-controls="mainNav" data-i18n-aria="nav.open">
+        <span></span><span></span><span></span>
+      </button>
 
-        <!-- Main Content -->
-        <div class="kid-main-panel">
-            <header class="kid-header sticky top-0 z-10 flex items-center justify-between">
-                <!-- Left side: Menu buttons -->
-                <div class="flex items-center">
-                <!-- Hamburger button for mobile -->
-                <button id="menu-toggle" class="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-200">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                </button>
-                    <!-- Desktop sidebar toggle button -->
-                    <button id="desktop-sidebar-toggle" class="hidden md:block p-2 rounded-md text-gray-600 hover:bg-gray-200 transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                        </svg>
-                    </button>
-                </div>
-                
-                <!-- Center: Main title -->
-                <h1 class="kid-title bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent text-center flex-1">
-                    儿童英语乐园
-                </h1>
-                
-                <!-- Right side: Empty for now, can be used for future features -->
-                <div class="flex items-center w-16"></div>
-            </header>
+      <nav class="nav" id="mainNav" data-i18n-aria="nav.main">
+        <a href="index.html#home" data-i18n="nav.home">Home</a>
+        <a href="index.html#features" data-i18n="nav.features">Features</a>
+        <a href="index.html#pricing" data-i18n="nav.pricing">Pricing</a>
+        <a href="index.html#about" data-i18n="nav.about">About</a>
+        <a href="index.html#faq" data-i18n="nav.faq">FAQ</a>
+        <a href="index.html#blog" data-i18n="nav.blog">Blog</a>
+      </nav>
 
-            <div class="kid-content-wrap">
-                <div class="kid-intro-card">
-                    <div class="text-center">
-                        <p id="app-subtitle" class="text-base md:text-lg text-slate-700 font-semibold">先选主题，再选学习模式；每次学一点，轻松记住单词。</p>
-                        <div class="mt-3 flex justify-center items-center gap-2 text-sm text-gray-600 flex-wrap">
-                            <span class="kid-tip-chip text-yellow-800">💡 点击卡片听发音</span>
-                            <span class="kid-tip-chip text-green-800">🎯 选择正确图片</span>
-                            <span class="kid-tip-chip text-blue-800">🔗 配对连线游戏</span>
-                        </div>
-                    </div>
-                </div>
-                 
-                <div class="kid-mode-strip">
-                    <button id="mode-flashcards" class="mode-toggle font-semibold text-gray-700 text-sm flex flex-col items-center gap-1">
-                        <span class="text-lg">📚</span>
-                        <span>卡片认读</span>
-                    </button>
-                    <button id="mode-game" class="mode-toggle font-semibold text-gray-700 text-sm flex flex-col items-center gap-1">
-                        <span class="text-lg">🎯</span>
-                        <span>看词选图</span>
-                    </button>
-                    <button id="mode-matching" class="mode-toggle font-semibold text-gray-700 text-sm flex flex-col items-center gap-1">
-                        <span class="text-lg">🔗</span>
-                        <span>配对连线</span>
-                    </button>
-                    <button id="mode-dictation" class="mode-toggle font-semibold text-gray-700 text-sm flex flex-col items-center gap-1">
-                        <span class="text-lg">✏️</span>
-                        <span>听写训练</span>
-                    </button>
-                </div>
-
-                <section class="kid-fun-toolbar" aria-label="趣味玩法工具条">
-                    <div class="flex flex-wrap items-center justify-center gap-2 md:gap-3">
-                        <button id="fun-random-card" class="kid-fun-btn" type="button">🎲 幸运抽卡</button>
-                        <button id="fun-sound-train" class="kid-fun-btn" type="button">🔊 语音连播</button>
-                        <button id="fun-random-challenge" class="kid-fun-btn" type="button">🚀 随机闯关</button>
-                        <button id="fun-streak-challenge" class="kid-fun-btn" type="button">🔥 连胜挑战</button>
-                        <button id="fun-find-word" class="kid-fun-btn" type="button">🕵️ 找找看</button>
-                        <button id="fun-timed-game" class="kid-fun-btn" type="button">⏱️ 限时闯关</button>
-                        <button id="fun-quick-tap" class="kid-fun-btn" type="button">⚡ 快速点点</button>
-                        <button id="fun-parent-play" class="kid-fun-btn" type="button">👨‍👩‍👧 亲子互动</button>
-                    </div>
-                    <p id="fun-play-status" class="text-center mt-2">点击上方按钮，开始一个趣味玩法。</p>
-                    <p id="fun-mini-progress" class="text-center mt-1 text-sm font-semibold text-slate-600">当前没有进行中的趣味任务。</p>
-                    <div class="fun-stats-row" aria-label="连胜排行信息">
-                        <span class="fun-stat-chip">🏅 最高连胜 <strong id="fun-best-streak">0</strong></span>
-                        <span class="fun-stat-chip">📆 今日最佳 <strong id="fun-today-best">0</strong></span>
-                        <span class="fun-stat-chip">✅ 挑战完成 <strong id="fun-challenge-wins">0</strong></span>
-                    </div>
-                    <div id="fun-badges" class="fun-badges" aria-label="挑战勋章"></div>
-                </section>
-
-                <section id="parent-play-panel" class="parent-play-panel hidden" aria-label="亲子互动任务">
-                    <div id="parent-play-title" class="parent-play-title">亲子互动任务</div>
-                    <p id="parent-play-desc" class="parent-play-desc">点击“下一题”开始。</p>
-                    <ul id="parent-play-steps" class="parent-play-step"></ul>
-                    <div id="parent-play-timer"></div>
-                    <div class="parent-play-actions">
-                        <button id="parent-play-next" class="parent-play-btn secondary" type="button">下一题</button>
-                        <button id="parent-play-start-timer" class="parent-play-btn ghost" type="button">开始20秒</button>
-                        <button id="parent-play-done" class="parent-play-btn" type="button">完成任务 +⭐</button>
-                        <button id="parent-play-close" class="parent-play-btn ghost" type="button">关闭</button>
-                    </div>
-                </section>
-
-                <main id="flashcard-container" class="kid-stage grid">
-                    <!-- 闪卡将由JS动态生成 -->
-                </main>
-        
-                <div id="game-container" class="hidden text-center kid-stage max-w-4xl mx-auto">
-                    <div id="game-question-area" class="mb-8 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-3xl p-6 shadow-lg">
-                        <div class="flex items-center justify-center gap-3 mb-4">
-                            <span class="text-2xl">🎵</span>
-                            <p class="text-xl text-gray-700 font-semibold">听声音，选择正确的图片：</p>
-                            <span class="text-2xl">👂</span>
-                        </div>
-                        <div id="game-question-word" class="text-5xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent my-4 cursor-pointer hover:scale-110 transition-transform p-4 bg-white rounded-2xl shadow-md" title="点击重新播放">
-                            <div class="text-sm text-gray-500 mb-2">点击单词听发音</div>
-                        </div>
-                    </div>
-                    <div id="game-choices-grid" class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                         <!-- 游戏选项将由JS动态生成 -->
-                    </div>
-                </div>
-
-                <!-- 配对连线容器 -->
-                <div id="matching-container" class="hidden kid-stage max-w-6xl mx-auto">
-                    <div class="text-center mb-8 bg-gradient-to-r from-green-50 to-blue-50 rounded-3xl p-6 shadow-lg">
-                        <div class="flex items-center justify-center gap-3 mb-4">
-                            <span class="text-2xl">🔗</span>
-                            <p class="text-xl text-gray-700 font-semibold">将左侧的单词与右侧对应的图片连线</p>
-                            <span class="text-2xl">🎯</span>
-                        </div>
-                        <div class="flex justify-center items-center gap-6 flex-wrap">
-                            <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-md">
-                                <span class="text-lg">📊</span>
-                                <span class="text-sm text-gray-600">已连线: </span>
-                                <span id="matching-progress" class="text-lg font-bold text-green-600">0</span>
-                                <span class="text-gray-400">/</span>
-                                <span id="matching-total" class="text-lg font-bold text-blue-600">0</span>
-                            </div>
-                            <button id="matching-check" class="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full hover:from-green-600 hover:to-green-700 transition-all shadow-lg flex items-center gap-2">
-                                <span>✅</span>
-                                <span>检查答案</span>
-                            </button>
-                            <button id="matching-reset" class="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-full hover:from-gray-600 hover:to-gray-700 transition-all shadow-lg flex items-center gap-2">
-                                <span>🔄</span>
-                                <span>重新开始</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="flex gap-8">
-                        <div class="flex-1 bg-gradient-to-b from-pink-50 to-purple-50 rounded-3xl p-6 shadow-lg">
-                            <div class="flex items-center justify-center gap-2 mb-6">
-                                <span class="text-2xl">📝</span>
-                                <h3 class="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">单词</h3>
-                                <span class="text-2xl">📝</span>
-                            </div>
-                            <div id="matching-words" class="flex flex-col items-center space-y-4">
-                                <!-- 单词列表将由JS动态生成 -->
-                            </div>
-                        </div>
-                        <div class="flex-1 bg-gradient-to-b from-blue-50 to-cyan-50 rounded-3xl p-6 shadow-lg">
-                            <div class="flex items-center justify-center gap-2 mb-6">
-                                <span class="text-2xl">🖼️</span>
-                                <h3 class="text-2xl font-bold bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text text-transparent">图片</h3>
-                                <span class="text-2xl">🖼️</span>
-                            </div>
-                            <div id="matching-images" class="flex flex-col items-center space-y-4">
-                                <!-- 图片列表将由JS动态生成 -->
-                            </div>
-                        </div>
-                    </div>
-                    <svg id="matching-svg" class="absolute inset-0 pointer-events-none" style="z-index: 10;">
-                        <!-- 连线将由JS动态生成 -->
-                    </svg>
-                </div>
-
-                <!-- 听写训练容器 -->
-                <div id="dictation-container" class="hidden text-center kid-stage max-w-5xl mx-auto">
-                    <div class="mb-8 bg-gradient-to-r from-purple-50 to-pink-50 rounded-3xl p-8 shadow-lg">
-                        <div class="flex items-center justify-center gap-3 mb-6">
-                            <span class="text-2xl">✏️</span>
-                            <p class="text-xl text-gray-700 font-semibold">听声音，用下方的字母卡片拼出单词</p>
-                            <span class="text-2xl">🎧</span>
-                        </div>
-                        <div class="flex justify-center items-center gap-6 mb-8 flex-wrap">
-                            <button id="dictation-play" class="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg flex items-center gap-3 text-lg font-semibold">
-                                <span class="text-2xl">🔊</span>
-                                <span>播放单词</span>
-                            </button>
-                            <div class="flex items-center gap-2 bg-white px-6 py-3 rounded-full shadow-md">
-                                <span class="text-lg">📊</span>
-                                <span class="text-sm text-gray-600">剩余: </span>
-                                <span id="dictation-remaining" class="text-xl font-bold text-purple-600">0</span>
-                            </div>
-                        </div>
-                        
-                        <!-- 单词输入区域 -->
-                        <div class="mb-8 bg-white rounded-2xl p-6 shadow-md">
-                            <div class="flex items-center justify-center gap-2 mb-4">
-                                <span class="text-lg">📝</span>
-                                <div class="text-lg text-gray-700 font-semibold">拼出的单词：</div>
-                                <span class="text-lg">📝</span>
-                            </div>
-                            <div id="dictation-word-display" class="min-h-[80px] w-full max-w-3xl mx-auto px-6 py-4 text-3xl font-bold text-center border-3 border-dashed border-purple-300 rounded-2xl bg-gradient-to-r from-purple-50 to-pink-50 flex items-center justify-center gap-3 shadow-inner">
-                                <span class="text-gray-400 text-lg">点击下方字母卡片拼出单词</span>
-                                <span class="text-2xl">👆</span>
-                            </div>
-                        </div>
-                        
-                        <!-- 字母卡片区域 -->
-                        <div class="mb-8 bg-white rounded-2xl p-6 shadow-md">
-                            <div class="flex items-center justify-center gap-2 mb-6">
-                                <span class="text-2xl">🔤</span>
-                                <div class="text-xl text-gray-700 font-semibold">字母卡片：</div>
-                                <span class="text-2xl">🔤</span>
-                            </div>
-                            <div id="dictation-letter-cards" class="flex flex-wrap justify-center gap-4 max-w-5xl mx-auto">
-                                <!-- 字母卡片将由JS动态生成 -->
-                            </div>
-                        </div>
-                        
-                        <!-- 操作按钮 -->
-                        <div class="flex justify-center gap-6 flex-wrap">
-                            <button id="dictation-clear" class="px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-full hover:from-yellow-600 hover:to-orange-600 transition-all shadow-lg flex items-center gap-2 text-lg font-semibold">
-                                <span>🗑️</span>
-                                <span>清空</span>
-                            </button>
-                            <button id="dictation-submit" class="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg flex items-center gap-2 text-lg font-semibold">
-                                <span>✅</span>
-                                <span>提交</span>
-                            </button>
-                            <button id="dictation-skip" class="px-8 py-3 bg-gradient-to-r from-gray-500 to-slate-500 text-white rounded-full hover:from-gray-600 hover:to-slate-600 transition-all shadow-lg flex items-center gap-2 text-lg font-semibold">
-                                <span>⏭️</span>
-                                <span>跳过</span>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- 覆盖层反馈信息 -->
-                    <div id="dictation-feedback-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
-                        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl transform transition-all duration-300">
-                            <div id="dictation-feedback" class="text-center">
-                        <!-- 反馈信息将由JS动态生成 -->
-                    </div>
-                            <div class="mt-6 flex justify-center">
-                                <button id="dictation-feedback-close" class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg font-semibold">
-                                    继续
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="dictation-progress" class="text-sm text-gray-500">
-                        <!-- 进度信息将由JS动态生成 -->
-                    </div>
-                </div>
-            </div>
-        </div>
+      <div class="header-actions">
+        <button type="button" class="lang-btn" id="langToggle" aria-label="Switch to Chinese">中文</button>
+        <a class="btn btn-ghost" href="login.html" data-i18n="common.login">Sign in</a>
+        <a class="btn btn-accent" href="register.html" data-i18n="common.register">Sign up free</a>
+      </div>
     </div>
+  </header>
 
-    <script src="js/modules/app-state.js" defer></script>
-    <script src="js/modules/learning-core-runtime.js" defer></script>
-    <script src="js/modules/dashboard-view.js" defer></script>
-    <script src="js/modules/dashboard-controller.js" defer></script>
-    <script src="js/modules/learning-insights.js" defer></script>
-    <script src="js/modules/mode-services.js" defer></script>
-    <script src="js/modules/matching-service.js" defer></script>
-    <script src="js/modules/dictation-service.js" defer></script>
-    <script src="js/modules/dictation-interaction.js" defer></script>
-    <script src="js/modules/tts-controller.js" defer></script>
-    <script src="js/modules/speech-queue.js" defer></script>
-    <script src="js/modules/app-bootstrap.js" defer></script>
-    <script src="js/modules/perf-profile.js" defer></script>
-    <script src="js/app.js" defer></script>
-
-    <div id="record-overlay" class="record-overlay" aria-live="polite">
-        <div class="record-modal" role="dialog" aria-modal="true" aria-labelledby="record-title">
-            <div id="record-title" class="record-title">🎉 打破纪录！</div>
-            <p id="record-desc" class="record-desc">你创造了新的连胜纪录！</p>
-            <button id="record-close-btn" type="button" class="record-close-btn">太棒了，继续</button>
+  <main>
+    <section class="hero section" id="home">
+      <div class="container">
+        <div class="hero-content">
+          <p class="eyebrow" data-i18n="index.hero.eyebrow">✦ Redefining business communication ✦</p>
+          <h1 data-i18n-html="index.hero.title">Master global communication<br/>Build enterprise-grade security</h1>
+          <p class="lead" data-i18n-html="index.hero.lead">Military-grade encryption · Lightning sync · AI at the core<br/>Built for leaders who demand excellence</p>
+          <div class="hero-features">
+            <span class="hero-feature-tag" data-i18n="index.hero.tag1">Military-grade encryption</span>
+            <span class="hero-feature-tag" data-i18n="index.hero.tag2">Unlimited cloud storage</span>
+            <span class="hero-feature-tag" data-i18n="index.hero.tag3">AI smart sorting</span>
+            <span class="hero-feature-tag" data-i18n="index.hero.tag4">Global edge network</span>
+            <span class="hero-feature-tag" data-i18n="index.hero.tag5">Zero-leak guarantee</span>
+          </div>
+          <div class="hero-actions">
+            <a class="btn btn-accent btn-large" href="register.html">
+              <span data-i18n="index.hero.ctaPrimary">Start premium experience</span>
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </a>
+            <a class="btn btn-outline btn-large" href="#features" data-i18n="index.hero.ctaSecondary">Explore technology</a>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <span class="hero-stat-value" data-i18n="index.hero.stat1.value">10M+</span>
+              <span class="hero-stat-label" data-i18n="index.hero.stat1.label">Business leaders worldwide</span>
+            </div>
+            <div class="hero-stat-divider"></div>
+            <div class="hero-stat">
+              <span class="hero-stat-value" data-i18n="index.hero.stat2.value">99.999%</span>
+              <span class="hero-stat-label" data-i18n="index.hero.stat2.label">Five-nines availability</span>
+            </div>
+            <div class="hero-stat-divider"></div>
+            <div class="hero-stat">
+              <span class="hero-stat-value" data-i18n="index.hero.stat3.value">200+</span>
+              <span class="hero-stat-label" data-i18n="index.hero.stat3.label">Enterprise customers</span>
+            </div>
+          </div>
         </div>
+        <div class="hero-art">
+          <div class="hero-decor hero-decor-1"></div>
+          <div class="hero-decor hero-decor-2"></div>
+          <div class="hero-decor hero-decor-3"></div>
+          <div class="mock-mail">
+            <div class="mail-top">
+              <span class="mail-dot"></span>
+              <span class="mail-dot"></span>
+              <span class="mail-dot"></span>
+              <span class="mail-title">KoxMail</span>
+            </div>
+            <div class="mail-body">
+              <div class="mail-item">
+                <span class="mail-icon">🔐</span>
+                <span class="mail-text" data-i18n="index.mock.e2e">End-to-end encryption</span>
+              </div>
+              <div class="mail-item">
+                <span class="mail-icon">⚡</span>
+                <span class="mail-text" data-i18n="index.mock.sync">Global sync</span>
+              </div>
+              <div class="mail-item">
+                <span class="mail-icon">🧠</span>
+                <span class="mail-text" data-i18n="index.mock.ai">AI-powered intelligence</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="trust section-sm">
+      <div class="container">
+        <p class="trust-text" data-i18n="index.trust">✦ Security standards trusted by Fortune 500 companies ✦</p>
+        <div class="badges">
+          <div class="badge">ISO/IEC 27001</div>
+          <div class="badge">SOC 2 Type II</div>
+          <div class="badge" data-i18n="index.badge.gdpr">GDPR certified</div>
+          <div class="badge" data-i18n="index.badge.mil">Military-grade encryption</div>
+          <div class="badge">SSL/TLS 1.3</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stats section-sm">
+      <div class="container">
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-number" data-target="10000000">0</span>
+            <span class="stat-suffix">+</span>
+            <p class="stat-label" data-i18n="index.stat1">Business users worldwide</p>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" data-target="5000000000">0</span>
+            <span class="stat-suffix">+</span>
+            <p class="stat-label" data-i18n="index.stat2">Encrypted emails delivered</p>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" data-target="99">0</span>
+            <span class="stat-suffix">.999%</span>
+            <p class="stat-label" data-i18n="index.stat3">Service availability</p>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" data-target="200">0</span>
+            <span class="stat-suffix">+</span>
+            <p class="stat-label" data-i18n="index.stat4">Enterprise customers</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="partners section-sm">
+      <div class="container">
+        <p class="partners-label" data-i18n="index.partners">✦ Trusted by leading enterprises worldwide ✦</p>
+        <div class="logo-carousel">
+          <div class="logo-track">
+            <div class="logo-item">NeoLink</div>
+            <div class="logo-item">Vertex</div>
+            <div class="logo-item">GigaTech</div>
+            <div class="logo-item">CloudBase</div>
+            <div class="logo-item">DataSphere</div>
+            <div class="logo-item">NexGen</div>
+            <div class="logo-item">SmartFlow</div>
+            <div class="logo-item">InnovateLab</div>
+            <div class="logo-item">Quantum</div>
+            <div class="logo-item">Stellar</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="features section" id="features">
+      <div class="container">
+        <div class="section-header">
+          <h2 data-i18n="index.features.title">Redefining email security</h2>
+          <p class="lead" data-i18n="index.features.lead">Innovation-driven, security-first</p>
+        </div>
+        <div class="cards-3">
+          <article class="card feature-card">
+            <div class="feature-icon">⚡</div>
+            <h3 data-i18n="index.features.speed.title">Lightning-fast engine</h3>
+            <p data-i18n="index.features.speed.desc">Global edge nodes with millisecond response. Smart routing picks the optimal path automatically.</p>
+            <ul class="feature-list">
+              <li data-i18n="index.features.speed.li1">50+ data centers worldwide</li>
+              <li data-i18n="index.features.speed.li2">Smart DNS resolution</li>
+              <li data-i18n="index.features.speed.li3">Global CDN acceleration</li>
+            </ul>
+          </article>
+          <article class="card feature-card">
+            <div class="feature-icon">🔒</div>
+            <h3 data-i18n="index.features.sec.title">Military-grade security</h3>
+            <p data-i18n="index.features.sec.desc">End-to-end encryption and AI anti-phishing protect your privacy and data.</p>
+            <ul class="feature-list">
+              <li data-i18n="index.features.sec.li1">AES-256 encryption</li>
+              <li data-i18n="index.features.sec.li2">AI anti-phishing</li>
+              <li data-i18n="index.features.sec.li3">Zero-trust architecture</li>
+            </ul>
+          </article>
+          <article class="card feature-card">
+            <div class="feature-icon">☁️</div>
+            <h3 data-i18n="index.features.cloud.title">Unlimited cloud storage</h3>
+            <p data-i18n="index.features.cloud.desc">Scale without limits. Keep files and mail history safe indefinitely.</p>
+            <ul class="feature-list">
+              <li data-i18n="index.features.cloud.li1">Basic: 5 GB</li>
+              <li data-i18n="index.features.cloud.li2">Pro: unlimited</li>
+              <li data-i18n="index.features.cloud.li3">Smart compression</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="how-it-works section alt-bg">
+      <div class="container">
+        <div class="section-header">
+          <h2 data-i18n="index.steps.title">Get started in three steps</h2>
+          <p class="lead" data-i18n="index.steps.lead">Simple, fast, fits your workflow</p>
+        </div>
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h3 data-i18n="index.steps.1.title">Sign up instantly</h3>
+              <p data-i18n="index.steps.1.desc">Create your business mailbox in 30 seconds and start secure communication.</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h3 data-i18n="index.steps.2.title">Seamless setup</h3>
+              <p data-i18n="index.steps.2.desc">Works on every platform. Sync devices and data in one click.</p>
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <h3 data-i18n="index.steps.3.title">Go premium</h3>
+              <p data-i18n="index.steps.3.desc">Experience top-tier security and speed for your business.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="more-features section">
+      <div class="container">
+        <div class="section-header">
+          <h2 data-i18n="index.more.title">Full enterprise feature matrix</h2>
+          <p class="lead" data-i18n="index.more.lead">Every feature built for excellence</p>
+        </div>
+        <div class="features-grid">
+          <div class="feature-row">
+            <div class="feature-box">
+              <div class="feature-icon">🧠</div>
+              <div class="feature-info">
+                <h4 data-i18n="index.more.ai.title">AI smart classification</h4>
+                <p data-i18n="index.more.ai.desc">Prioritize what matters with intelligent sorting and quantum-inspired algorithms.</p>
+              </div>
+            </div>
+            <div class="feature-box">
+              <div class="feature-icon">📱</div>
+              <div class="feature-info">
+                <h4 data-i18n="index.more.sync.title">Cross-platform sync</h4>
+                <p data-i18n="index.more.sync.desc">iOS, Android, macOS, Windows, and Linux — all in real time.</p>
+              </div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feature-box">
+              <div class="feature-icon">📎</div>
+              <div class="feature-info">
+                <h4 data-i18n="index.more.attach.title">Large attachments</h4>
+                <p data-i18n="index.more.attach.desc">Send files up to 5 GB — documents, media, and more.</p>
+              </div>
+            </div>
+            <div class="feature-box">
+              <div class="feature-icon">⏪</div>
+              <div class="feature-info">
+                <h4 data-i18n="index.more.recall.title">Recall sent mail</h4>
+                <p data-i18n="index.more.recall.desc">Changed your mind? Recall within 5 minutes.</p>
+              </div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feature-box">
+              <div class="feature-icon">🔔</div>
+              <div class="feature-info">
+                <h4 data-i18n="index.more.notify.title">Smart notifications</h4>
+                <p data-i18n="index.more.notify.desc">AI highlights important mail so you never miss critical updates.</p>
+              </div>
+            </div>
+            <div class="feature-box">
+              <div class="feature-icon">📊</div>
+              <div class="feature-info">
+                <h4 data-i18n="index.more.analytics.title">Deep analytics</h4>
+                <p data-i18n="index.more.analytics.desc">Reports on volume, trends, and efficiency to inform decisions.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="testimonials section-sm">
+      <div class="container">
+        <h2 data-i18n="index.testimonials.title">Chosen by leaders worldwide</h2>
+        <div class="cards-3">
+          <article class="card quote-card">
+            <p data-i18n="index.testimonials.1">"KoxMail sync and large attachments solved our global team pain points — productivity up 300%."</p>
+            <div class="person" data-i18n="index.testimonials.1.author">Chen Ying · Global Ops Director · NeoLink</div>
+          </article>
+          <article class="card quote-card">
+            <p data-i18n="index.testimonials.2">"Military-grade security and AI anti-phishing saved us incalculable risk."</p>
+            <div class="person" data-i18n="index.testimonials.2.author">David Li · CISO · Vertex</div>
+          </article>
+          <article class="card quote-card">
+            <p data-i18n="index.testimonials.3">"Migration was smooth — near-zero learning curve and a leap in efficiency."</p>
+            <div class="person" data-i18n="index.testimonials.3.author">Wang Zhe · VP Product · GigaTech</div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="about section alt-bg" id="about">
+      <div class="container">
+        <h2 data-i18n="index.about.title">About KoxMail</h2>
+        <div class="z-flow">
+          <div class="card">
+            <h3 data-i18n="index.about.story.title">Redefining secure communication</h3>
+            <p data-i18n="index.about.story.desc">KoxMail was born from a pursuit of exceptional communication. In an age of information overload, we strip away noise and restore the essence of connection — privacy-first email for a global audience.</p>
+          </div>
+          <div class="card timeline">
+            <h3 data-i18n="index.about.timeline.title">Our journey</h3>
+            <ul>
+              <li data-i18n-html="index.about.timeline.li1"><strong>2024:</strong> Proprietary end-to-end encryption; international security certification.</li>
+              <li data-i18n-html="index.about.timeline.li2"><strong>2025:</strong> KoxMail 1.0 global launch; 10M+ users in six months.</li>
+              <li data-i18n-html="index.about.timeline.li3"><strong>2026:</strong> Smart communication ecosystem; millisecond global sync.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3 data-i18n="index.about.mission.title">Mission & vision</h3>
+            <p data-i18n-html="index.about.mission.mission"><strong>Mission:</strong> Seamless, secure, fast communication for global professionals.</p>
+            <p data-i18n-html="index.about.mission.vision"><strong>Vision:</strong> The world's most trusted intelligent communication platform.</p>
+          </div>
+          <div class="card team">
+            <h3 data-i18n="index.about.team.title">Leadership team</h3>
+            <div class="team-grid">
+              <div class="member"><span class="avatar"></span><p>CEO · Lena</p></div>
+              <div class="member"><span class="avatar"></span><p>CTO · Kevin</p></div>
+              <div class="member"><span class="avatar"></span><p>PM · Ruby</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="security-features section alt-bg">
+      <div class="container">
+        <div class="section-header">
+          <h2 data-i18n="index.security.title">Military-grade security stack</h2>
+          <p class="lead" data-i18n="index.security.lead">Six layers of defense for your data</p>
+        </div>
+        <div class="security-grid">
+          <div class="security-card">
+            <div class="security-icon">🔐</div>
+            <h3 data-i18n="index.security.e2e.title">End-to-end encryption</h3>
+            <p data-i18n="index.security.e2e.desc">AES-256 and quantum-resistant techniques — only you control your data.</p>
+          </div>
+          <div class="security-card">
+            <div class="security-icon">🛡️</div>
+            <h3 data-i18n="index.security.phish.title">AI anti-phishing</h3>
+            <p data-i18n="index.security.phish.desc">Advanced AI detects phishing and blocks threats in real time.</p>
+          </div>
+          <div class="security-card">
+            <div class="security-icon">🔑</div>
+            <h3 data-i18n="index.security.mfa.title">Zero-trust MFA</h3>
+            <p data-i18n="index.security.mfa.desc">TOTP, biometrics, and hardware security keys for enterprise accounts.</p>
+          </div>
+          <div class="security-card">
+            <div class="security-icon">🗑️</div>
+            <h3 data-i18n="index.security.wipe.title">Secure deletion</h3>
+            <p data-i18n="index.security.wipe.desc">7-pass overwrite ensures data cannot be recovered.</p>
+          </div>
+          <div class="security-card">
+            <div class="security-icon">✅</div>
+            <h3 data-i18n="index.security.compliance.title">Global compliance</h3>
+            <p data-i18n="index.security.compliance.desc">ISO 27001, SOC 2, and GDPR certified.</p>
+          </div>
+          <div class="security-card">
+            <div class="security-icon">📋</div>
+            <h3 data-i18n="index.security.audit.title">Full audit trail</h3>
+            <p data-i18n="index.security.audit.desc">Every access logged; anomalies alerted in seconds.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pricing section" id="pricing">
+      <div class="container">
+        <div class="section-header">
+          <h2 data-i18n="index.pricing.title">Choose your plan</h2>
+          <p class="lead" data-i18n="index.pricing.lead">Tailored for every professional</p>
+        </div>
+
+        <div class="pricing-toggle">
+          <button class="toggle-btn active" data-period="monthly" data-i18n="index.pricing.monthly">Monthly</button>
+          <button class="toggle-btn" data-period="yearly"><span data-i18n="index.pricing.yearly">Yearly</span> <span class="save-badge" data-i18n="index.pricing.save">Save 20%</span></button>
+        </div>
+
+        <div class="pricing-grid-apple">
+          <div class="option-card" id="plan-basic">
+            <div class="option-content">
+              <div class="option-badge" data-i18n="index.pricing.basic.badge">Free</div>
+              <div class="option-title" data-i18n="index.pricing.basic.title">Basic</div>
+              <div class="option-desc" data-i18n="index.pricing.basic.desc">For everyday personal use</div>
+            </div>
+            <div class="option-price"><span data-i18n="index.pricing.basic.price">$0</span><span data-i18n="index.pricing.basic.unit">/forever</span></div>
+          </div>
+
+          <div class="option-card selected" id="plan-pro">
+            <div class="option-content">
+              <div class="option-badge recommended" data-i18n="index.pricing.pro.badge">Recommended</div>
+              <div class="option-title" data-i18n="index.pricing.pro.title">Pro</div>
+              <div class="option-desc" data-i18n="index.pricing.pro.desc">For professionals and small teams</div>
+            </div>
+            <div class="option-price">
+              <span class="price-amount" data-i18n="index.pricing.pro.price">$4.99</span>
+              <span class="price-unit" data-i18n="index.pricing.pro.unit">/mo</span>
+              <span class="price-yearly" hidden data-i18n="index.pricing.pro.yearly">$47.88/yr</span>
+            </div>
+          </div>
+
+          <div class="option-card" id="plan-enterprise">
+            <div class="option-content">
+              <div class="option-badge enterprise" data-i18n="index.pricing.enterprise.badge">Enterprise</div>
+              <div class="option-title" data-i18n="index.pricing.enterprise.title">Enterprise</div>
+              <div class="option-desc" data-i18n="index.pricing.enterprise.desc">For mid-to-large organizations</div>
+            </div>
+            <div class="option-price" data-i18n="index.pricing.enterprise.price">Contact sales</div>
+          </div>
+        </div>
+
+        <div class="pricing-details">
+          <h3 data-i18n="index.pricing.details.title">What you get</h3>
+          <div class="feature-grid">
+            <div class="feature-item" data-i18n="index.pricing.details.f1">5 GB storage (unlimited on Pro)</div>
+            <div class="feature-item" data-i18n="index.pricing.details.f2">500 MB attachments (5 GB on Pro)</div>
+            <div class="feature-item" data-i18n="index.pricing.details.f3">Spam filtering (AI anti-phishing on Pro)</div>
+            <div class="feature-item" data-i18n="index.pricing.details.f4">Community support (24/7 priority on Pro)</div>
+          </div>
+
+          <div class="pricing-actions">
+            <a class="btn btn-accent" href="subscribe.html" data-i18n="index.pricing.subscribe">Subscribe to Pro</a>
+            <a class="btn btn-outline" href="business.html" data-i18n="index.pricing.enterpriseLink">Explore enterprise</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="faq section alt-bg" id="faq">
+      <div class="container">
+        <h2 data-i18n="index.faq.title">Frequently asked questions</h2>
+        <div class="faq-top">
+          <input type="search" id="faqSearch" data-i18n-placeholder="index.faq.search" placeholder="Search questions..." data-i18n-aria="index.faq.searchAria" aria-label="FAQ search">
+          <div class="tags" id="faqTags">
+            <span class="tag-btn active" data-filter="all" data-i18n="index.faq.tag.all">All</span>
+            <span class="tag-btn" data-filter="account" data-i18n="index.faq.tag.account">Account & security</span>
+            <span class="tag-btn" data-filter="client" data-i18n="index.faq.tag.client">Client setup</span>
+            <span class="tag-btn" data-filter="security" data-i18n="index.faq.tag.security">Privacy & encryption</span>
+            <span class="tag-btn" data-filter="billing" data-i18n="index.faq.tag.billing">Billing</span>
+          </div>
+        </div>
+        <div class="accordion" id="faqAccordion">
+          <article class="accordion-item" data-category="account">
+            <button class="accordion-trigger" aria-expanded="false">
+              <span data-i18n="index.faq.q1">How do I reset my password?</span><span class="icon">+</span>
+            </button>
+            <div class="accordion-panel">
+              <p data-i18n="index.faq.a1">Use "Forgot password" on the sign-in page. Verify via your recovery email or phone.</p>
+            </div>
+          </article>
+          <article class="accordion-item" data-category="account">
+            <button class="accordion-trigger" aria-expanded="false">
+              <span data-i18n="index.faq.q2">How do I change my phone or recovery email?</span><span class="icon">+</span>
+            </button>
+            <div class="accordion-panel">
+              <p data-i18n="index.faq.a2">After sign-in, go to Settings → Account security, verify your password, then update contact info.</p>
+            </div>
+          </article>
+          <article class="accordion-item" data-category="client">
+            <button class="accordion-trigger" aria-expanded="false">
+              <span data-i18n="index.faq.q3">Does KoxMail support POP3/IMAP?</span><span class="icon">+</span>
+            </button>
+            <div class="accordion-panel">
+              <p data-i18n="index.faq.a3">Yes. Enable IMAP/SMTP under Settings → Client access for an app-specific password.</p>
+            </div>
+          </article>
+          <article class="accordion-item" data-category="client">
+            <button class="accordion-trigger" aria-expanded="false">
+              <span data-i18n="index.faq.q4">How do I set up Outlook or Apple Mail?</span><span class="icon">+</span>
+            </button>
+            <div class="accordion-panel">
+              <p data-i18n="index.faq.a4">Choose IMAP/SMTP, enter your KoxMail address and app password. Servers: imap.koxmail.com / smtp.koxmail.com.</p>
+            </div>
+          </article>
+          <article class="accordion-item" data-category="security">
+            <button class="accordion-trigger" aria-expanded="false">
+              <span data-i18n="index.faq.q5">How do I enable two-factor authentication (2FA)?</span><span class="icon">+</span>
+            </button>
+            <div class="accordion-panel">
+              <p data-i18n="index.faq.a5">Go to Settings → Account security → Two-factor authentication. Scan the QR code or use SMS backup.</p>
+            </div>
+          </article>
+          <article class="accordion-item" data-category="security">
+            <button class="accordion-trigger" aria-expanded="false">
+              <span data-i18n="index.faq.q6">I lost my phone — how do I sign in?</span><span class="icon">+</span>
+            </button>
+            <div class="accordion-panel">
+              <p data-i18n="index.faq.a6">Use your recovery email for a code, or contact support with ID verification.</p>
+            </div>
+          </article>
+          <article class="accordion-item" data-category="billing">
+            <button class="accordion-trigger" aria-expanded="false">
+              <span data-i18n="index.faq.q7">How do I request an invoice?</span><span class="icon">+</span>
+            </button>
+            <div class="accordion-panel">
+              <p data-i18n="index.faq.a7">Go to Account → Billing & subscription → Request invoice. We issue within 3 business days.</p>
+            </div>
+          </article>
+          <article class="accordion-item" data-category="billing">
+            <button class="accordion-trigger" aria-expanded="false">
+              <span data-i18n="index.faq.q8">What payment methods are supported?</span><span class="icon">+</span>
+            </button>
+            <div class="accordion-panel">
+              <p data-i18n="index.faq.a8">Visa, MasterCard, Amex, Alipay, WeChat Pay, and bank transfer for enterprises.</p>
+            </div>
+          </article>
+        </div>
+        <div class="empty-state" id="faqEmptyState" hidden>
+          <p data-i18n="index.faq.empty">No results found. Try another keyword.</p>
+          <a class="btn btn-outline" href="support.html" data-i18n="index.faq.contact">Contact support</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="blog-preview section" id="blog">
+      <div class="container">
+        <div class="section-header">
+          <h2 data-i18n="index.blog.title">Insights</h2>
+          <p class="lead" data-i18n="index.blog.lead">Latest in secure communication and innovation</p>
+          <a class="link-underline" href="blog.html" data-i18n="index.blog.viewAll">View all articles</a>
+        </div>
+        <div class="blog-grid">
+          <article class="blog-card">
+            <div class="blog-image">
+              <div class="skeleton" style="width: 100%; height: 180px;"></div>
+            </div>
+            <div class="blog-content">
+              <span class="badge" data-i18n="index.blog.1.badge">Product update</span>
+              <h3 data-i18n="index.blog.1.title">New AI assistant — 5× faster mail handling</h3>
+              <p data-i18n="index.blog.1.desc">Auto-sort, draft replies, and surface what matters most.</p>
+              <div class="blog-meta">
+                <span data-i18n="index.blog.1.date">May 2026</span>
+              </div>
+            </div>
+          </article>
+          <article class="blog-card">
+            <div class="blog-image">
+              <div class="skeleton" style="width: 100%; height: 180px;"></div>
+            </div>
+            <div class="blog-content">
+              <span class="badge" data-i18n="index.blog.2.badge">Security</span>
+              <h3 data-i18n="index.blog.2.title">Building an unbreakable enterprise mail security stack</h3>
+              <p data-i18n="index.blog.2.desc">From E2E encryption to zero-trust access — how KoxMail protects your assets.</p>
+              <div class="blog-meta">
+                <span data-i18n="index.blog.2.date">April 2026</span>
+              </div>
+            </div>
+          </article>
+          <article class="blog-card">
+            <div class="blog-image">
+              <div class="skeleton" style="width: 100%; height: 180px;"></div>
+            </div>
+            <div class="blog-content">
+              <span class="badge" data-i18n="index.blog.3.badge">Productivity</span>
+              <h3 data-i18n="index.blog.3.title">10 email habits top business leaders use</h3>
+              <p data-i18n="index.blog.3.desc">From AI assist to time blocking — elevate communication and decisions.</p>
+              <div class="blog-meta">
+                <span data-i18n="index.blog.3.date">March 2026</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="contact section" id="contact">
+      <div class="container grid-2">
+        <div class="contact-info">
+          <h2 data-i18n="index.contact.title">Contact us</h2>
+          <p data-i18n-html="index.contact.hq"><strong>Global HQ:</strong> 888 Kox Tower, Silicon Valley Tech Blvd</p>
+          <p data-i18n-html="index.contact.sales"><strong>Business:</strong> enterprise@koxmail.com</p>
+          <p data-i18n-html="index.contact.phone"><strong>Hotline:</strong> 400-888-KOX (24/7 worldwide)</p>
+          <div class="map-placeholder" aria-label="Map placeholder">Map Placeholder</div>
+        </div>
+        <div class="card">
+          <h3 data-i18n="index.contact.form.title">Send feedback</h3>
+          <form id="contactForm" novalidate>
+            <div class="field">
+              <label for="name" data-i18n="index.contact.name">Name *</label>
+              <input id="name" name="name" required>
+              <small class="error-msg"></small>
+            </div>
+            <div class="field">
+              <label for="email" data-i18n="index.contact.email">Email *</label>
+              <input id="email" name="email" type="email" required>
+              <small class="error-msg"></small>
+            </div>
+            <div class="field">
+              <label for="subject" data-i18n="index.contact.subject">Subject</label>
+              <input id="subject" name="subject">
+              <small class="error-msg"></small>
+            </div>
+            <div class="field">
+              <label for="message" data-i18n="index.contact.message">Message *</label>
+              <textarea id="message" name="message" rows="5" required></textarea>
+              <small class="error-msg"></small>
+            </div>
+            <button class="btn btn-accent full" id="contactSubmit" type="submit">
+              <span class="btn-text" data-i18n="index.contact.submit">Submit feedback</span>
+              <span class="spinner" aria-hidden="true"></span>
+            </button>
+          </form>
+          <div class="success-card" id="contactSuccess" hidden>
+            <h4 data-i18n="index.contact.success.title">Submitted</h4>
+            <p data-i18n="index.contact.success.desc">Thank you! Our team will respond within 24 hours.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta section-sm">
+      <div class="container cta-box">
+        <h2 data-i18n="index.cta.title">Start your communication journey</h2>
+        <p class="lead" data-i18n="index.cta.lead">Sign up for 30 days of full features free — the inbox leaders choose</p>
+        <a class="btn btn-accent btn-large" href="register.html">
+          <span data-i18n="index.cta.btn">Start free trial</span>
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+      </div>
+    </section>
+
+    <div class="floating-actions" id="floatingActions">
+      <button class="float-btn" id="scrollTopBtn" data-i18n-title="float.scrollTop" data-i18n-aria="float.scrollTop" title="Back to top" aria-label="Back to top">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14M5 12l7-7 7 7"/>
+        </svg>
+      </button>
+      <button class="float-btn" id="darkModeBtn" data-i18n-title="float.theme" data-i18n-aria="float.theme" title="Toggle theme" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
     </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <h4 data-i18n="footer.features">Features</h4>
+        <a href="index.html#features" data-i18n="footer.features.ai">AI inbox management</a>
+        <a href="index.html#features" data-i18n="footer.features.sync">Cross-platform sync</a>
+        <a href="index.html#pricing" data-i18n="footer.features.storage">Unlimited cloud storage</a>
+      </div>
+      <div>
+        <h4 data-i18n="footer.business">Business</h4>
+        <a href="index.html#about" data-i18n="footer.business.about">About KoxMail</a>
+        <a href="business.html" data-i18n="footer.business.solutions">Enterprise solutions</a>
+        <a href="index.html#pricing" data-i18n="footer.business.custom">Custom plans</a>
+      </div>
+      <div>
+        <h4 data-i18n="footer.security">Security & compliance</h4>
+        <a href="privacy.html">ISO 27001</a>
+        <a href="privacy.html">SOC 2</a>
+        <a href="privacy.html" data-i18n="footer.security.gdpr">GDPR compliant</a>
+      </div>
+      <div>
+        <h4 data-i18n="footer.support">Support</h4>
+        <a href="index.html#faq" data-i18n="footer.support.faq">FAQ</a>
+        <a href="support.html" data-i18n="footer.support.tech">24/7 technical support</a>
+        <a href="support.html" data-i18n="footer.support.sales">Contact sales</a>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p data-i18n="footer.copyright">© 2026 KoxMail. Redefining communication in the digital age.</p>
+      <div class="footer-links">
+        <a href="privacy.html" data-i18n="footer.privacy">Privacy Policy</a>
+        <a href="terms.html" data-i18n="footer.terms">Terms of Service</a>
+        <a href="support.html" data-i18n="footer.weibo" aria-label="Weibo">Weibo</a>
+        <a href="support.html" data-i18n="footer.wechat" aria-label="WeChat">WeChat</a>
+        <a href="support.html" aria-label="LinkedIn">LinkedIn</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="i18n.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
